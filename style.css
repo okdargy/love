@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,900;1,100;1,300;1,700&display=swap');
+
+:root {
+    --accent: #FF1690;
+
+    --bulma-body-background-color: #1E1E1E;
+}
+
+body {
+    background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url(background.png);
+    background-color: #222222;
+    background-size: 400px;
+    background-position: center;
+
+    font-family: 'Poppins', sans-serif;
+
+    padding-bottom: 6.5rem;
+}
+
+#page-container {
+    width: 85%;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+nav#navbar {
+    position: absolute;
+    margin: 20px;
+}
+
+nav#navbar ul li {
+    display: inline-block;
+    padding: 10px;
+}
+
+nav#navbar ul li a.active {
+    color: var(--bulma-success-base);
+}
+
+nav#navbar ul li a:not(.active) {
+    color: #7c7c7c;
+}
+
+#page-hero {
+    --bulma-hero-h: #fff;
+
+    background-image: url('banner.svg');
+    background-size: contain;
+
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+
+    box-shadow: 0 0 20px 0px black;
+
+    margin-bottom: 2rem;
+}
+
+.accent {
+    color: var(--accent);
+}
