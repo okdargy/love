@@ -22,8 +22,9 @@ export const lucia = new Lucia(adapter, {
 			username: attributes.username,
 			display_name: attributes.display_name,
 			discordId: attributes.discordId,
+			polytoriaId: attributes.polytoriaId || null,
 			avatar: attributes.avatar,
-			isAdmin: attributes.isAdmin
+			role: attributes.role
 		};
 	}
 });
@@ -40,8 +41,9 @@ export interface DatabaseUserAttributes {
 	username: string;
 	display_name: string;
 	discordId: number;
+	polytoriaId?: number;
 	avatar: string;
-	isAdmin: boolean;
+	role: "user" | "developer" | "admin" | "editor";
 }
 
 export const validateRequest = cache(

@@ -5,15 +5,26 @@ export const userTable = sqliteTable("user", {
 	id: text("id").notNull().primaryKey(),
 	username: text("username").notNull(),
 	discordId: text("discordId").notNull(),
+	polytoriaId: integer("polytoriaId").references(() => polytoriaUserTable.id),
 	display_name: text("display_name").notNull(),
 	accessToken: text("accessToken").notNull(),
 	refreshToken: text("refreshToken").notNull(),
 	accessTokenExpiresAt: integer("accessTokenExpiresAt").notNull(),
 	avatar: text("avatar").notNull(),
-	isAdmin: integer('isAdmin', { mode: 'boolean' }).default(false).notNull(),
+	role: text('role', { enum: ['user', 'developer', 'admin', 'editor']}).default('user').notNull(),
 	created_at: integer("created_at").notNull(),
 	updated_at: integer("updated_at").notNull(),
 });
+
+export const polytoriaUserTable = sqliteTable("polytoria_user", {
+	id: integer("id").notNull().primaryKey(),
+	username: text("username").notNull(),
+	thumbnailUrl: text("thumbnailUrl").notNull(),
+});
+
+export const polytoriaUserRelations = relations(polytoriaUserTable, ({ one }) => ({
+	user: one(userTable)
+}));
 
 export const sessionTable = sqliteTable("session", {
 	id: text("id").primaryKey(),
