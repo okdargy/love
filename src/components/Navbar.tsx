@@ -12,6 +12,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation"
 import { Menu, LogOut, Wrench } from 'lucide-react';
 import { LoveIcon } from "@/components/icons";
+import { useSession } from "./SessionContext"
 
 const Links = [
     { href: "#", label: "Home" },
@@ -24,6 +25,7 @@ const Links = [
 async function logout(): Promise<ActionResult> {
     "use server";
     const { session } = await validateRequest();
+
     if (!session) {
         return {
             error: "Unauthorized"
@@ -41,8 +43,8 @@ interface ActionResult {
     error: string | null;
 }
 
-export default async function Navbar() {
-    const { user } = await validateRequest();
+export default function Navbar(props: { session: Awaited<ReturnType<typeof validateRequest>> }) {
+    const { user } = props.session;
 
     return (
         <header className="flex h-14 items-center gap-4 border-b bg-background">
@@ -56,44 +58,31 @@ export default async function Navbar() {
 
                 <div className="flex items-center ml-auto gap-3">
                     {user ? (
-                        <Button variant="secondary" size="icon" className="rounded-full bg-transparent">
-                            <Image src={
-                                "https://cdn.discordapp.com/avatars/" + user.discordId + "/" + user.avatar + ".png"
-                            } alt={user.username} width={32} height={32} className="rounded-full" />
-                            <span className="sr-only">Toggle user menu</span>
-                        </Button>
-                    ) : (
-                        <Link href="/login/discord">
-                            <Button variant="outline" className="">Login</Button>
-                        </Link>
-                    )}
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button size="icon" variant="outline">
-                                <Menu size={16} />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 my-auto p-2 space-y-1" align="end">
-                            {user && (
-                                <>
-                                    {user.role === "admin" ? (
-                                        <Link href="/admin">
-                                            <Button variant="ghost" className="w-full flex items-center justify-between">
-                                                <Wrench className="h-5 w-5 mr-2" />
-                                                Admin Panel
-                                            </Button>
-                                        </Link>
-                                    ) : null}
+                        <>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="secondary" size="icon" className="rounded-full bg-transparent">
+                                        <Image src={
+                                            "https://cdn.discordapp.com/avatars/" + user.discordId + "/" + user.avatar + ".png"
+                                        } alt={user.username} width={32} height={32} className="rounded-full" />
+                                        <span className="sr-only">Toggle user menu</span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-64 my-auto p-2 space-y-1" align="end">
                                     <form action={logout} id="logoutForm" className="w-full">
                                         <Button variant="ghost" type="submit" className="w-full flex items-center justify-between">
                                             <LogOut className="h-5 w-5 mr-2" />
                                             Logout
                                         </Button>
                                     </form>
-                                </>
-                            )}
-                        </PopoverContent>
-                    </Popover>
+                                </PopoverContent>
+                            </Popover>
+                        </>
+                    ) : (
+                        <Link href="/login/discord">
+                            <Button variant="outline" className="">Login</Button>
+                        </Link>
+                    )}
                 </div>
             </nav>
         </header>

@@ -129,7 +129,7 @@ export default function Home() {
                     alt={item.name}
                     width={200}
                     height={200}
-                    className="rounded-sm data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                    className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
                     data-loaded='false'
                     onLoad={event => {
                       event.currentTarget.setAttribute('data-loaded', 'true')

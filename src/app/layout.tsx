@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/sonner"
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/components/Theme";
+import { SessionProvider } from "@/components/SessionContext";
+import { validateRequest } from "@/lib/auth";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -19,21 +21,25 @@ export const metadata: Metadata = {
   description: "we trade",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await validateRequest();
+  
   return (
     <html lang="en">
       <body className={poppins.className}>
         <Provider>
           <ThemeProvider defaultTheme="dark" storageKey="theme">
-            <Navbar />
-              <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
-                {children}
-              </main>
-            <Toaster />
+            <SessionProvider value={session}>
+                <Navbar session={session} />
+                <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
+                  {children}
+                </main>
+              <Toaster />
+            </SessionProvider>
           </ThemeProvider>
         </Provider>
       </body>
