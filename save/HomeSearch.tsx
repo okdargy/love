@@ -11,7 +11,7 @@ import {
 import { useState, useEffect } from "react";
 import { trpc } from "@/app/_trpc/client";
 import useDebounceValue from "@/app/_hooks/useDebounceValue";
-import { Input } from "./ui/input";
+import { Input } from "../src/components/ui/input";
 
 export default function Search() {
   const [search, setSearch] = useState<string>("");
@@ -42,7 +42,7 @@ export default function Search() {
           {items.length > 0 ? (
             <div className="border-t p-1 divide-y">
               {items.map((item) => (
-                  <div className="p-3">
+                  <div className="py-2.5 px-3 text-sm">
                     <a href={`/item/${item.id}`}>
                       {item.name}
                     </a>

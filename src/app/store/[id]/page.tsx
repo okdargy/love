@@ -1,9 +1,20 @@
 'use client';
 
 import { trpc } from '@/app/_trpc/client';
-import { useParams  } from 'next/navigation';
-import { useState } from 'react';
- 
+import { useParams } from 'next/navigation';
+import { Coins, BarChart } from 'lucide-react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+
+import Image from 'next/image';
+import { ReactNode } from 'react';
+
 export default function Page() {
   const pathname = useParams<{ id: string }>()
 
@@ -21,21 +32,91 @@ export default function Page() {
 
   return (
     <main>
-      {
-        itemInfo.isLoading ? (
-          <p>Loading...</p>
-        ) : itemInfo.data
-        ? (
-          <div>
-            <img className="w-16 h-16" src={itemInfo.data.thumbnailUrl} alt={itemInfo.data.name} />
-            <h1>{itemInfo.data.name}</h1>
-            <p>{itemInfo.data.description}</p>
-            <code>{JSON.stringify(itemInfo.data)}</code>
+      {itemInfo.isLoading ? (
+        <div>
+          <p className="text-xl">Loading...</p>
+        </div>
+      ) : itemInfo.data ? (
+        <div className="space-y-3">
+          <Breadcrumb className='mb-4'>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/">Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{itemInfo.data.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-4">
+            <div className="relative flex-shrink-0 w-full md:w-1/4 space-y-3">
+              <div className="relative w-full h-auto">
+              <div className="absolute inset-0 bg-[url('/client-background.png')] bg-cover bg-center opacity-30 rounded-lg"></div>
+              <Image
+                src={itemInfo.data.thumbnailUrl}
+                alt={itemInfo.data.name}
+                width={800}
+                height={800}
+                className="relative w-full h-auto object-cover rounded-lg border p-2 data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                data-loaded='false'
+                onLoad={event => {
+                  event.currentTarget.setAttribute('data-loaded', 'true')
+                }}
+              />
+            </div>
+            <div className='space-y-1'>
+              <h3 className='text-neutral-600'>Hat</h3>
+              <div>
+                <h1 className="text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.name}</h1>
+                <p className="text-neutral-400">{itemInfo.data.description}</p>
+              </div>
+            </div>
           </div>
-        ) : (
-          <p>Couldn't find item with id: {id}</p>
-        )
-      }
-    </main>
+          <div className="w-full space-y-3">
+            <div className='grid grid-cols-2 grid-rows-2 gap-x-3 gap-y-3 mt-4 md:mt-0'>
+              <InfoCard title="Value" value={itemInfo.data.stats.value} icon={<Coins />} />
+              <InfoCard title="Demand" value={itemInfo.data.stats.demand} icon={<BarChart />} />
+              <InfoCard title="Trend" value={itemInfo.data.stats.trend} icon={<BarChart />} />
+              <InfoCard title="Stock" value={itemInfo.data.stats.ogStock} icon={<BarChart />} />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-2">JSON Result</h2>
+              <pre className="text-sm bg-neutral-800 p-2 rounded-lg overflow-x-auto">
+                {JSON.stringify(itemInfo.data, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </div>
+        </div>
+  ) : (
+    <div className="flex justify-center items-center h-full">
+      <p className="text-xl">Couldn't find item with id: {id}</p>
+    </div>
   )
+}
+    </main >
+  )
+}
+
+export function InfoCard({ title, value, icon }: {
+  title: string;
+  value: string | number | null;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="relative bg-neutral-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+      <div className="relative flex items-center justify-between">
+        <div>
+          <h3 className="text-neutral-400 text-sm uppercase tracking-wide">{title}</h3>
+          <p className="text-xl font-semibold text-white mt-2">
+            {value !== null ? value : "N/A"}
+          </p>
+        </div>
+        <div className="ml-2 text-white" style={{ fontSize: '2rem' }}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
 }
