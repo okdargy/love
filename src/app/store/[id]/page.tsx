@@ -51,50 +51,48 @@ export default function Page() {
           </Breadcrumb>
           <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-4">
             <div className="relative flex-shrink-0 w-full md:w-1/4 space-y-3">
-              <div className="relative w-full h-auto">
-              <div className="absolute inset-0 bg-[url('/client-background.png')] bg-cover bg-center opacity-30 rounded-lg"></div>
-              <Image
-                src={itemInfo.data.thumbnailUrl}
-                alt={itemInfo.data.name}
-                width={800}
-                height={800}
-                className="relative w-full h-auto object-cover rounded-lg border p-2 data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
-                data-loaded='false'
-                onLoad={event => {
-                  event.currentTarget.setAttribute('data-loaded', 'true')
-                }}
-              />
+              <div className="relative w-full h-auto max-w-sm mx-auto">
+                <div className="absolute inset-0 bg-[url('/client-background.png')] bg-cover bg-center opacity-30 rounded-lg"></div>
+                <Image
+                  src={itemInfo.data.thumbnailUrl}
+                  alt={itemInfo.data.name}
+                  width={800}
+                  height={800}
+                  className="relative w-full h-auto object-cover rounded-lg border p-2 data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                  data-loaded='false'
+                  onLoad={event => {
+                    event.currentTarget.setAttribute('data-loaded', 'true')
+                  }}
+                />
+              </div>
+              <div className='space-y-1 w-full md:w-min overflow-hidden'>
+                <h3 className='text-neutral-600'>Hat</h3>
+                <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.name}</h1>
+                <p className="text-sm text-neutral-400">{itemInfo.data.description}</p>
+              </div>
             </div>
-            <div className='space-y-1'>
-              <h3 className='text-neutral-600'>Hat</h3>
-              <div>
-                <h1 className="text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.name}</h1>
-                <p className="text-neutral-400">{itemInfo.data.description}</p>
+            <div className="w-full space-y-3">
+              <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-2 gap-x-3 gap-y-3 mt-4 md:mt-0'>
+                <InfoCard title="Value" value={itemInfo.data.stats.value} icon={<Coins />} />
+                <InfoCard title="Demand" value={itemInfo.data.stats.demand} icon={<BarChart />} />
+                <InfoCard title="Trend" value={itemInfo.data.stats.trend} icon={<BarChart />} />
+                <InfoCard title="Stock" value={itemInfo.data.stats.ogStock} icon={<BarChart />} />
+              </div>
+              <div className=''>
+                <h2 className="text-xl font-semibold mb-2">JSON Result</h2>
+                <pre className="text-sm bg-neutral-800 p-2 rounded-lg grid grid-cols-1 overflow-auto">
+                  {JSON.stringify(itemInfo.data, null, 2)}
+                </pre>
               </div>
             </div>
           </div>
-          <div className="w-full space-y-3">
-            <div className='grid grid-cols-2 grid-rows-2 gap-x-3 gap-y-3 mt-4 md:mt-0'>
-              <InfoCard title="Value" value={itemInfo.data.stats.value} icon={<Coins />} />
-              <InfoCard title="Demand" value={itemInfo.data.stats.demand} icon={<BarChart />} />
-              <InfoCard title="Trend" value={itemInfo.data.stats.trend} icon={<BarChart />} />
-              <InfoCard title="Stock" value={itemInfo.data.stats.ogStock} icon={<BarChart />} />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold mb-2">JSON Result</h2>
-              <pre className="text-sm bg-neutral-800 p-2 rounded-lg overflow-x-auto">
-                {JSON.stringify(itemInfo.data, null, 2)}
-              </pre>
-            </div>
-          </div>
         </div>
+      ) : (
+        <div className="flex justify-center items-center h-full">
+          <p className="text-xl">Couldn't find item with id: {id}</p>
         </div>
-  ) : (
-    <div className="flex justify-center items-center h-full">
-      <p className="text-xl">Couldn't find item with id: {id}</p>
-    </div>
-  )
-}
+      )
+      }
     </main >
   )
 }
