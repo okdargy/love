@@ -75,11 +75,18 @@ export default function Page() {
                   <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.name}</h1>
                   <p className="text-sm text-neutral-400">{itemInfo.data.description}</p>
                 </div>
-                <div className="flex-grow md:flex-row gap-2">
-                    {user && user.role === "admin" && (
-                    <Button variant={'secondary'} className="w-full md:w-auto">
-                      <Pencil className='mr-3 w-4 h-4' />Edit
+                <div className="flex gap-2">
+                  <Link href={"https://polytoria.com/store/" + itemInfo.data.id} className='w-full'>
+                    <Button variant={'secondary'} className='w-full'>
+                      <ExternalLink className='w-4 h-4' />
                     </Button>
+                  </Link>
+                  {user && user.role === "admin" && (
+                    <Link href={"/store/" + itemInfo.data.id + "/edit"} className='w-full'>
+                      <Button variant={'secondary'} className='w-full'>
+                        <Pencil className='w-4 h-4' />
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </div>
