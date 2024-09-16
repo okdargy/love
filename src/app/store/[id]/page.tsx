@@ -109,7 +109,7 @@ export default function Page() {
         </div>
       ) : (
         <div className="flex justify-center items-center h-full">
-          <p className="text-xl">Couldn't find item with id: {id}</p>
+          <p className="text-xl">Could not find item with id: {id}</p>
         </div>
       )
       }
@@ -117,7 +117,7 @@ export default function Page() {
   )
 }
 
-export function InfoCard({ title, value, icon }: {
+function InfoCard({ title, value, icon }: {
   title: string;
   value: string | number | null;
   icon: ReactNode;

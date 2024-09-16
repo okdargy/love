@@ -54,7 +54,7 @@ export default function Home() {
       total: ITEMS_PER_PAGE,
       search: searchParams.get("search") ?? "",
     });
-  }, []);
+  });
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'decimal' }).format(price);

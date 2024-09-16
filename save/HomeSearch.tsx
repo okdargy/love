@@ -27,7 +27,7 @@ export default function Search() {
 
   useEffect(() => {
     if(searchTerm) {
-      searchItems.mutate(searchTerm);
+      searchItems.mutate({ input: searchTerm });
     } else {
       setItems([]);
     }

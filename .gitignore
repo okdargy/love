@@ -35,4 +35,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# trigger.dev
 .trigger
+
+# package tracking
+package-lock.json
+pnpm-lock.yaml
