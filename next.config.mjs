@@ -14,7 +14,7 @@ const nextConfig = {
                 port: '',
                 pathname: '/avatars/**',
             }
-        ],
+        ]
     },
 };
 

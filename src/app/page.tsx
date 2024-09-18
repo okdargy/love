@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/pagination"
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { TRPCClientErrorLike } from "@trpc/client";
+import { BuildProcedure } from "@trpc/server";
 
 const ITEMS_PER_PAGE = 25;
 const DEFAULT_PAGE = 1;
@@ -25,7 +27,7 @@ export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [result, setResult] = useState<{
+  const [result, setDataResult] = useState<{
     items: {
       id: number;
       name: string;
@@ -37,13 +39,18 @@ export default function Home() {
     items: [],
     totalPages: 0,
   });
+  const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
   const [currentPage, setCurrentPage] = useState(+(searchParams.get("page") ?? DEFAULT_PAGE));
 
   const getItems = trpc.getItemsByPage.useMutation({
-    onSuccess(data, variables, context) {
-      setResult(data);
+    onError(error) {
+      setError(error);
+      setLoading(false);
+    },
+    onSuccess(data) {
+      setDataResult(data);
       setLoading(false);
     },
   });
@@ -54,7 +61,7 @@ export default function Home() {
       total: ITEMS_PER_PAGE,
       search: searchParams.get("search") ?? "",
     });
-  });
+  }, []);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'decimal' }).format(price);
@@ -86,6 +93,7 @@ export default function Home() {
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
     setLoading(true);
+
     const queryParams = new URLSearchParams({ page: newPage.toString() });
   
     if (searchTerm) {
@@ -93,6 +101,7 @@ export default function Home() {
     }
   
     router.push(`/?${queryParams.toString()}`);
+
     getItems.mutate({
       page: newPage,
       total: ITEMS_PER_PAGE,
@@ -118,11 +127,16 @@ export default function Home() {
         <div className="flex justify-center items-center p-2">
           <Spinner width="24" height="24" className="fill-red-500" />
         </div>
+      ) : error ? (
+        <div className="p-4 bg-red-500 bg-opacity-50 border-2 border-red-500 text-white rounded-lg shadow-sm">
+          <p className="text-sm font-bold">An error occurred:</p>
+          <p className="text-sm">{error.message}</p>
+        </div>
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-4">
             {result.items.map((item, index) => (
-              <Link key={index} href={`/store/${item.id}`}>
+              <Link key={index} href={`/store/${item.id}`} passHref={true}>
                 <div className="p-4 space-y-3 border hover:border-red-500 transition-all rounded-lg shadow-sm flex flex-col justify-between">
                   <Image
                     src={item.thumbnailUrl}
@@ -134,6 +148,7 @@ export default function Home() {
                     onLoad={event => {
                       event.currentTarget.setAttribute('data-loaded', 'true')
                     }}
+                    unoptimized
                   />
                   <div className="mt-auto">
                     <h2 className="text-md text-gray-100 font-bold truncate">{item.name}</h2>

@@ -28,6 +28,7 @@ export default function Page() {
   }
 
   const id = parseInt(pathname.id);
+
   const itemInfo = trpc.getItem.useQuery(id, {
     onError(err) {
       console.error(err)
