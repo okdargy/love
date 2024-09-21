@@ -17,6 +17,7 @@ import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/components/SessionContext';
 import Link from 'next/link';
+import Error from '@/components/Error';
 
 export default function Page() {
   const { user } = useSession();
@@ -24,7 +25,7 @@ export default function Page() {
 
   // check if the id is a number
   if (isNaN(parseInt(pathname.id))) {
-    return <p>Invalid id</p>
+    return <Error message="Invalid ID" />
   }
 
   const id = parseInt(pathname.id);
@@ -109,9 +110,7 @@ export default function Page() {
           </div>
         </div>
       ) : (
-        <div className="flex justify-center items-center h-full">
-          <p className="text-xl">Could not find item with id: {id}</p>
-        </div>
+        <Error message="Could not find item" />
       )
       }
     </main >

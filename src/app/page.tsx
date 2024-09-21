@@ -19,6 +19,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { TRPCClientErrorLike } from "@trpc/client";
 import { BuildProcedure } from "@trpc/server";
+import Error from "@/components/Error";
 
 const ITEMS_PER_PAGE = 25;
 const DEFAULT_PAGE = 1;
@@ -39,7 +40,8 @@ export default function Home() {
     items: [],
     totalPages: 0,
   });
-  const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
+  
+  const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"query", any, any>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
   const [currentPage, setCurrentPage] = useState(+(searchParams.get("page") ?? DEFAULT_PAGE));
@@ -128,10 +130,7 @@ export default function Home() {
           <Spinner width="24" height="24" className="fill-red-500" />
         </div>
       ) : error ? (
-        <div className="p-4 bg-red-500 bg-opacity-50 border-2 border-red-500 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-bold">An error occurred:</p>
-          <p className="text-sm">{error.message}</p>
-        </div>
+        <Error message={error.message} />
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-4">

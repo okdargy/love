@@ -38,7 +38,7 @@ export default async function RootLayout({
                 <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
                   {children}
                 </main>
-              <Toaster />
+              <Toaster richColors />
             </SessionProvider>
           </ThemeProvider>
         </Provider>

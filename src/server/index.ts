@@ -85,7 +85,7 @@ export const appRouter = router({
         const { user } = await validateRequest();
 
         if (!user || user.role === "user") {
-            throw new Error("You do not have permission to edit item stats");
+            throw new Error("You do not have permission to edit items");
         }
 
         // check if item exists
