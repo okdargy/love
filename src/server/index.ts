@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { like, eq, count, or, asc } from "drizzle-orm";
+import { like, eq, count, or, desc } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { collectablesStatsTable, collectablesTable } from "@/lib/db/schema";
@@ -59,7 +59,7 @@ export const appRouter = router({
             limit,
             offset,
             where: searchCondition,
-            orderBy: [asc(collectablesTable.id)],
+            orderBy: [desc(collectablesTable.id)],
             with: { stats: true }
         });
 
@@ -71,9 +71,8 @@ export const appRouter = router({
     editItemStats: publicProcedure.input(z.object({
         id: z.number().min(1),
         value: z.number().optional(),
-        demand: z.string().optional(),
-        trend: z.string().optional(),
-        ogStock: z.number().optional(),
+        demand: z.enum(["awful", "low", "normal", "great", "high"]).optional(),
+        trend: z.enum(["stable", "unstable", "fluctuating"]).optional(),
         funFact: z.string().optional(),
         effect: z.string().optional(),
         rare: z.boolean().optional(),

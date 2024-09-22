@@ -3,7 +3,7 @@
 import { trpc } from "@/app/_trpc/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { TRPCClientErrorLike } from "@trpc/client";
 import { BuildProcedure } from "@trpc/server";
 import Error from "@/components/Error";
@@ -12,7 +12,13 @@ import { Spinner } from "@/components/icons";
 import { toast } from "sonner";
 import { ItemInfo } from "./page";
 import { useRouter } from "next/navigation";
-import { revalidatePath } from 'next/cache'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select"
 
 export default function Form({ data }: { data: ItemInfo }) {
     if (!data) {
@@ -32,19 +38,25 @@ export default function Form({ data }: { data: ItemInfo }) {
             name: "Demand",
             key: "demand",
             value: data.stats.demand,
-            type: "string",
+            type: "enum",
+            options: {
+                awful: "Awful",
+                low: "Low",
+                normal: "Normal",
+                great: "Great",
+                high: "High",
+            }
         },
         {
             name: "Trend",
             key: "trend",
             value: data.stats.trend,
-            type: "string",
-        },
-        {
-            name: "OG Stock",
-            key: "ogStock",
-            value: data.stats.ogStock,
-            type: "number",
+            type: "enum",
+            options: {
+                stable: "Stable",
+                unstable: "Unstable",
+                fluctuating: "Fluctuating",
+            }
         },
         {
             name: "Fun Fact",
@@ -95,6 +107,14 @@ export default function Form({ data }: { data: ItemInfo }) {
             [name]: parsedValue,
         }));
     };
+
+    const handleInputChange = (key: string, value: string) => {
+        console.log(key, value);
+        setFormData((prevData) => ({
+            ...prevData,
+            [key]: value,
+        }));
+    }
     
     const handleSwitchChange = (key: string, value: boolean) => {
         setFormData((prevData) => ({
@@ -163,14 +183,27 @@ export default function Form({ data }: { data: ItemInfo }) {
                             checked={formData[option.key] as boolean}
                             onCheckedChange={(value) => handleSwitchChange(option.key, value)}
                         />
+                    ) : option.type === "enum" ? (
+                        <Select onValueChange={(value) => handleInputChange(option.key, value)} value={formData[option.key] as string}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {option.options && Object.entries(option.options).map(([key, value]) => (
+                                    <SelectItem key={key} value={key}>
+                                        {value}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     ) : (
                         <Input
                             id={option.key}
                             name={option.key}
                             type={option.type}
-                            value={formData[option.key] as string | number}
+                            value={formData[option.key] as string}
                             onChange={handleChange}
-                            className="p-2 border rounded"
+                            className="border rounded p-2"
                         />
                     )}
                 </div>

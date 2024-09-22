@@ -39,7 +39,16 @@ export default function EditPage() {
           <p className="text-xl">Loading...</p>
         </div>
       ) : itemInfo.data ? (
-        <Form data={{ ...itemInfo.data, onSaleUntil: new Date(itemInfo.data.onSaleUntil) }} />
+        <div className="grid space-y-3 divide-y">
+          <div className="space-y-1">
+              <h3 className="text-neutral-500 mb-1 capitalize">{itemInfo.data.type}</h3>
+              <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.name}</h1>
+              <p className="text-sm text-neutral-400">{itemInfo.data.description}</p>
+          </div>
+          <div className="py-3">
+            <Form data={{ ...itemInfo.data, onSaleUntil: new Date(itemInfo.data.onSaleUntil) }} />
+          </div>
+        </div>
       ) : (
         <Error message="Could not find item" />
       )}

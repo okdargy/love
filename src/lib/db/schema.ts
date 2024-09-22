@@ -51,9 +51,8 @@ export const collectablesTable = sqliteTable("collectables", {
 export const collectablesStatsTable = sqliteTable("collectables_stats", {
 	id: integer("id").notNull().references(() => collectablesTable.id),
 	value: integer("value"),
-	demand: text("demand"),
-	trend: text("trend"),
-	ogStock: integer("ogStock"),
+	demand: text("demand", { enum: ["awful", "low", "normal", "great", "high"] }),
+	trend: text("trend", { enum: ["stable", "unstable", "fluctuating"] }),
 	funFact: text("funFact"),
 	effect: text("effect"),
 	rare: integer('rare', { mode: 'boolean' }).default(false),
@@ -70,4 +69,8 @@ export const collectablesRelations = relations(collectablesTable, ({ one }) => (
 		references: [collectablesStatsTable.id],
 	})
 }));
+
+function sqliteEnum(arg0: string, arg1: string[]) {
+	throw new Error('Function not implemented.');
+}
 

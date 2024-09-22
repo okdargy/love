@@ -2,7 +2,7 @@
 
 import { trpc } from '@/app/_trpc/client';
 import { useParams } from 'next/navigation';
-import { Coins, BarChart, Pencil, ExternalLink } from 'lucide-react';
+import { Coins, BarChart, Pencil, ExternalLink, TrendingUp, Blocks } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -97,10 +97,9 @@ export default function Page() {
               <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-2 gap-x-3 gap-y-3 mt-4 md:mt-0'>
                 <InfoCard title="Value" value={itemInfo.data.stats.value} icon={<Coins />} />
                 <InfoCard title="Demand" value={itemInfo.data.stats.demand} icon={<BarChart />} />
-                <InfoCard title="Trend" value={itemInfo.data.stats.trend} icon={<BarChart />} />
-                <InfoCard title="Stock" value={itemInfo.data.stats.ogStock} icon={<BarChart />} />
+                <InfoCard title="Trend" value={itemInfo.data.stats.trend} icon={<TrendingUp />} />
               </div>
-              <div className=''>
+              <div>
                 <h2 className="text-xl font-semibold mb-2">JSON Result</h2>
                 <pre className="text-sm bg-neutral-800 p-2 rounded-lg grid grid-cols-1 overflow-auto">
                   {JSON.stringify(itemInfo.data, null, 2)}
@@ -122,6 +121,12 @@ function InfoCard({ title, value, icon }: {
   value: string | number | null;
   icon: ReactNode;
 }) {
+  if (typeof value === 'number') {
+    value = new Intl.NumberFormat().format(value);
+  } else if (typeof value === 'string') {
+    value = value.charAt(0).toUpperCase() + value.slice(1);
+  }
+  
   return (
     <div className="relative bg-neutral-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       <div className="relative flex items-center justify-between">
