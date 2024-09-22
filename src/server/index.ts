@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { like, eq, count, or } from "drizzle-orm";
+import { like, eq, count, or, asc } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { collectablesStatsTable, collectablesTable } from "@/lib/db/schema";
@@ -59,6 +59,7 @@ export const appRouter = router({
             limit,
             offset,
             where: searchCondition,
+            orderBy: [asc(collectablesTable.id)],
             with: { stats: true }
         });
 

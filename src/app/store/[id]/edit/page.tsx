@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { trpc } from "@/app/_trpc/client";
+import { inferProcedureOutput } from '@trpc/server';
+import { AppRouter } from "@/server";
 import { Spinner } from "@/components/icons";
 import Error from "@/components/Error";
 import { useSession } from "@/components/SessionContext";
 import Form from "./Form";
+
+export type ItemInfo = inferProcedureOutput<AppRouter['getItem']>;
 
 export default function EditPage() {
     const { user } = useSession();
@@ -35,7 +39,7 @@ export default function EditPage() {
           <p className="text-xl">Loading...</p>
         </div>
       ) : itemInfo.data ? (
-        <Form id={itemInfo.data.id} name={itemInfo.data.name} />
+        <Form data={{ ...itemInfo.data, onSaleUntil: new Date(itemInfo.data.onSaleUntil) }} />
       ) : (
         <Error message="Could not find item" />
       )}

@@ -128,7 +128,7 @@ function InfoCard({ title, value, icon }: {
         <div>
           <h3 className="text-neutral-400 text-sm uppercase tracking-wide">{title}</h3>
           <p className="text-xl font-semibold text-white mt-2">
-            {value !== null ? value : "N/A"}
+            {value !== null && value !== "" ? value : "N/A"}
           </p>
         </div>
         <div className="ml-2 text-white" style={{ fontSize: '2rem' }}>

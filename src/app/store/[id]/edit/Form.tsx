@@ -1,83 +1,90 @@
 "use client";
 
-import { z } from "zod";
 import { trpc } from "@/app/_trpc/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TRPCClientErrorLike } from "@trpc/client";
 import { BuildProcedure } from "@trpc/server";
 import Error from "@/components/Error";
 import { Switch } from "@/components/ui/switch"
 import { Spinner } from "@/components/icons";
 import { toast } from "sonner";
+import { ItemInfo } from "./page";
+import { useRouter } from "next/navigation";
+import { revalidatePath } from 'next/cache'
 
-const options = [
-    {
-        name: "Value",
-        key: "value",
-        type: "number",
-    },
-    {
-        name: "Demand",
-        key: "demand",
-        type: "string",
-    },
-    {
-        name: "Trend",
-        key: "trend",
-        type: "string",
-    },
-    {
-        name: "OG Stock",
-        key: "ogStock",
-        type: "number",
-    },
-    {
-        name: "Fun Fact",
-        key: "funFact",
-        type: "string",
-    },
-    {
-        name: "Effect",
-        key: "effect",
-        type: "string",
-    },
-    {
-        name: "Rare",
-        key: "rare",
-        type: "boolean",
-    },
-    {
-        name: "Freaky",
-        key: "freaky",
-        type: "boolean",
-    },
-    {
-        name: "Projected",
-        key: "projected",
-        type: "boolean",
-    },
-];
+export default function Form({ data }: { data: ItemInfo }) {
+    if (!data) {
+        return <Error message="Could not find item" />;
+    }
 
-export default function Form({ id, name }: { id: number, name: string }) {
+    const router = useRouter();
+
+    const options = [
+        {
+            name: "Value",
+            key: "value",
+            value: data.stats.value,
+            type: "number",
+        },
+        {
+            name: "Demand",
+            key: "demand",
+            value: data.stats.demand,
+            type: "string",
+        },
+        {
+            name: "Trend",
+            key: "trend",
+            value: data.stats.trend,
+            type: "string",
+        },
+        {
+            name: "OG Stock",
+            key: "ogStock",
+            value: data.stats.ogStock,
+            type: "number",
+        },
+        {
+            name: "Fun Fact",
+            key: "funFact",
+            value: data.stats.funFact,
+            type: "string",
+        },
+        {
+            name: "Effect",
+            key: "effect",
+            value: data.stats.effect,
+            type: "string",
+        },
+        {
+            name: "Rare",
+            key: "rare",
+            value: data.stats.rare,
+            type: "boolean",
+        },
+        {
+            name: "Freaky",
+            key: "freaky",
+            value: data.stats.freaky,
+            type: "boolean",
+        },
+        {
+            name: "Projected",
+            key: "projected",
+            value: data.stats.projected,
+            type: "boolean",
+        },
+    ];
+
     const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
     const [loading, setLoading] = useState(false);
-
     const [formData, setFormData] = useState(
         options.reduce((acc, option) => {
-            switch (option.type) {
-                case 'number':
-                    acc[option.key] = 0;
-                    break;
-                case 'boolean':
-                    acc[option.key] = false;
-                    break;
-                default:
-                    acc[option.key] = '';
-            }
+            acc[option.key] = option.value;
             return acc;
-        }, {} as Record<string, string | number | boolean>)
+        }, {} as Record<string, any>)
     );
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,29 +105,50 @@ export default function Form({ id, name }: { id: number, name: string }) {
     
     const submitItem = trpc.editItemStats.useMutation({
         onError(error) {
+            toast.error("An error occurred while submitting changes");
+            console.error("An error occurred while submitting changes: ", error);
             setError(error);
             setLoading(false);
         },
-        onSuccess(data) {
-            toast.success("Item updated successfully");
+        onSuccess() {
+            toast.success("Changes submitted successfully");
             setLoading(false);
+            router.refresh();
+            router.replace("/store/" + data.id);
         },
         onMutate() {
             setLoading(true);
         }
     });
     
+    const filterChangedValues = (originalData: Record<string, any>, newData: Record<string, any>) => {
+        const changedData: Record<string, any> = {};
+        for (const key in newData) {
+            if (newData[key] !== originalData[key] && newData[key] !== null) {
+                changedData[key] = newData[key];
+            }
+        }
+        return changedData;
+    };
+    
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if(loading) return;
+        const changedData = filterChangedValues(data.stats, formData);
+        
+        if (Object.keys(changedData).length === 0) {
+            toast.info("No changes to submit");
+            return;
+        }
+
         try {
-            await submitItem.mutateAsync({ ...formData, id });
+            await submitItem.mutateAsync({ ...changedData, id: data.id });
         } catch (error) {
             console.error(error);
             setLoading(false);
         }
     };
     
-    // Form component JSX
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             {options.map((option) => (
