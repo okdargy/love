@@ -63,6 +63,13 @@ export const appRouter = router({
             with: { stats: true }
         });
 
+        const searchItem = items.findIndex(item => item.shorthand && item.shorthand.toLowerCase() === sanitizedSearch.toLowerCase());
+
+        if (searchItem > -1) {
+            const [item] = items.splice(searchItem, 1);
+            items.unshift(item);
+        }
+
         return { items, totalPages };
     }),
     getItem: publicProcedure.input(z.number().min(1)).query(async (opts) => {
