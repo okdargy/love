@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+const colors = require('tailwindcss/colors')
 
 const config = {
   darkMode: ["class"],
@@ -19,13 +20,17 @@ const config = {
 		},
     extend: {
       colors: {
+        red: {
+          ...colors.red,
+          500: "#ff5951",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
+          DEFAULT: "#ff5951",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {

@@ -133,7 +133,7 @@ export default function Home() {
         <Error message={error.message} />
       ) : (
         <div className="space-y-3">
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {result.items.map((item, index) => (
               <Link key={index} href={`/store/${item.id}`} passHref={true}>
                 <div className="p-4 space-y-3 border hover:border-red-500 transition-all rounded-lg shadow-sm flex flex-col justify-between">
