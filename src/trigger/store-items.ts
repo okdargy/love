@@ -5,26 +5,58 @@ import { collectablesStatsTable, collectablesTable } from "@/lib/db/schema";
 export const storeItemsTask = schedules.task({
   id: "store-items",
   run: async (payload: any, { ctx }) => {
-    const items = await fetchAllItems();
+    // Fetch the first item from the database and the first item from Polytoria
+    const response = await fetch("https://polytoria.com/api/store/items?collectiblesOnly=true");
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch store items");
+    }
+
+    const resJson: StoreItemsResponse = await response.json();
+    const firstItem = resJson.data[0];
+    const firstDbItem = await db.select().from(collectablesTable).orderBy(collectablesTable.id).limit(1);
+
+    // Check to see if the id from the first item in the database is less than the id from the first item from Polytoria
+    if (firstDbItem.length && firstItem.id <= firstDbItem[0].id) {
+      logger.log("No new items found.");
+      return;
+    }
+    
+    // Fetch items from Polytoria
+    const items = await fetchAllItems([
+      {
+        page: 1,
+        result: resJson
+      }
+    ]);
     logger.log(JSON.stringify(items));
 
-    const values = items.map((item: any) => ({
-      id: item.id,
-      type: item.type,
-      name: item.name,
-      description: item.description,
-      thumbnailUrl: item.thumbnailUrl,
-      price: item.price,
-      onSaleUntil: new Date(item.onSaleUntil),
-      isSoldOut: item.isSoldOut,
-    }));
+    // Check if there are new items
+    const newItems = items.filter((item: any) => !firstDbItem.length || item.id > firstDbItem[0].id);
 
-    const result = await db.insert(collectablesTable).values(values).returning({ id: collectablesTable.id }).onConflictDoNothing();
-    
-    if(result.length > 0) { 
-      await db.insert(collectablesStatsTable).values(result.map((item) => ({ id: item.id }))).onConflictDoNothing();
+    if (newItems.length > 0) {
+      const values = newItems.map((item: any) => ({
+        id: item.id,
+        type: item.type,
+        name: item.name,
+        description: item.description,
+        thumbnailUrl: item.thumbnailUrl,
+        price: item.price,
+        onSaleUntil: new Date(item.onSaleUntil),
+        isSoldOut: item.isSoldOut,
+      }));
+
+      const result = await db.insert(collectablesTable).values(values).returning({ id: collectablesTable.id }).onConflictDoNothing();
+      
+      if(result.length > 0) {
+        logger.log(`Inserted ${result.length} new items.`);
+      } else {
+        logger.log("No new items to insert.");
+      }
+    } else {
+      logger.log("No new items found.");
     }
-  },
+  }
 });
 
 type StoreItem = {
@@ -58,9 +90,21 @@ type StoreItemsResponse = {
   data: StoreItem[];
 };
 
-async function fetchAllItems() {
+async function fetchAllItems(previousData?: {
+  page: number;
+  result: StoreItemsResponse;
+}[]): Promise<StoreItem[]> {
   let allItems: StoreItem[] = [];
   let nextPageURL = "https://polytoria.com/api/store/items?collectiblesOnly=true";
+
+  if (previousData && previousData.length > 0) {
+    // Use the last page's nextPageURL from previousData
+    const lastPage = previousData[previousData.length - 1];
+    nextPageURL = lastPage.result.meta && lastPage.result.meta.nextPageURL 
+      ? new URL(lastPage.result.meta.nextPageURL, "https://polytoria.com").toString() 
+      : "";
+    allItems = previousData.flatMap(data => data.result.data);
+  }
 
   while (nextPageURL !== "") {
     const response = await fetch(nextPageURL);
@@ -71,8 +115,20 @@ async function fetchAllItems() {
     const pageData: StoreItemsResponse = await response.json();
     allItems = allItems.concat(pageData.data);
 
-    nextPageURL = pageData.meta && pageData.meta.nextPageURL ? new URL(pageData.meta.nextPageURL, "https://polytoria.com").toString() : "";
+    nextPageURL = pageData.meta && pageData.meta.nextPageURL 
+      ? new URL(pageData.meta.nextPageURL, "https://polytoria.com").toString() 
+      : "";
   }
 
   return allItems;
+}
+
+async function fetchFirstItem() {
+  const response = await fetch("https://polytoria.com/api/store/items?collectiblesOnly=true");
+  if (!response.ok) {
+    throw new Error("Failed to fetch store items");
+  }
+
+  const pageData: StoreItemsResponse = await response.json();
+  return pageData.data[0];
 }
