@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { like, eq, count, or, desc } from "drizzle-orm";
+import { like, eq, count, or, desc, and, inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, tagsTable, itemTagsTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 
@@ -73,7 +73,28 @@ export const appRouter = router({
         return { items, totalPages };
     }),
     getItem: publicProcedure.input(z.number().min(1)).query(async (opts) => {
-        return await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, opts.input), with: { stats: true } });
+        return await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, opts.input), with: { stats: true, tags: true } });
+    }),
+    getItemWithTags: publicProcedure.input(z.number().min(1)).query(async (opts) => {
+        try {
+            const item = await db.query.collectablesTable.findFirst({
+                where: eq(collectablesTable.id, opts.input),
+                with: {
+                    stats: true,
+                    tags: true,
+                }
+            });
+
+            if(!item) {
+                throw new Error("Item not found");
+            }
+
+            const allTags = await db.query.tagsTable.findMany();
+
+            return { item, allTags };
+        } catch (e) {
+            console.error(e);
+        }
     }),
     editItemStats: publicProcedure.input(z.object({
         id: z.number().min(1),
@@ -85,10 +106,10 @@ export const appRouter = router({
         rare: z.boolean().optional(),
         freaky: z.boolean().optional(),
         projected: z.boolean().optional(),
+        tags: z.array(z.number()).optional(),
     })).mutation(async (opts) => {
-        const { id, ...stats } = opts.input;
+        const { id, tags, ...stats } = opts.input;
 
-        // first, check if user is admin, editor, or developer
         const { user } = await validateRequest();
 
         if (!user || user.role === "user") {
@@ -96,7 +117,7 @@ export const appRouter = router({
         }
 
         // check if item exists
-        const item = await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, id) });
+        const item = await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, id), with: { tags: true } });
 
         if (!item) {
             throw new Error("Item does not exist");
@@ -104,8 +125,40 @@ export const appRouter = router({
             console.log(item);
         }
 
-        // update item stats
-        await db.update(collectablesStatsTable).set(stats).where(eq(collectablesStatsTable.id, id));
+        const filteredStats = Object.fromEntries(
+            Object.entries(stats).filter(([_, value]) => value !== undefined && value !== null)
+        );
+
+        return await db.transaction(async (tx) => {
+            // Update item stats
+            if (Object.keys(filteredStats).length > 0) {
+                console.log('check 0.5');
+                await tx.update(collectablesStatsTable).set(filteredStats).where(eq(collectablesStatsTable.id, id));
+            } else {
+                console.log('No valid stats to update');
+            }
+
+            // Update tags
+            if (tags && tags.length > 0) {
+                const existingTagIds = item.tags.map(tag => tag.tagId);
+        
+                const tagsToAdd = tags.filter(tagId => !existingTagIds.includes(tagId));
+                const tagsToRemove = existingTagIds.filter(tagId => !tags.includes(tagId));
+
+                if (tagsToAdd.length > 0) {
+                    const tagInserts = tagsToAdd.map(tagId => ({
+                        itemId: id,
+                        tagId: tagId
+                    }));
+                    
+                    await tx.insert(itemTagsTable).values(tagInserts);
+                }
+        
+                if (tagsToRemove.length > 0) {
+                    await tx.delete(itemTagsTable).where(and(eq(itemTagsTable.itemId, id), inArray(itemTagsTable.tagId, tagsToRemove)));
+                }
+            }
+        });
     }),
 });
 

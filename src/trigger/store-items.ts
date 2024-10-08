@@ -46,12 +46,28 @@ export const storeItemsTask = schedules.task({
         isSoldOut: item.isSoldOut,
       }));
 
-      const result = await db.insert(collectablesTable).values(values).returning({ id: collectablesTable.id }).onConflictDoNothing();
-      
-      if(result.length > 0) {
-        logger.log(`Inserted ${result.length} new items.`);
-      } else {
-        logger.log("No new items to insert.");
+      try {
+        await db.transaction(async (trx) => {
+            const result = await trx.insert(collectablesTable)
+                .values(values)
+                .returning({ id: collectablesTable.id })
+                .onConflictDoNothing();
+    
+            if (result.length > 0) {
+                await trx.insert(collectablesStatsTable)
+                    .values(result.map((item: any) => ({
+                        id: item.id
+                        // Add other necessary fields here
+                    })))
+                    .onConflictDoNothing();
+    
+                logger.log(`Inserted ${result.length} new items.`);
+            } else {
+                logger.log("No new items to insert.");
+            }
+        });
+      } catch (e) {
+          logger.error("Failed to insert items and stats");
       }
     } else {
       logger.log("No new items found.");

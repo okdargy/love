@@ -28,19 +28,10 @@ export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [result, setDataResult] = useState<{
-    items: {
-      id: number;
-      name: string;
-      thumbnailUrl: string;
-      price: number;
-    }[],
-    totalPages: number;
-  }>({
+  const [result, setDataResult] = useState<ReturnType<typeof trpc.getItemsByPage.useMutation>['data']>({
     items: [],
     totalPages: 0,
   });
-  
   const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"query", any, any>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
@@ -56,6 +47,8 @@ export default function Home() {
       setLoading(false);
     },
   });
+
+  const safeResult = result ?? { items: [], totalPages: 0 };
 
   useEffect(() => {
     getItems.mutate({
@@ -134,9 +127,9 @@ export default function Home() {
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {result.items.map((item, index) => (
+            {safeResult.items.map((item, index) => (
               <Link key={index} href={`/store/${item.id}`} passHref={true}>
-                <div className="p-4 space-y-3 border hover:border-red-500 transition-all rounded-lg shadow-sm flex flex-col justify-between">
+                <div className="p-4 space-y-3 border hover:border-red-500 transition-all rounded-lg shadow-sm flex flex-col justify-between relative">
                   <Image
                     src={item.thumbnailUrl}
                     alt={item.name}
@@ -155,6 +148,9 @@ export default function Home() {
                       <i className="pi pi-brick me-2"></i>{formatPrice(item.price)}
                     </p>
                   </div>
+                  <div className="absolute -top-3 right-0 p-2">
+                    
+                  </div>
                 </div>
               </Link>
             ))}
@@ -165,7 +161,7 @@ export default function Home() {
                 <PaginationPrevious href="#" />
               </PaginationItem>
               <PaginationItem>
-                {Array.from({ length: result.totalPages ?? 1 }).map((_, index) => (
+                {Array.from({ length: result?.totalPages ?? 1 }).map((_, index) => (
                   <PaginationLink
                     key={index}
                     onClick={() => handlePageChange(index + 1)}

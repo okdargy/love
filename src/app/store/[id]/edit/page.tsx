@@ -10,27 +10,27 @@ import Error from "@/components/Error";
 import { useSession } from "@/components/SessionContext";
 import Form from "./Form";
 
-export type ItemInfo = inferProcedureOutput<AppRouter['getItem']>;
+export type ItemInfo = inferProcedureOutput<AppRouter['getItemWithTags']>
 
 export default function EditPage() {
-    const { user } = useSession();
-    const pathname = useParams<{ id: string }>();
+  const { user } = useSession();
+  const pathname = useParams<{ id: string }>();
 
-    if(!user || user.role === "user") {
-        return <Error message="Unauthorized" />
+  if (!user || user.role === "user") {
+    return <Error message="Unauthorized" />
+  }
+
+  if (isNaN(parseInt(pathname.id))) {
+    return <Error message="Invalid ID" />
+  }
+
+  const id = parseInt(pathname.id);
+
+  const itemInfo = trpc.getItemWithTags.useQuery(id, {
+    onError(err) {
+      console.error(err)
     }
-
-    if (isNaN(parseInt(pathname.id))) {
-        return <Error message="Invalid ID" />
-    }
-
-    const id = parseInt(pathname.id);
-
-    const itemInfo = trpc.getItem.useQuery(id, {
-        onError(err) {
-        console.error(err)
-        }
-    })
+  })
 
   return (
     <main>
@@ -39,14 +39,20 @@ export default function EditPage() {
           <p className="text-xl">Loading...</p>
         </div>
       ) : itemInfo.data ? (
-        <div className="grid space-y-3 divide-y">
+        <div className="grid space-y-3.5 divide-y">
           <div className="space-y-1">
-              <h3 className="text-neutral-500 mb-1 capitalize">{itemInfo.data.type}</h3>
-              <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.name}</h1>
-              <p className="text-sm text-neutral-400">{itemInfo.data.description}</p>
+            <h3 className="text-neutral-500 mb-1 capitalize">{itemInfo.data.item.type}</h3>
+            <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.item.name}</h1>
+            <p className="text-sm text-neutral-400">{itemInfo.data.item.description}</p>
           </div>
           <div className="py-3">
-            <Form data={{ ...itemInfo.data, onSaleUntil: new Date(itemInfo.data.onSaleUntil) }} />
+              <Form data={{
+                item: {
+                  ...itemInfo.data.item,
+                  onSaleUntil: new Date(itemInfo.data.item.onSaleUntil)
+                },
+                allTags: itemInfo.data.allTags
+              }} />
           </div>
         </div>
       ) : (

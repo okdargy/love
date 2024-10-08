@@ -19,6 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select";
 
 export default function Form({ data }: { data: ItemInfo }) {
     if (!data) {
@@ -31,14 +32,14 @@ export default function Form({ data }: { data: ItemInfo }) {
         {
             name: "Value",
             key: "value",
-            value: data.stats.value,
             type: "number",
+            value: data.item?.stats.value,
         },
         {
             name: "Demand",
             key: "demand",
-            value: data.stats.demand,
             type: "enum",
+            value: data.item?.stats.demand,
             options: {
                 awful: "Awful",
                 low: "Low",
@@ -50,8 +51,8 @@ export default function Form({ data }: { data: ItemInfo }) {
         {
             name: "Trend",
             key: "trend",
-            value: data.stats.trend,
             type: "enum",
+            value: data.item?.stats.trend,
             options: {
                 stable: "Stable",
                 unstable: "Unstable",
@@ -61,33 +62,28 @@ export default function Form({ data }: { data: ItemInfo }) {
         {
             name: "Fun Fact",
             key: "funFact",
-            value: data.stats.funFact,
             type: "string",
+            value: data.item?.stats.funFact,
         },
         {
             name: "Effect",
             key: "effect",
-            value: data.stats.effect,
             type: "string",
+            value: data.item?.stats.effect,
         },
         {
-            name: "Rare",
-            key: "rare",
-            value: data.stats.rare,
-            type: "boolean",
-        },
-        {
-            name: "Freaky",
-            key: "freaky",
-            value: data.stats.freaky,
-            type: "boolean",
-        },
-        {
-            name: "Projected",
-            key: "projected",
-            value: data.stats.projected,
-            type: "boolean",
-        },
+            name: "Tags",
+            key: "tags",
+            type: "multi-select",
+            valueType: "number",
+            value: data.item?.tags.map((tag) => tag.tagId.toString()),
+            opts: data.allTags.map((tag) => {
+                return {
+                    value: tag.id.toString(),
+                    label: tag.name,
+                };
+            })
+        }
     ];
 
     const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
@@ -122,11 +118,26 @@ export default function Form({ data }: { data: ItemInfo }) {
             [key]: value,
         }));
     };
+
+    const handleMultiSelectChange = (key: string, value: string[], valueType?: string) => {
+        setFormData((prevData) => {
+            const updatedData = {
+                ...prevData,
+                [key]: value,
+            };
+        
+            if (valueType === 'number' && Array.isArray(value)) {
+                updatedData[key] = value.map(tag => Number(tag));
+            }
+        
+            return updatedData;
+        });
+    }
     
     const submitItem = trpc.editItemStats.useMutation({
         onError(error) {
-            toast.error("An error occurred while submitting changes");
-            console.error("An error occurred while submitting changes: ", error);
+            toast.error("An error occurred while submitting changes: " + error.message);
+            console.error(error);
             setError(error);
             setLoading(false);
         },
@@ -134,9 +145,10 @@ export default function Form({ data }: { data: ItemInfo }) {
             toast.success("Changes submitted successfully");
             setLoading(false);
             router.refresh();
-            router.replace("/store/" + data.id);
+            router.replace("/store/" + data.item.id);
         },
         onMutate() {
+            console.log(formData);
             setLoading(true);
         }
     });
@@ -154,7 +166,7 @@ export default function Form({ data }: { data: ItemInfo }) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if(loading) return;
-        const changedData = filterChangedValues(data.stats, formData);
+        const changedData = filterChangedValues(data.item.stats, formData);
         
         if (Object.keys(changedData).length === 0) {
             toast.info("No changes to submit");
@@ -162,7 +174,7 @@ export default function Form({ data }: { data: ItemInfo }) {
         }
 
         try {
-            await submitItem.mutateAsync({ ...changedData, id: data.id });
+            await submitItem.mutateAsync({ ...changedData, id: data.item.id });
         } catch (error) {
             console.error(error);
             setLoading(false);
@@ -196,6 +208,13 @@ export default function Form({ data }: { data: ItemInfo }) {
                                 ))}
                             </SelectContent>
                         </Select>
+                    ) : option.type === "multi-select" ? (
+                        <MultiSelect
+                            options={option.opts || []}
+                            onValueChange={(value) => handleMultiSelectChange(option.key, value, option.valueType)}
+                            value={option.value ?? []}
+                            placeholder="Select tags"
+                        />
                     ) : (
                         <Input
                             id={option.key}

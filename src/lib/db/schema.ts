@@ -1,5 +1,5 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { relations, sql } from 'drizzle-orm';
+import { eq, relations, sql } from 'drizzle-orm';
 
 export const userTable = sqliteTable("user", {
 	id: text("id").notNull().primaryKey(),
@@ -48,29 +48,44 @@ export const collectablesTable = sqliteTable("collectables", {
 	updated_at: integer("updated_at").notNull().default(sql`(current_timestamp)`)
 });
 
-export const collectablesStatsTable = sqliteTable("collectables_stats", {
-	id: integer("id").notNull().references(() => collectablesTable.id),
-	value: integer("value"),
-	demand: text("demand", { enum: ["awful", "low", "normal", "great", "high"] }),
-	trend: text("trend", { enum: ["stable", "unstable", "fluctuating"] }),
-	funFact: text("funFact"),
-	effect: text("effect"),
-	rare: integer('rare', { mode: 'boolean' }).default(false),
-	freaky: integer('freaky', { mode: 'boolean' }).default(false),
-	projected: integer('projected', { mode: 'boolean' }).default(false),
-	created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
-	updated_at: integer("updated_at").notNull().default(sql`(current_timestamp)`)
+export const tagsTable = sqliteTable("tags", {
+    id: integer("id").primaryKey({
+		autoIncrement: true
+	}).notNull(),
+    name: text("name").notNull(),
+	emoji: text("emoji").notNull()
 });
 
-export const collectablesRelations = relations(collectablesTable, ({ one }) => ({
-	stats: one(collectablesStatsTable, {
-		relationName: 'stats',
-		fields: [collectablesTable.id],
-		references: [collectablesStatsTable.id],
-	})
+export const itemTagsTable = sqliteTable("item_tags", {
+    itemId: integer("itemId").notNull().references(() => collectablesTable.id),
+    tagId: integer("tagId").notNull().references(() => tagsTable.id)
+});
+
+// Update the collectablesStatsTable
+export const collectablesStatsTable = sqliteTable("collectables_stats", {
+    id: integer("id").notNull().references(() => collectablesTable.id),
+    value: integer("value"),
+    demand: text("demand", { enum: ["awful", "low", "normal", "great", "high"] }),
+    trend: text("trend", { enum: ["stable", "unstable", "fluctuating"] }),
+    funFact: text("funFact"),
+    effect: text("effect"),
+    created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
+    updated_at: integer("updated_at").notNull().default(sql`(current_timestamp)`)
+});
+
+export const collectablesRelations = relations(collectablesTable, ({ one, many }) => ({
+    stats: one(collectablesStatsTable, {
+        relationName: 'stats',
+        fields: [collectablesTable.id],
+        references: [collectablesStatsTable.id],
+    }),
+    tags: many(itemTagsTable)
 }));
 
-function sqliteEnum(arg0: string, arg1: string[]) {
-	throw new Error('Function not implemented.');
-}
-
+export const tagsRelations = relations(itemTagsTable, ({ one }) => ({
+	item: one(collectablesTable, {
+		relationName: 'item',
+		fields: [itemTagsTable.itemId],
+		references: [collectablesTable.id],
+	})
+}));
