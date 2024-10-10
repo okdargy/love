@@ -5,7 +5,7 @@ export default function NotFound() {
         <div className="text-center">
             <Image src="/noomy_404.png" alt="404" width={400} height={400} className="mx-auto" />
             <h1 className="text-4xl text-red-500 font-bold">404</h1>
-            <p className="text-neutral-500">"page not found, are you lost?"</p>
+            <p className="text-neutral-500">page not found, are you lost?</p>
         </div>
     );
 }

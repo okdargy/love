@@ -31,7 +31,7 @@ export const sessionTable = sqliteTable("session", {
 	userId: text("userId")
 		.notNull()
 		.references(() => userTable.id),
-	expiresAt: integer("expiresAt").notNull()
+	expiresAt: integer("expiresAt").notNull(),
 });
 
 export const collectablesTable = sqliteTable("collectables", {

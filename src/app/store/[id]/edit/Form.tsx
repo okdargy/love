@@ -22,11 +22,10 @@ import {
 import { MultiSelect } from "@/components/ui/multi-select";
 
 export default function Form({ data }: { data: ItemInfo }) {
-    if (!data) {
-        return <Error message="Could not find item" />;
-    }
-
     const router = useRouter();
+
+    const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
+    const [loading, setLoading] = useState(false);
 
     const options = [
         {
@@ -86,14 +85,12 @@ export default function Form({ data }: { data: ItemInfo }) {
         }
     ];
 
-    const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState(
-        options.reduce((acc, option) => {
-            acc[option.key] = option.value;
-            return acc;
-        }, {} as Record<string, any>)
-    );
+    const initialFormData = options.reduce((acc, option) => {
+        acc[option.key] = option.value;
+        return acc;
+    }, {} as Record<string, any>);
+
+    const [formData, setFormData] = useState(initialFormData);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;

@@ -30,13 +30,11 @@ const Links = [
     { href: "#", label: "Leaderboard" },
 ]
 
-async function logout(): Promise<ActionResult> {
+async function logout(): Promise<void> {
 	"use server";
 	const { session } = await validateRequest();
 	if (!session) {
-		return {
-			error: "Unauthorized"
-		};
+        return;
 	}
 
 	await lucia.invalidateSession(session.id);
