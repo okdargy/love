@@ -86,6 +86,9 @@ export default function Home() {
   };
 
   const handlePageChange = (newPage: number) => {
+    // Ensure the new page is within the bounds of the total pages
+    newPage = Math.max(1, Math.min(newPage, safeResult.totalPages));
+
     setCurrentPage(newPage);
     setLoading(true);
 
