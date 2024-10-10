@@ -70,7 +70,7 @@ export default function Home() {
     if (searchTerm) {
       queryParams.append("search", searchTerm);
     }
-    
+
     router.push(`/?${queryParams.toString()}`);
     getItems.mutate({
       page: DEFAULT_PAGE,
@@ -90,11 +90,11 @@ export default function Home() {
     setLoading(true);
 
     const queryParams = new URLSearchParams({ page: newPage.toString() });
-  
+
     if (searchTerm) {
       queryParams.append("search", searchTerm);
     }
-  
+
     router.push(`/?${queryParams.toString()}`);
 
     getItems.mutate({
@@ -149,7 +149,7 @@ export default function Home() {
                     </p>
                   </div>
                   <div className="absolute -top-3 right-0 p-2">
-                    
+
                   </div>
                 </div>
               </Link>
@@ -158,24 +158,29 @@ export default function Home() {
           <Pagination>
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious href="#" />
+                <PaginationPrevious
+                  href="#"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? 'disabled' : ''}
+                />
               </PaginationItem>
               <PaginationItem>
                 {Array.from({ length: result?.totalPages ?? 1 }).map((_, index) => (
                   <PaginationLink
                     key={index}
                     onClick={() => handlePageChange(index + 1)}
-                    className="cursor-pointer"
+                    className={`cursor-pointer ${currentPage === index + 1 ? 'active' : ''}`}
                   >
                     {index + 1}
                   </PaginationLink>
                 ))}
               </PaginationItem>
               <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext href="#" />
+                <PaginationNext
+                  href="#"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === (result?.totalPages ?? 1) ? 'disabled' : ''}
+                />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
