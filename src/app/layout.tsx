@@ -18,8 +18,19 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "polytoria.trade",
-  description: "we trade",
+  title: "LOVE",
+  description: "Welcome to List Of Values: Everlast, your #1 reliable source for Trading & Economy information on Polytoria",
+  openGraph: {
+    images: [
+      {
+        url: "/favicon-96x96.png"
+      }
+    ]
+  }
+};
+
+export const viewport = {
+  themeColor: "#ff5951",
 };
 
 export default async function RootLayout({
