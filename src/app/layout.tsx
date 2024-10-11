@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/components/Theme";
 import { SessionProvider } from "@/components/SessionContext";
 import { validateRequest } from "@/lib/auth";
+import Footer from "@/components/Footer";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default async function RootLayout({
                 <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
                   {children}
                 </main>
+                <Footer />
               <Toaster richColors />
             </SessionProvider>
           </ThemeProvider>
