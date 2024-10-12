@@ -59,11 +59,13 @@ export default async function RootLayout({
         <Provider>
           <ThemeProvider defaultTheme="dark" storageKey="theme">
             <SessionProvider value={session}>
-                <Navbar session={session} />
-                <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
-                  {children}
-                </main>
-                <Footer sha={sha} />
+                <div id="container">
+                  <Navbar session={session} />
+                  <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
+                    {children}
+                  </main>
+                  <Footer sha={sha} />
+                </div>
               <Toaster richColors />
             </SessionProvider>
           </ThemeProvider>

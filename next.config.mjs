@@ -10,10 +10,16 @@ const nextConfig = {
             },
             {
                 protocol: 'https',
+                hostname: 'c0.ptacdn.com',
+                port: '',
+                pathname: '/thumbnails/avatars/**',
+            },
+            {
+                protocol: 'https',
                 hostname: 'cdn.discordapp.com',
                 port: '',
                 pathname: '/avatars/**',
-            }
+            },
         ]
     },
 };

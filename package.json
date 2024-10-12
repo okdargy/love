@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 9032",
+    "dev": "next dev -p 9032 --turbo",
     "build": "next build",
     "start": "next start -p 9031 -H 127.0.0.1",
     "lint": "next lint",
@@ -15,6 +15,7 @@
     "@lucia-auth/adapter-drizzle": "^1.1.0",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
+    "@radix-ui/react-hover-card": "^1.1.2",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-popover": "^1.1.2",
     "@radix-ui/react-select": "^2.1.2",

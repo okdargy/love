@@ -23,12 +23,15 @@ export default function Page() {
   const { user } = useSession();
   const pathname = useParams<{ id: string }>()
 
-  // check if the id is a number
-  if (isNaN(parseInt(pathname.id))) {
-    return <Error message="Invalid ID" />
+  const id = parseInt(pathname.id);
+
+  if(isNaN(id)) {
+      return <Error message="Invalid ID, must be a number" />
   }
 
-  const id = parseInt(pathname.id);
+  if(id < 1) {
+      return <Error message="Invalid ID, must be greater than 0" />
+  }
 
   const itemInfo = trpc.getItem.useQuery(id, {
     onError(err) {
