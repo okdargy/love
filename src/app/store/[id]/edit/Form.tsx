@@ -75,7 +75,7 @@ export default function Form({ data }: { data: ItemInfo }) {
             key: "tags",
             type: "multi-select",
             valueType: "number",
-            value: data.item.tags.map((tag) => tag.tagId.toString()),
+            value: data.item.tags.map((tag) => tag.tagId),
             opts: data.allTags.map((tag) => {
                 return {
                     value: tag.id.toString(),
@@ -154,6 +154,7 @@ export default function Form({ data }: { data: ItemInfo }) {
     const filterChangedValues = (originalData: Record<string, any>, newData: Record<string, any>) => {
         const changedData: Record<string, any> = {};
         for (const key in newData) {
+            console.log(key, newData[key], originalData[key]);
             if (newData[key] !== originalData[key] && newData[key] !== null) {
                 changedData[key] = newData[key];
             }
@@ -210,7 +211,7 @@ export default function Form({ data }: { data: ItemInfo }) {
                         <MultiSelect
                             options={option.opts || []}
                             onValueChange={(value) => handleMultiSelectChange(option.key, value, option.valueType)}
-                            defaultValue={Array.isArray(option.value) ? option.value : []}
+                            defaultValue={Array.isArray(option.value) ? option.value.map(String) : []}
                             placeholder="Select tags"
                         />
                     ) : (

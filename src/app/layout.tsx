@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/Theme";
 import { SessionProvider } from "@/components/SessionContext";
 import { validateRequest } from "@/lib/auth";
 import Footer from "@/components/Footer";
+import { execSync } from 'child_process';
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -33,13 +34,25 @@ export const viewport = {
   themeColor: "#ff5951",
 };
 
+export async function getSha() {
+  let sha = '';
+  try {
+    sha = execSync('git rev-parse HEAD').toString().trim();
+  } catch (error) {
+    console.error('Error fetching commit SHA:', error);
+  }
+
+  return sha
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const session = await validateRequest();
-  
+  const sha = await getSha();
+
   return (
     <html lang="en">
       <body className={poppins.className}>
@@ -50,7 +63,7 @@ export default async function RootLayout({
                 <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
                   {children}
                 </main>
-                <Footer />
+                <Footer sha={sha} />
               <Toaster richColors />
             </SessionProvider>
           </ThemeProvider>
