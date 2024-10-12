@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import Image from 'next/image';
 import { Lock } from 'lucide-react';
+import Link from "next/link";
 
 async function grabItemizedInventory(id: number): Promise<{
     isPrivate: boolean;
@@ -63,7 +64,6 @@ async function grabItemizedInventory(id: number): Promise<{
 
 export default async function Inventory({ id }: { id: number }) {
     const { isPrivate, inventory } = await grabItemizedInventory(id);
-    console.log(isPrivate);
     inventory.sort((a, b) => b.amount - a.amount);
 
     return (
@@ -71,24 +71,6 @@ export default async function Inventory({ id }: { id: number }) {
             <div className="flex mb-4">
                 <h2 className="text-2xl font-bold">Inventory</h2>
             </div>
-            <ul className="divide-y divide-neutral-900">
-                {inventory.map((item, index) => (
-                    <li key={index} className="flex items-center space-x-4 px-3 py-2.5 justify-between">
-                        <Image src={item.asset.thumbnail} alt={item.asset.name} width={64} height={64} className="rounded-md" />
-                        <div className="text-right">
-                            <p className="text-lg font-semibold">{item.asset.name}</p>
-                            <HoverCard>
-                                <HoverCardTrigger asChild>
-                                    <p className="text-right text-neutral-500 cursor-pointer">Owns {item.amount} copies</p>
-                                </HoverCardTrigger>
-                                <HoverCardContent className="text-left">
-                                    <p>{'#' + item.serials.sort((a, b) => a - b).join(', #')}</p>
-                                </HoverCardContent>
-                            </HoverCard>
-                        </div>
-                    </li>
-                ))}
-            </ul>
             {isPrivate ? <div className="flex flex-col items-center justify-center space-y-2">
                 <Lock className="h-6 w-6 text-neutral-500" />
                 <p className="text-neutral-500 text-center">This user has a private inventory</p>
@@ -98,7 +80,9 @@ export default async function Inventory({ id }: { id: number }) {
                         <li key={index} className="flex items-center space-x-4 px-3 py-2.5 justify-between">
                             <Image src={item.asset.thumbnail} alt={item.asset.name} width={64} height={64} className="rounded-md" />
                             <div className="text-right">
-                                <p className="text-lg font-semibold">{item.asset.name}</p>
+                                <Link href={`/store/${item.asset.id}`}>
+                                    <p className="text-lg font-semibold">{item.asset.name}</p>
+                                </Link>
                                 <HoverCard>
                                     <HoverCardTrigger asChild>
                                         <p className="text-right text-neutral-500 cursor-pointer">Owns {item.amount} copies</p>
