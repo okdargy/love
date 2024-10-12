@@ -4,7 +4,7 @@ import Link from 'next/link';
 export default function Footer() {
     return (
         <footer className="flex flex-col items-center gap-1 p-4 border-t bg-background">
-            <div className="flex gap-6">
+            <div className="flex gap-3">
                 <Link href="https://discord.gg/jUFET2fN3p" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-md font-semibold hover:fill-red-500 hover:text-red-500 transition-colors">
                     <svg className='h-3 w-3 fill-current' viewBox="0 -28.5 256 256" version="1.1" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid">
                         <g>

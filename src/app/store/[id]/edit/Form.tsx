@@ -32,13 +32,13 @@ export default function Form({ data }: { data: ItemInfo }) {
             name: "Value",
             key: "value",
             type: "number",
-            value: data.item?.stats.value,
+            value: data.item.stats.value,
         },
         {
             name: "Demand",
             key: "demand",
             type: "enum",
-            value: data.item?.stats.demand,
+            value: data.item.stats.demand,
             options: {
                 awful: "Awful",
                 low: "Low",
@@ -51,7 +51,7 @@ export default function Form({ data }: { data: ItemInfo }) {
             name: "Trend",
             key: "trend",
             type: "enum",
-            value: data.item?.stats.trend,
+            value: data.item.stats.trend,
             options: {
                 stable: "Stable",
                 unstable: "Unstable",
@@ -62,20 +62,20 @@ export default function Form({ data }: { data: ItemInfo }) {
             name: "Fun Fact",
             key: "funFact",
             type: "string",
-            value: data.item?.stats.funFact,
+            value: data.item.stats.funFact,
         },
         {
             name: "Effect",
             key: "effect",
             type: "string",
-            value: data.item?.stats.effect,
+            value: data.item.stats.effect,
         },
         {
             name: "Tags",
             key: "tags",
             type: "multi-select",
             valueType: "number",
-            value: data.item?.tags.map((tag) => tag.tagId.toString()),
+            value: data.item.tags.map((tag) => tag.tagId.toString()),
             opts: data.allTags.map((tag) => {
                 return {
                     value: tag.id.toString(),
@@ -127,6 +127,7 @@ export default function Form({ data }: { data: ItemInfo }) {
                 updatedData[key] = value.map(tag => Number(tag));
             }
         
+            console.log(updatedData);
             return updatedData;
         });
     }
@@ -209,7 +210,7 @@ export default function Form({ data }: { data: ItemInfo }) {
                         <MultiSelect
                             options={option.opts || []}
                             onValueChange={(value) => handleMultiSelectChange(option.key, value, option.valueType)}
-                            value={option.value ?? []}
+                            defaultValue={Array.isArray(option.value) ? option.value : []}
                             placeholder="Select tags"
                         />
                     ) : (

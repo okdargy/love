@@ -157,6 +157,8 @@ export const appRouter = router({
                 if (tagsToRemove.length > 0) {
                     await tx.delete(itemTagsTable).where(and(eq(itemTagsTable.itemId, id), inArray(itemTagsTable.tagId, tagsToRemove)));
                 }
+            } else if (tags && tags.length === 0 && item.tags.length > 0) {
+                await tx.delete(itemTagsTable).where(eq(itemTagsTable.itemId, id));
             }
         });
     }),

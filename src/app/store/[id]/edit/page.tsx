@@ -10,7 +10,6 @@ import Error from "@/components/Error";
 import { useSession } from "@/components/SessionContext";
 import Form from "./Form";
 
-
 export type Defined<T> = T extends undefined ? never : T;
 export type ItemInfo = Defined<inferProcedureOutput<AppRouter['getItemWithTags']>>;
 
