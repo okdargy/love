@@ -65,10 +65,9 @@ export const itemTagsTable = sqliteTable("item_tags", {
 export const collectablesStatsTable = sqliteTable("collectables_stats", {
     id: integer("id").notNull().references(() => collectablesTable.id),
     value: integer("value"),
-    demand: text("demand", { enum: ["awful", "low", "normal", "great", "high"] }),
-    trend: text("trend", { enum: ["stable", "unstable", "fluctuating"] }),
+    demand: text("demand", { enum: ["awful", "low", "normal", "high", "great"] }),
+    trend: text("trend", { enum: ["stable", "unstable", "fluctuating", "rising", "lowering"] }),
     funFact: text("funFact"),
-    effect: text("effect"),
     created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
     updated_at: integer("updated_at").notNull().default(sql`(current_timestamp)`)
 });

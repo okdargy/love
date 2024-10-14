@@ -77,7 +77,7 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                             </Popover>
                         </>
                     ) : (
-                        <Link href="/login/discord">
+                        <Link href="/login/discord" prefetch={false}>
                             <Button variant="outline" className="">Login</Button>
                         </Link>
                     )}

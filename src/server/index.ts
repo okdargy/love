@@ -40,17 +40,40 @@ export const appRouter = router({
         page: z.number().min(1),
         total: z.number().min(1).max(25),
         search: z.string(),
+        filters: z.object({
+            sortBy: z.string(),
+            order: z.string(),
+            types: z.array(z.string())
+        }).optional(),
     })).mutation(async (opts) => {
         const offset = (opts.input.page - 1) * opts.input.total;
         const limit = opts.input.total;
 
         const sanitizedSearch = sanitizeSearchInput(opts.input.search);
-        const searchCondition = opts.input.search
-            ? or(
-                like(collectablesTable.shorthand, `%${sanitizedSearch}%`),
-                like(collectablesTable.name, `%${sanitizedSearch}%`)
-            )
-            : undefined;
+        let searchCondition = opts.input.search
+        ? or(
+            like(collectablesTable.shorthand, `%${sanitizedSearch}%`),
+            like(collectablesTable.name, `%${sanitizedSearch}%`)
+        )
+        : undefined;
+
+        const sortOptions: { [key: string]: any } = {
+            date: collectablesTable.id
+        };
+
+        let sortOrder = [desc(collectablesTable.id)];
+
+        if(opts.input.filters) {
+            const { sortBy, order, types } = opts.input.filters;
+
+            if(sortOptions[sortBy]) {
+                sortOrder = [order === "asc" ? sortOptions[sortBy] : desc(sortOptions[sortBy])];
+            }
+
+            if(types && types.length > 0) {
+                searchCondition = and(searchCondition, inArray(collectablesTable.type, types));
+            }
+        }
 
         const [totalCount] = await db.select({ count: count() }).from(collectablesTable).where(searchCondition);
         const totalPages = Math.ceil(totalCount.count / limit);
@@ -59,7 +82,7 @@ export const appRouter = router({
             limit,
             offset,
             where: searchCondition,
-            orderBy: [desc(collectablesTable.id)],
+            orderBy: sortOrder,
             with: { stats: true }
         });
 
@@ -70,7 +93,9 @@ export const appRouter = router({
             items.unshift(item);
         }
 
-        return { items, totalPages };
+        const allTags = await db.query.tagsTable.findMany();
+
+        return { items, totalPages, allTags };
     }),
     getItem: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         return await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, opts.input), with: { stats: true, tags: true } });
@@ -102,7 +127,6 @@ export const appRouter = router({
         demand: z.enum(["awful", "low", "normal", "great", "high"]).optional(),
         trend: z.enum(["stable", "unstable", "fluctuating"]).optional(),
         funFact: z.string().optional(),
-        effect: z.string().optional(),
         rare: z.boolean().optional(),
         freaky: z.boolean().optional(),
         projected: z.boolean().optional(),

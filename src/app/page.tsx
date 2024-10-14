@@ -20,6 +20,13 @@ import { Button } from "@/components/ui/button";
 import { TRPCClientErrorLike } from "@trpc/client";
 import { BuildProcedure } from "@trpc/server";
 import Error from "@/components/Error";
+import { Filter, SlidersHorizontal } from "lucide-react";
+import { Popover } from "@radix-ui/react-popover";
+import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 const ITEMS_PER_PAGE = 25;
 const DEFAULT_PAGE = 1;
@@ -31,8 +38,14 @@ export default function Home() {
   const [result, setDataResult] = useState<ReturnType<typeof trpc.getItemsByPage.useMutation>['data']>({
     items: [],
     totalPages: 0,
+    allTags: [],
   });
   const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"query", any, any>> | null>(null);
+  const [filters, setFilters] = useState({
+    sortBy: "date",
+    order: "desc",
+    types: []
+  });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
   const [currentPage, setCurrentPage] = useState(+(searchParams.get("page") ?? DEFAULT_PAGE));
@@ -48,7 +61,40 @@ export default function Home() {
     },
   });
 
-  const safeResult = result ?? { items: [], totalPages: 0 };
+  const safeResult = result ?? { items: [], totalPages: 0, allTags: [] };
+
+  const filterOptions = [
+    {
+      label: "Sort By",
+      key: "sortBy",
+      type: "select",
+      value: filters.sortBy,
+      options: [
+        { value: "date", label: "Date added" },
+      ],
+    },
+    {
+      label: "Order",
+      key: "order",
+      type: "select",
+      value: filters.order,
+      options: [
+        { value: "asc", label: "Ascending" },
+        { value: "desc", label: "Descending" },
+      ],
+    },
+    {
+      label: "Types",
+      key: "types",
+      type: "multi-select",
+      value: filters.types,
+      options: [
+        { value: "hat", label: "Hat" },
+        { value: "face", label: "Face" },
+        { value: "tool", label: "Tool" },
+      ],
+    }
+  ]
 
   useEffect(() => {
     getItems.mutate({
@@ -76,6 +122,7 @@ export default function Home() {
       page: DEFAULT_PAGE,
       total: ITEMS_PER_PAGE,
       search: searchTerm,
+      filters
     });
   };
 
@@ -107,6 +154,20 @@ export default function Home() {
     });
   };
 
+  const handleMultiSelectChange = (key: string, value: string[], int?: boolean) => {
+    setFilters({
+      ...filters,
+      [key]: int ? value.map(v => parseInt(v)) : value
+    });
+  }
+
+  const handleSelectChange = (key: string, value: string, int?: boolean) => {
+    setFilters({
+      ...filters,
+      [key]: int ? parseInt(value) : value
+    });
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex gap-x-2">
@@ -117,6 +178,46 @@ export default function Home() {
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={handleKeyDown}
         />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="secondary">
+              <SlidersHorizontal className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <div className="grid gap-3 divide-y">
+              <div className="grid gap-2">
+                {
+                  filterOptions.map((option, index) => (
+                    <div key={index} className="grid grid-cols-3 items-center">
+                      <Label className="col-span-1">{option.label}</Label>
+                      <div className="col-span-2">
+                        {option.type === "select" ? (
+                          <Select
+                            value={typeof option.value === 'string' ? option.value : undefined}
+                            onValueChange={(value: string) => handleSelectChange(option.key, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue className="w-full" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {option.options.map((opt, index) => (
+                                <SelectItem key={index} value={opt.value}>{opt.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : option.type === "multi-select" ? (
+                          <MultiSelect options={option.options} onValueChange={(value: string[]) => handleMultiSelectChange(option.key, value, false )} value={option.value} />
+                        ) : null}
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+            
+          </PopoverContent>
+        </Popover>
         <Button variant="default" onClick={handleSearch}>
           Search
         </Button>

@@ -67,7 +67,7 @@ export default function Page() {
                   alt={itemInfo.data.name}
                   width={800}
                   height={800}
-                  className="relative w-full h-auto object-cover rounded-lg border p-2 data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                  className="relative w-full h-auto object-cover rounded-lg border data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
                   data-loaded='false'
                   onLoad={event => {
                     event.currentTarget.setAttribute('data-loaded', 'true')

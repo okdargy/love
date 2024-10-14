@@ -43,8 +43,8 @@ export default function Form({ data }: { data: ItemInfo }) {
                 awful: "Awful",
                 low: "Low",
                 normal: "Normal",
-                great: "Great",
                 high: "High",
+                great: "Great",
             }
         },
         {
@@ -63,12 +63,6 @@ export default function Form({ data }: { data: ItemInfo }) {
             key: "funFact",
             type: "string",
             value: data.item.stats.funFact,
-        },
-        {
-            name: "Effect",
-            key: "effect",
-            type: "string",
-            value: data.item.stats.effect,
         },
         {
             name: "Tags",
