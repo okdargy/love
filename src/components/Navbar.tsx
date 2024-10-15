@@ -49,9 +49,9 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
             <nav className="flex w-full max-w-screen-lg mx-auto gap-6 p-4 sm:p-6 justify-between">
                 <Link
                     href="/"
-                    className="p-2 hover:bg-red-500 hover:bg-opacity-20 transition-all rounded-lg"
+                    className="p-2 hover:bg-primary hover:bg-opacity-20 transition-all rounded-lg"
                 >
-                    <LoveIcon className="h-6 w-6 fill-red-500" />
+                    <LoveIcon className="h-6 w-6 fill-primary" />
                 </Link>
 
                 <div className="flex items-center ml-auto gap-3">
@@ -67,6 +67,14 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-64 my-auto p-2 space-y-1" align="end">
+                                    {user.role === "admin" && (
+                                        <Link href="/admin">
+                                            <Button variant="ghost" className="w-full flex items-center justify-between">
+                                                <Wrench className="h-5 w-5 mr-2" />
+                                                Admin
+                                            </Button>
+                                        </Link>
+                                    )}
                                     <form action={logout} id="logoutForm" className="w-full">
                                         <Button variant="ghost" type="submit" className="w-full flex items-center justify-between">
                                             <LogOut className="h-5 w-5 mr-2" />

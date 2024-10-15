@@ -39,7 +39,7 @@ export default async function Page({ params }: { params: { id: string } }) {
     return (
         <div className="space-y-4">
             <div className="flex gap-x-3">
-                <Image src={userData.thumbnail.icon} alt={userData.username} width={512} height={512} className="h-20 w-20 rounded-full border-2 border-red-500 p-2" />
+                <Image src={userData.thumbnail.icon} alt={userData.username} width={512} height={512} className="h-20 w-20 rounded-full border-2 border-primary p-2" />
                 <div className="my-auto">
                     <h1 className="font-semibold text-2xl">{userData.username}</h1>
                     <h2 className="text-neutral-400">Value: {formatNumber(userData.netWorth)}</h2>
