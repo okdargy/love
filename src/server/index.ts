@@ -184,7 +184,6 @@ export const appRouter = router({
             }
 
             const logData = { id, ...filteredStats, tags };
-            console.log('Log data:', JSON.stringify(logData));
             
             await tx.insert(auditLogsTable).values({
                 userId: user.id,
