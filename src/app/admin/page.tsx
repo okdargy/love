@@ -1,5 +1,7 @@
 export default async function AdminHome() {
     return (
-        <p>content</p>
+        <div>
+            <p>𝓯𝓻𝓮𝓪𝓴𝔂 things will come here soon</p>
+        </div>
     )
 }

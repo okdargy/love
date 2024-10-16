@@ -44,6 +44,7 @@ next-env.d.ts
 # package tracking
 package-lock.json
 pnpm-lock.yaml
+bun.lockb
 
 # temp save
 save

@@ -2,13 +2,14 @@ import { z } from "zod";
 import { like, eq, count, or, desc, and, inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable, tagsTable, itemTagsTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
+import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
 
 const sanitizeSearchInput = (input: string) => {
     return input.replace(/[^a-zA-Z0-9\s']/g, '');
-};  
+}; 
 
 export const appRouter = router({
     searchItems: publicProcedure.input(z.object({
@@ -133,7 +134,6 @@ export const appRouter = router({
         tags: z.array(z.number()).optional(),
     })).mutation(async (opts) => {
         const { id, tags, ...stats } = opts.input;
-
         const { user } = await validateRequest();
 
         if (!user || user.role === "user") {
@@ -154,9 +154,7 @@ export const appRouter = router({
         );
 
         return await db.transaction(async (tx) => {
-            // Update item stats
             if (Object.keys(filteredStats).length > 0) {
-                console.log('check 0.5');
                 await tx.update(collectablesStatsTable).set(filteredStats).where(eq(collectablesStatsTable.id, id));
             } else {
                 console.log('No valid stats to update');
@@ -184,7 +182,39 @@ export const appRouter = router({
             } else if (tags && tags.length === 0 && item.tags.length > 0) {
                 await tx.delete(itemTagsTable).where(eq(itemTagsTable.itemId, id));
             }
+
+            const logData = { id, ...filteredStats, tags };
+            console.log('Log data:', JSON.stringify(logData));
+            
+            await tx.insert(auditLogsTable).values({
+                userId: user.id,
+                action: 'edit',
+                where: 'collectables',
+                payload: JSON.stringify(logData),
+            });
         });
+    }),
+    getAuditLogs: publicProcedure.input(z.object({
+        page: z.number().min(1),
+        total: z.number().min(1).max(25),
+    })).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user || user.role === "user") {
+            throw new Error("You do not have permission to view audit logs");
+        }
+
+        const offset = (opts.input.page - 1) * opts.input.total;
+        const limit = opts.input.total;
+
+        const logs = await db.query.auditLogsTable.findMany({
+            limit,
+            offset,
+            orderBy: [desc(auditLogsTable.id)],
+            with: { user: true }
+        });
+
+        return { logs };
     }),
 });
 

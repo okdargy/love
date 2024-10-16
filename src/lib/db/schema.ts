@@ -88,3 +88,21 @@ export const tagsRelations = relations(itemTagsTable, ({ one }) => ({
 		references: [collectablesTable.id],
 	})
 }));
+
+export const auditLogsTable = sqliteTable("audit_logs", {
+	id: integer("id").notNull().primaryKey({
+		autoIncrement: true
+	}),
+	userId: text("userId").notNull().references(() => userTable.id),
+	action: text("action").notNull(),
+	where: text("where").notNull(),
+	payload: text("payload").notNull(),
+	timestamp: text("created_at").notNull().default(sql`(current_timestamp)`),
+});
+
+export const auditLogsRelations = relations(auditLogsTable, ({ one }) => ({
+    user: one(userTable, {
+        fields: [auditLogsTable.userId],
+        references: [userTable.id],
+    }),
+}));
