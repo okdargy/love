@@ -207,6 +207,9 @@ export const appRouter = router({
         const offset = (opts.input.page - 1) * opts.input.total;
         const limit = opts.input.total;
 
+        const [totalCount] = await db.select({ count: count() }).from(auditLogsTable);
+        const totalPages = Math.ceil(totalCount.count / limit);
+
         const logs = await db.query.auditLogsTable.findMany({
             limit,
             offset,
@@ -214,7 +217,7 @@ export const appRouter = router({
             with: { user: true }
         });
 
-        return { logs };
+        return { logs, totalPages };
     }),
 });
 
