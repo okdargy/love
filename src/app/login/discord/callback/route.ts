@@ -13,8 +13,16 @@ export async function GET(request: Request): Promise<Response> {
 	const storedState = cookies().get("discord_oauth_state")?.value ?? null;
 
 	if (!code || !state || !storedState || state !== storedState.toString()) {
-		return new Response(null, {
-			status: 400
+		const errorMessage = !code ? "Missing code parameter" :
+							 !state ? "Missing state parameter" :
+							 !storedState ? "Missing stored state" :
+							 "State parameter does not match stored state";
+	
+		return new Response(JSON.stringify({ error: errorMessage }), {
+			status: 400,
+			headers: {
+				'Content-Type': 'application/json'
+			}
 		});
 	}
 
@@ -88,12 +96,16 @@ export async function GET(request: Request): Promise<Response> {
 		});
 	} catch (e) {
 		console.error(e);
+
 		if (e instanceof OAuth2RequestError && e.message === "bad_verification_code") {
-			// invalid code
-			return new Response(null, {
-				status: 400
+			return new Response(JSON.stringify({ error: "Invalid code" }), {
+				status: 400,
+				headers: {
+					'Content-Type': 'application/json'
+				}
 			});
 		}
+
 		return new Response(null, {
 			status: 500
 		});
