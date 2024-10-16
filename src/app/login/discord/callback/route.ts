@@ -43,6 +43,18 @@ export async function GET(request: Request): Promise<Response> {
 				path: ".",
 				...sessionCookie.attributes
 			});
+
+			await db.update(userTable)
+				.set({
+					accessToken: tokens.accessToken,
+					refreshToken: tokens.refreshToken,
+					accessTokenExpiresAt: tokens.accessTokenExpiresAt.getTime(),
+					username: discordUser.username,
+					display_name: discordUser.global_name ?? discordUser.username,
+					avatar: discordUser.avatar ?? "",
+					updated_at: new Date().getTime()
+				})
+				.where(eq(userTable.id, existingUser.id));
 		} else {
 			const userId = generateId(15);
 
