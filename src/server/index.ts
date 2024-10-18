@@ -5,7 +5,6 @@ import { db } from "@/lib/db";
 import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
-import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
 
 const sanitizeSearchInput = (input: string) => {
     return input.replace(/[^a-zA-Z0-9\s']/g, '');
@@ -125,8 +124,8 @@ export const appRouter = router({
     editItemStats: publicProcedure.input(z.object({
         id: z.number().min(1),
         value: z.number().optional(),
-        demand: z.enum(["awful", "low", "normal", "great", "high"]).optional(),
-        trend: z.enum(["stable", "unstable", "fluctuating"]).optional(),
+        demand: z.enum(["awful", "low", "normal", "great", "high", ""]).optional(),
+        trend: z.enum(["stable", "unstable", "fluctuating", ""]).optional(),
         funFact: z.string().optional(),
         rare: z.boolean().optional(),
         freaky: z.boolean().optional(),

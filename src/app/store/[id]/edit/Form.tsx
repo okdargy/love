@@ -16,6 +16,7 @@ import {
     Select,
     SelectContent,
     SelectItem,
+    SelectSeparator,
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select"
@@ -97,6 +98,15 @@ export default function Form({ data }: { data: ItemInfo }) {
 
     const handleInputChange = (key: string, value: string) => {
         console.log(key, value);
+
+        if(value === "null") {
+            setFormData((prevData) => ({
+                ...prevData,
+                [key]: null,
+            }));
+            return;
+        }
+        
         setFormData((prevData) => ({
             ...prevData,
             [key]: value,
@@ -199,6 +209,18 @@ export default function Form({ data }: { data: ItemInfo }) {
                                         {value}
                                     </SelectItem>
                                 ))}
+                                <SelectSeparator />
+                                <Button
+                                    className="w-full px-2"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleInputChange(option.key, "null");
+                                    }}
+                                >
+                                    Clear
+                                </Button>
                             </SelectContent>
                         </Select>
                     ) : option.type === "multi-select" ? (
