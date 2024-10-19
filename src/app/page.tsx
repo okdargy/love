@@ -224,7 +224,7 @@ export default function Home() {
       </div>
       {loading ? ( // Step 2: Show a loading icon when the data is being fetched
         <div className="flex justify-center items-center p-2">
-          <Spinner width="24" height="24" className="fill-text-primary" />
+          <Spinner width="24" height="24" className="fill-primary" />
         </div>
       ) : error ? (
         <Error message={error.message} />
@@ -233,7 +233,7 @@ export default function Home() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {safeResult.items.map((item, index) => (
               <Link key={index} href={`/store/${item.id}`} passHref={true}>
-                <div className="p-4 space-y-3 border hover:border-text-primary transition-all rounded-lg shadow-sm flex flex-col justify-between relative">
+                <div className="p-4 space-y-3 border hover:border-primary transition-all rounded-lg shadow-sm flex flex-col justify-between relative">
                   <Image
                     src={item.thumbnailUrl}
                     alt={item.name}

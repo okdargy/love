@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { useSession } from '@/components/SessionContext';
 import Link from 'next/link';
 import Error from '@/components/Error';
+import { Spinner } from '@/components/icons';
 
 export default function Page() {
   const { user } = useSession();
@@ -42,8 +43,8 @@ export default function Page() {
   return (
     <main>
       {itemInfo.isLoading ? (
-        <div>
-          <p className="text-xl">Loading...</p>
+        <div className="flex justify-center items-center p-2">
+          <Spinner width="24" height="24" className="fill-primary" />
         </div>
       ) : itemInfo.data ? (
         <div className="space-y-4">
