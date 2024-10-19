@@ -207,7 +207,7 @@ export default function Home() {
                             </SelectContent>
                           </Select>
                         ) : option.type === "multi-select" ? (
-                          <MultiSelect options={option.options} onValueChange={(value: string[]) => handleMultiSelectChange(option.key, value, false )} value={option.value} />
+                          <MultiSelect options={option.options} onValueChange={(value: string[]) => handleMultiSelectChange(option.key, value, false )} defaultValue={Array.isArray(option.value) ? option.value : []} />
                         ) : null}
                       </div>
                     </div>
@@ -252,8 +252,16 @@ export default function Home() {
                       <i className="pi pi-brick me-2"></i>{formatPrice(item.price)}
                     </p>
                   </div>
-                  <div className="absolute -top-3 right-0 p-2">
+                  <div className="absolute -top-3 right-0 p-2 space-x-1.5">
+                      {item.tags.map((tag, index) => {
+                        const correspondingTag = safeResult.allTags.find(t => t.id === tag.tagId);
 
+                        return (
+                          <span key={index} className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-800 text-white rounded-md px-2 py-1">
+                            {correspondingTag ? correspondingTag.emoji : tag.itemId}
+                          </span>
+                        );
+                      })}
                   </div>
                 </div>
               </Link>

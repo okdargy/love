@@ -58,7 +58,7 @@ export const tagsTable = sqliteTable("tags", {
 
 export const itemTagsTable = sqliteTable("item_tags", {
     itemId: integer("itemId").notNull().references(() => collectablesTable.id),
-    tagId: integer("tagId").notNull().references(() => tagsTable.id)
+    tagId: integer("tagId").notNull().references(() => tagsTable.id),
 });
 
 // Update the collectablesStatsTable

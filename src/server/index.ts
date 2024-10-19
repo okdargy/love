@@ -83,7 +83,7 @@ export const appRouter = router({
             offset,
             where: searchCondition,
             orderBy: sortOrder,
-            with: { stats: true }
+            with: { stats: true, tags: true }
         });
 
         const searchItem = items.findIndex(item => item.shorthand && item.shorthand.toLowerCase() === sanitizedSearch.toLowerCase());
