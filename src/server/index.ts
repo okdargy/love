@@ -144,8 +144,6 @@ export const appRouter = router({
 
         if (!item) {
             throw new Error("Item does not exist");
-        } else {
-            console.log(item);
         }
 
         const filteredStats = Object.fromEntries(
@@ -155,8 +153,6 @@ export const appRouter = router({
         return await db.transaction(async (tx) => {
             if (Object.keys(filteredStats).length > 0) {
                 await tx.update(collectablesStatsTable).set(filteredStats).where(eq(collectablesStatsTable.id, id));
-            } else {
-                console.log('No valid stats to update');
             }
 
             // Update tags
@@ -217,6 +213,70 @@ export const appRouter = router({
 
         return { logs, totalPages };
     }),
+    getAllItemOwners: publicProcedure.input(z.number().min(1)).query(async (opts) => {
+        const id = opts.input;
+        
+        let allOwners: Inventory[] = [];
+        let page = 1;
+        let hasMore = true;
+    
+        do {
+            try {
+                const response = await fetch(`https://api.polytoria.com/v1/store/${id}/owners?limit=100&page=${page}`);
+                if (!response.ok) {
+                    throw new Error(`Error fetching data: ${response.statusText}`);
+                }
+    
+                const data: OwnersResponse = await response.json();
+    
+                if (data.inventories.length === 0) {
+                    break;
+                }
+    
+                allOwners.push(...data.inventories);
+
+                hasMore = page < data.pages;
+                page++;
+            } catch (error) {
+                console.error(`Failed to fetch owners on page ${page}:`, error);
+                hasMore = false;
+            }
+        } while (hasMore);
+    
+        // Create a map to count the number of items each owner has
+        const ownerMap: { [key: string]: { username: string; id: number; serials: number[] } } = {};
+    
+        allOwners.forEach(inventory => {
+            const owner = inventory.user;
+            
+            if (!ownerMap[owner.id]) {
+                ownerMap[owner.id] = { username: owner.username, id: owner.id, serials: [] };
+            }
+            ownerMap[owner.id].serials.push(inventory.serial);
+        });
+    
+        // Convert the map to an array and sort it by the number of items in descending order
+        const sortedOwners = Object.values(ownerMap).sort((a, b) => b.serials.length - a.serials.length);
+    
+        return sortedOwners;
+    })
 });
 
 export type AppRouter = typeof appRouter;
+
+export interface User {
+    id: number;
+    username: string;
+}
+
+export interface Inventory {
+    serial: number;
+    purchasedAt: string;
+    user: User;
+}
+
+export interface OwnersResponse {
+    inventories: Inventory[];
+    pages: number;
+    total: number;
+}

@@ -19,6 +19,7 @@ import { useSession } from '@/components/SessionContext';
 import Link from 'next/link';
 import Error from '@/components/Error';
 import { Spinner } from '@/components/icons';
+import Hoarders from './Hoarders';
 
 export default function Page() {
   const { user } = useSession();
@@ -102,6 +103,10 @@ export default function Page() {
                 <InfoCard title="Value" value={itemInfo.data.stats.value} icon={<Coins />} />
                 <InfoCard title="Demand" value={itemInfo.data.stats.demand} icon={<BarChart />} />
                 <InfoCard title="Trend" value={itemInfo.data.stats.trend} icon={<TrendingUp />} />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Hoarders</h2>
+                <Hoarders id={itemInfo.data.id} />
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-2">JSON Result</h2>
