@@ -67,7 +67,6 @@ export const collectablesStatsTable = sqliteTable("collectables_stats", {
     demand: text("demand", { enum: ["awful", "low", "normal", "high", "great"] }),
     trend: text("trend", { enum: ["stable", "unstable", "fluctuating", "rising", "lowering"] }),
     funFact: text("funFact"),
-	activeSerials: text("activeSerials", { mode: 'json' }).default('[]').notNull(),
     created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
     updated_at: integer("updated_at").notNull().default(sql`(current_timestamp)`)
 });
