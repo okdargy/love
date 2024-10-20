@@ -67,10 +67,7 @@ export default async function Inventory({ id }: { id: number }) {
     inventory.sort((a, b) => b.amount - a.amount);
 
     return (
-        <div className="border border-neutral-800 rounded-md p-4">
-            <div className="flex mb-4">
-                <h2 className="text-2xl font-bold">Inventory</h2>
-            </div>
+        <div className="border border-neutral-100/10 rounded-md p-4">
             {isPrivate ? <div className="flex flex-col items-center justify-center space-y-2">
                 <Lock className="h-6 w-6 text-neutral-500" />
                 <p className="text-neutral-500 text-center">This user has a private inventory</p>
@@ -85,7 +82,7 @@ export default async function Inventory({ id }: { id: number }) {
                                 </Link>
                                 <HoverCard>
                                     <HoverCardTrigger asChild>
-                                        <p className="text-right text-neutral-500 cursor-pointer">Owns {item.amount} copies</p>
+                                        <p className="text-right text-neutral-500 cursor-pointer">Owns {item.amount} {item.amount === 1 ? 'copy' : 'copies'}</p>
                                     </HoverCardTrigger>
                                     <HoverCardContent className="text-left">
                                         <p>{'#' + item.serials.sort((a, b) => a - b).join(', #')}</p>

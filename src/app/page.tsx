@@ -257,7 +257,7 @@ export default function Home() {
                         const correspondingTag = safeResult.allTags.find(t => t.id === tag.tagId);
 
                         return (
-                          <span key={index} className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-800 text-white rounded-md px-2 py-1">
+                          <span key={index} className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-100/10 text-white rounded-md px-2 py-1">
                             {correspondingTag ? correspondingTag.emoji : tag.itemId}
                           </span>
                         );

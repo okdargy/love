@@ -2,7 +2,7 @@
 
 import { trpc } from '@/app/_trpc/client';
 import { useParams } from 'next/navigation';
-import { Coins, BarChart, Pencil, ExternalLink, TrendingUp, Blocks } from 'lucide-react';
+import { Coins, BarChart, Pencil, ExternalLink, TrendingUp, Blocks, Tag } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,7 +19,7 @@ import { useSession } from '@/components/SessionContext';
 import Link from 'next/link';
 import Error from '@/components/Error';
 import { Spinner } from '@/components/icons';
-import Hoarders from './Hoarders';
+import Owners from './Owners';
 
 export default function Page() {
   const { user } = useSession();
@@ -103,14 +103,15 @@ export default function Page() {
                 <InfoCard title="Value" value={itemInfo.data.stats.value} icon={<Coins />} />
                 <InfoCard title="Demand" value={itemInfo.data.stats.demand} icon={<BarChart />} />
                 <InfoCard title="Trend" value={itemInfo.data.stats.trend} icon={<TrendingUp />} />
+                <InfoCard title="Shorthand" value={itemInfo.data.shorthand} icon={<Tag />} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-2">Hoarders</h2>
-                <Hoarders id={itemInfo.data.id} />
+                <h2 className="text-xl font-semibold mb-2">Owners</h2>
+                <Owners id={itemInfo.data.id} />
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-2">JSON Result</h2>
-                <pre className="text-sm bg-neutral-800 p-2 rounded-lg grid grid-cols-1 overflow-auto">
+                <pre className="text-sm border border-neutral-100/10 p-3 rounded-lg grid grid-cols-1 overflow-auto">
                   {JSON.stringify(itemInfo.data, null, 2)}
                 </pre>
               </div>
@@ -137,7 +138,7 @@ function InfoCard({ title, value, icon }: {
   }
   
   return (
-    <div className="relative bg-neutral-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+    <div className="relative bg-neutral-900 border border-neutral-100/10 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       <div className="relative flex items-center justify-between">
         <div>
           <h3 className="text-neutral-400 text-sm uppercase tracking-wide">{title}</h3>

@@ -73,7 +73,7 @@ export default function AdminLogs() {
                 <div className='space-y-2'>
                     <div className='space-y-1'>
                         {data?.logs.map(log => (
-                            <div key={log.id} className='flex justify-between gap-x-4 w-full border border-gray-100/10 p-3 rounded-md'>
+                            <div key={log.id} className='flex justify-between gap-x-4 w-full border border-neutral-100/10 p-3 rounded-md'>
                                 <div className='flex gap-x-4'>
                                     <Image
                                         src={`https://cdn.discordapp.com/avatars/${log.user.discordId}/${log.user.avatar}.png`}

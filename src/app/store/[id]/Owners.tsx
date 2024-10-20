@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, ArrowRightLeft, Eye, User } from 'lucide-react';
 import Link from 'next/link';
 import Error from '@/components/Error';
 
-export default function Hoarders({ id }: { id: number }) {
+export default function Owners({ id }: { id: number }) {
     const [page, setPage] = useState(1);
     const LIMIT_PER_PAGE = 5;
     const owners = trpc.getAllItemOwners.useQuery(id);
@@ -27,7 +27,7 @@ export default function Hoarders({ id }: { id: number }) {
     };
 
     return (
-        <div className="bg-neutral-500/10 border border-neutral-500/50 p-4 rounded-lg shadow-md">
+        <div className="border border-neutral-100/10 p-4 rounded-lg shadow-md">
             {owners.isLoading ? (
                 <div className="flex justify-center items-center h-64">
                     <Spinner width="24" height="24" className="fill-primary" />
@@ -44,7 +44,7 @@ export default function Hoarders({ id }: { id: number }) {
                                     <p className="text-sm text-neutral-500">Owns {owner.serials.length} {owner.serials.length === 1 ? 'copy' : 'copies'}</p>
                                 </div>
                                 <div className='space-x-2'>
-                                    <Link href={`https://polytoria.com/users/${owner.id}`}>
+                                    <Link href={`/users/${owner.id}`}>
                                         <Button className="gap-x-2" variant={'secondary'}>
                                             <User />
                                         </Button>
