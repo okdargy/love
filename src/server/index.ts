@@ -125,7 +125,7 @@ export const appRouter = router({
         id: z.number().min(1),
         value: z.number().optional(),
         demand: z.enum(["awful", "low", "normal", "great", "high", ""]).optional(),
-        trend: z.enum(["stable", "unstable", "fluctuating", ""]).optional(),
+        trend: z.enum(["stable", "unstable", "fluctuating", "rising", "lowering", ""]).optional(),
         funFact: z.string().optional(),
         rare: z.boolean().optional(),
         freaky: z.boolean().optional(),

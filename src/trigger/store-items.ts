@@ -1,12 +1,12 @@
 import { logger, schedules } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable } from "@/lib/db/schema";
+import { auditLogsTable, collectablesStatsTable, collectablesTable } from "@/lib/db/schema";
 
 export const storeItemsTask = schedules.task({
   id: "store-items",
-  run: async (payload: any, { ctx }) => {
+  run: async () => {
     // Fetch the first item from the database and the first item from Polytoria
-    const response = await fetch("https://polytoria.com/api/store/items?collectiblesOnly=true");
+    const response = await fetch("https://polytoria.com/api/store/items?collectiblesOnly=true&sort=createdAt");
 
     if (!response.ok) {
       throw new Error("Failed to fetch store items");
@@ -17,7 +17,7 @@ export const storeItemsTask = schedules.task({
     const firstDbItem = await db.select().from(collectablesTable).orderBy(collectablesTable.id).limit(1);
 
     // Check to see if the id from the first item in the database is less than the id from the first item from Polytoria
-    if (firstDbItem.length && firstItem.id <= firstDbItem[0].id) {
+    if (firstItem.id <= firstDbItem[0].id) {
       logger.log("No new items found.");
       return;
     }

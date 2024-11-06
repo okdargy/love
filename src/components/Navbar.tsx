@@ -46,14 +46,13 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
 
     return (
         <header className="flex h-14 items-center gap-4 border-b bg-background">
-            <nav className="flex w-full max-w-screen-lg mx-auto gap-6 p-4 sm:p-6 justify-between">
-                <Link
+            <nav className="flex w-full max-w-screen-lg mx-auto gap-2 p-4 sm:p-6 justify-between">
+            <Link
                     href="/"
                     className="p-2 hover:bg-primary hover:bg-opacity-20 transition-all rounded-lg"
                 >
                     <LoveIcon className="h-6 w-6 fill-primary" />
                 </Link>
-
                 <div className="flex items-center ml-auto gap-3">
                     {user ? (
                         <>
@@ -66,7 +65,7 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                                         <span className="sr-only">Toggle user menu</span>
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-64 my-auto p-2 space-y-1" align="end">
+                                <PopoverContent className="w-64 my-auto p-2 space-y-1" align="center">
                                     {user.role === "admin" && (
                                         <Link href="/admin">
                                             <Button variant="ghost" className="w-full flex items-center justify-between">

@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ITEMS_PER_PAGE = 25;
 const DEFAULT_PAGE = 1;
@@ -207,7 +208,7 @@ export default function Home() {
                             </SelectContent>
                           </Select>
                         ) : option.type === "multi-select" ? (
-                          <MultiSelect options={option.options} onValueChange={(value: string[]) => handleMultiSelectChange(option.key, value, false )} defaultValue={Array.isArray(option.value) ? option.value : []} />
+                          <MultiSelect options={option.options} onValueChange={(value: string[]) => handleMultiSelectChange(option.key, value, false)} defaultValue={Array.isArray(option.value) ? option.value : []} />
                         ) : null}
                       </div>
                     </div>
@@ -215,7 +216,7 @@ export default function Home() {
                 }
               </div>
             </div>
-            
+
           </PopoverContent>
         </Popover>
         <Button variant="default" onClick={handleSearch}>
@@ -253,15 +254,24 @@ export default function Home() {
                     </p>
                   </div>
                   <div className="absolute -top-3 right-0 p-2 space-x-1.5">
-                      {item.tags.map((tag, index) => {
-                        const correspondingTag = safeResult.allTags.find(t => t.id === tag.tagId);
+                    {item.tags.map((tag, index) => {
+                      const correspondingTag = safeResult.allTags.find(t => t.id === tag.tagId);
 
-                        return (
-                          <span key={index} className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-100/10 text-white rounded-md px-2 py-1">
-                            {correspondingTag ? correspondingTag.emoji : tag.itemId}
-                          </span>
-                        );
-                      })}
+                      return (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <span key={index} className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-100/10 text-white rounded-md px-2 py-1">
+                                {correspondingTag ? correspondingTag.emoji : tag.itemId}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{correspondingTag ? correspondingTag.name : tag.itemId}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    })}
                   </div>
                 </div>
               </Link>

@@ -57,6 +57,8 @@ export default function Form({ data }: { data: ItemInfo }) {
                 stable: "Stable",
                 unstable: "Unstable",
                 fluctuating: "Fluctuating",
+                rising: "Rising",
+                lowering: "Lowering",
             }
         },
         {

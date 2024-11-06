@@ -2,7 +2,7 @@
 
 import { trpc } from '@/app/_trpc/client';
 import { useParams } from 'next/navigation';
-import { Coins, BarChart, Pencil, ExternalLink, TrendingUp, Blocks, Tag } from 'lucide-react';
+import { Coins, BarChart, Pencil, ExternalLink, TrendingUp, Blocks, Tag, Plus } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -82,19 +82,21 @@ export default function Page() {
                   <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.name}</h1>
                   <p className="text-sm text-neutral-400">{itemInfo.data.description}</p>
                 </div>
-                <div className="flex gap-2">
-                  <Link href={"https://polytoria.com/store/" + itemInfo.data.id} className='w-full'>
-                    <Button variant={'secondary'} className='w-full'>
-                      <ExternalLink className='w-4 h-4' />
-                    </Button>
-                  </Link>
-                  {user && user.role === "admin" && (
-                    <Link href={"/store/" + itemInfo.data.id + "/edit"} className='w-full'>
+                <div className='space-y-2'>
+                  <div className="flex gap-2">
+                    <Link href={"https://polytoria.com/store/" + itemInfo.data.id} className='w-full'>
                       <Button variant={'secondary'} className='w-full'>
-                        <Pencil className='w-4 h-4' />
+                        <ExternalLink className='w-4 h-4' />
                       </Button>
                     </Link>
-                  )}
+                    {user && user.role === "admin" && (
+                      <Link href={"/store/" + itemInfo.data.id + "/edit"} className='w-full'>
+                        <Button variant={'secondary'} className='w-full'>
+                          <Pencil className='w-4 h-4' />
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
