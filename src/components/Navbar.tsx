@@ -10,7 +10,7 @@ import Link from "next/link"
 import { lucia, validateRequest } from "@/lib/auth"
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation"
-import { Menu, LogOut, Wrench } from 'lucide-react';
+import { Menu, LogOut, Wrench, Calculator } from 'lucide-react';
 import { LoveIcon } from "@/components/icons";
 import { useSession } from "./SessionContext"
 
@@ -54,6 +54,18 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                     <LoveIcon className="h-6 w-6 fill-primary" />
                 </Link>
                 <div className="flex items-center ml-auto gap-3">
+                    {/* <Popover>
+                        <PopoverTrigger asChild>
+                        <div
+                            className="p-2 hover:bg-neutral-100 hover:bg-opacity-20 transition-all rounded-lg cursor-pointer"
+                        >
+                            <Calculator className="h-6 w-6 p-0.5" />
+                        </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-72 h-96" align="center">
+                            <p className="text-lg font-semibold text-center">Coming soon...</p>
+                        </PopoverContent>
+                    </Popover> */}
                     {user ? (
                         <>
                             <Popover>

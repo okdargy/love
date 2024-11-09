@@ -21,6 +21,7 @@ import {
     SelectValue,
   } from "@/components/ui/select"
 import { MultiSelect } from "@/components/ui/multi-select";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Form({ data }: { data: ItemInfo }) {
     const router = useRouter();
@@ -64,7 +65,7 @@ export default function Form({ data }: { data: ItemInfo }) {
         {
             name: "Fun Fact",
             key: "funFact",
-            type: "string",
+            type: "long_string",
             value: data.item.stats.funFact,
         },
         {
@@ -98,6 +99,14 @@ export default function Form({ data }: { data: ItemInfo }) {
         }));
     };
 
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value,
+        }));
+    };
+    
     const handleInputChange = (key: string, value: string) => {
         console.log(key, value);
 
@@ -193,7 +202,15 @@ export default function Form({ data }: { data: ItemInfo }) {
                     <label htmlFor={option.key} className="mb-2 font-semibold">
                         {option.name}
                     </label>
-                    {option.type === "boolean" ? (
+                    {option.type === "long_string" ? (
+                        <Textarea
+                            id={option.key}
+                            name={option.key}
+                            value={formData[option.key] as string}
+                            onChange={handleTextareaChange}
+                            className="border rounded p-2"
+                        />
+                    ) : option.type === "boolean" ? (
                         <Switch
                             id={option.key}
                             name={option.key}

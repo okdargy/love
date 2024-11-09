@@ -97,6 +97,12 @@ export default function Page() {
                       </Link>
                     )}
                   </div>
+                  <div>
+                    <Button variant={'secondary'} className='w-full gap-x-2' disabled>
+                        <Plus className='w-4 h-4' />
+                        Add to Calculator
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
