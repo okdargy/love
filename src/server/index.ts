@@ -131,8 +131,9 @@ export const appRouter = router({
         freaky: z.boolean().optional(),
         projected: z.boolean().optional(),
         tags: z.array(z.number()).optional(),
+        shorthand: z.string().optional(),
     })).mutation(async (opts) => {
-        const { id, tags, ...stats } = opts.input;
+        const { id, tags, shorthand, ...stats } = opts.input;
         const { user } = await validateRequest();
 
         if (!user || user.role === "user") {
@@ -151,7 +152,11 @@ export const appRouter = router({
         );
 
         return await db.transaction(async (tx) => {
+            let logData: { id: number; tags: number[] | undefined; shorthand?: string } = { id, ...filteredStats, tags };
+
+            console.log(filteredStats)
             if (Object.keys(filteredStats).length > 0) {
+                console.log("Updating stats");
                 await tx.update(collectablesStatsTable).set(filteredStats).where(eq(collectablesStatsTable.id, id));
             }
 
@@ -178,7 +183,11 @@ export const appRouter = router({
                 await tx.delete(itemTagsTable).where(eq(itemTagsTable.itemId, id));
             }
 
-            const logData = { id, ...filteredStats, tags };
+            // Update shorthand if it's changed and user is an admin
+            if (shorthand && shorthand !== item.shorthand && user.role === "admin") {
+                logData = { ...logData, shorthand: shorthand };
+                await tx.update(collectablesTable).set({ shorthand: shorthand }).where(eq(collectablesTable.id, id));
+            }
             
             await tx.insert(auditLogsTable).values({
                 userId: user.id,

@@ -19,9 +19,11 @@ import {
     SelectSeparator,
     SelectTrigger,
     SelectValue,
-  } from "@/components/ui/select"
+} from "@/components/ui/select"
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
+import { Lock } from "lucide-react";
 
 export default function Form({ data }: { data: ItemInfo }) {
     const router = useRouter();
@@ -80,6 +82,12 @@ export default function Form({ data }: { data: ItemInfo }) {
                     label: tag.name,
                 };
             })
+        }, {
+            name: "Shorthand",
+            key: "shorthand",
+            type: "string",
+            value: data.item.shorthand,
+            adminOnly: true
         }
     ];
 
@@ -106,24 +114,24 @@ export default function Form({ data }: { data: ItemInfo }) {
             [name]: value,
         }));
     };
-    
+
     const handleInputChange = (key: string, value: string) => {
         console.log(key, value);
 
-        if(value === "null") {
+        if (value === "null") {
             setFormData((prevData) => ({
                 ...prevData,
                 [key]: null,
             }));
             return;
         }
-        
+
         setFormData((prevData) => ({
             ...prevData,
             [key]: value,
         }));
     }
-    
+
     const handleSwitchChange = (key: string, value: boolean) => {
         setFormData((prevData) => ({
             ...prevData,
@@ -137,16 +145,16 @@ export default function Form({ data }: { data: ItemInfo }) {
                 ...prevData,
                 [key]: value,
             };
-        
+
             if (valueType === 'number' && Array.isArray(value)) {
                 updatedData[key] = value.map(tag => Number(tag));
             }
-        
+
             console.log(updatedData);
             return updatedData;
         });
     }
-    
+
     const submitItem = trpc.editItemStats.useMutation({
         onError(error) {
             toast.error("An error occurred while submitting changes: " + error.message);
@@ -165,7 +173,7 @@ export default function Form({ data }: { data: ItemInfo }) {
             setLoading(true);
         }
     });
-    
+
     const filterChangedValues = (originalData: Record<string, any>, newData: Record<string, any>) => {
         const changedData: Record<string, any> = {};
         for (const key in newData) {
@@ -176,12 +184,12 @@ export default function Form({ data }: { data: ItemInfo }) {
         }
         return changedData;
     };
-    
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if(loading) return;
+        if (loading) return;
         const changedData = filterChangedValues(data.item.stats, formData);
-        
+
         if (Object.keys(changedData).length === 0) {
             toast.info("No changes to submit");
             return;
@@ -194,83 +202,96 @@ export default function Form({ data }: { data: ItemInfo }) {
             setLoading(false);
         }
     };
-    
+
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            {options.map((option) => (
-                <div key={option.key} className="flex flex-col">
-                    <label htmlFor={option.key} className="mb-2 font-semibold">
-                        {option.name}
-                    </label>
-                    {option.type === "long_string" ? (
-                        <Textarea
-                            id={option.key}
-                            name={option.key}
-                            value={formData[option.key] as string}
-                            onChange={handleTextareaChange}
-                            className="border rounded p-2"
-                        />
-                    ) : option.type === "boolean" ? (
-                        <Switch
-                            id={option.key}
-                            name={option.key}
-                            checked={formData[option.key] as boolean}
-                            onCheckedChange={(value) => handleSwitchChange(option.key, value)}
-                        />
-                    ) : option.type === "enum" ? (
-                        <Select onValueChange={(value) => handleInputChange(option.key, value)} value={formData[option.key] as string}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select an option" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {option.options && Object.entries(option.options).map(([key, value]) => (
-                                    <SelectItem key={key} value={key}>
-                                        {value}
-                                    </SelectItem>
-                                ))}
-                                <SelectSeparator />
-                                <Button
-                                    className="w-full px-2"
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        handleInputChange(option.key, "null");
-                                    }}
-                                >
-                                    Clear
-                                </Button>
-                            </SelectContent>
-                        </Select>
-                    ) : option.type === "multi-select" ? (
-                        <MultiSelect
-                            options={option.opts || []}
-                            onValueChange={(value) => handleMultiSelectChange(option.key, value, option.valueType)}
-                            defaultValue={Array.isArray(option.value) ? option.value.map(String) : []}
-                            placeholder="Select tags"
-                        />
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+                {options.map((option) => (
+                    <div key={option.key} className="flex flex-col">
+                        <label htmlFor={option.key} className="mb-2 font-semibold flex justify-between">
+                            <span>{option.name}</span>
+                            {option.adminOnly && (
+                                <span className="text-right text-sm my-auto text-neutral-400 flex gap-x-1.5">
+                                    Admin Only
+                                    <Lock className="h-4 w-4 my-auto" />
+                                </span>
+                            )}
+                        </label>
+                        {option.type === "long_string" ? (
+                            <Textarea
+                                id={option.key}
+                                name={option.key}
+                                value={formData[option.key] as string}
+                                onChange={handleTextareaChange}
+                                className="border rounded p-2"
+                            />
+                        ) : option.type === "boolean" ? (
+                            <Switch
+                                id={option.key}
+                                name={option.key}
+                                checked={formData[option.key] as boolean}
+                                onCheckedChange={(value) => handleSwitchChange(option.key, value)}
+                            />
+                        ) : option.type === "enum" ? (
+                            <Select onValueChange={(value) => handleInputChange(option.key, value)} value={formData[option.key] as string}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select an option" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {option.options && Object.entries(option.options).map(([key, value]) => (
+                                        <SelectItem key={key} value={key}>
+                                            {value}
+                                        </SelectItem>
+                                    ))}
+                                    <SelectSeparator />
+                                    <Button
+                                        className="w-full px-2"
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleInputChange(option.key, "null");
+                                        }}
+                                    >
+                                        Clear
+                                    </Button>
+                                </SelectContent>
+                            </Select>
+                        ) : option.type === "multi-select" ? (
+                            <MultiSelect
+                                options={option.opts || []}
+                                onValueChange={(value) => handleMultiSelectChange(option.key, value, option.valueType)}
+                                defaultValue={Array.isArray(option.value) ? option.value.map(String) : []}
+                                placeholder="Select tags"
+                            />
+                        ) : (
+                            <Input
+                                id={option.key}
+                                name={option.key}
+                                type={option.type}
+                                value={formData[option.key] as string}
+                                onChange={handleChange}
+                                className="border rounded p-2"
+                            />
+                        )}
+                    </div>
+                ))}
+            </div>
+            <div className="flex space-x-2 items-center">
+                <Button type="submit" variant="default">
+                    {loading ? (
+                        <>
+                            <Spinner width="12" height="12" className="mr-2.5 fill-white" />
+                            Submitting...
+                        </>
                     ) : (
-                        <Input
-                            id={option.key}
-                            name={option.key}
-                            type={option.type}
-                            value={formData[option.key] as string}
-                            onChange={handleChange}
-                            className="border rounded p-2"
-                        />
+                        "Submit"
                     )}
-                </div>
-            ))}
-            <Button type="submit" variant="default">
-                {loading ? (
-                    <>
-                        <Spinner width="24" height="24" className="fill-white mr-3" />
-                        Submitting...
-                    </>
-                ) : (
-                    "Submit"
-                )}
-            </Button>
+                </Button>
+                <Link href={"/store/" + data.item.id}>
+                    <Button variant="secondary">Cancel</Button>
+                </Link>
+            </div>
         </form>
     );
 }
