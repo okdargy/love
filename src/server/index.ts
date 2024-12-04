@@ -123,7 +123,7 @@ export const appRouter = router({
     }),
     editItemStats: publicProcedure.input(z.object({
         id: z.number().min(1),
-        value: z.number().optional(),
+        value: z.number().nullable().optional(),
         demand: z.enum(["awful", "low", "normal", "great", "high", ""]).optional(),
         trend: z.enum(["stable", "unstable", "fluctuating", "rising", "lowering", ""]).optional(),
         funFact: z.string().optional(),
@@ -148,7 +148,7 @@ export const appRouter = router({
         }
 
         const filteredStats = Object.fromEntries(
-            Object.entries(stats).filter(([_, value]) => value !== undefined && value !== null)
+            Object.entries(stats).filter(([_, value]) => value !== undefined)
         );
 
         return await db.transaction(async (tx) => {
