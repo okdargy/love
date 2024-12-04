@@ -47,12 +47,15 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
     return (
         <header className="flex h-14 items-center gap-4 border-b bg-background">
             <nav className="flex w-full max-w-screen-lg mx-auto gap-2 p-4 sm:p-6 justify-between">
-            <Link
-                    href="/"
-                    className="p-2 hover:bg-primary hover:bg-opacity-20 transition-all rounded-lg"
-                >
-                    <LoveIcon className="h-6 w-6 fill-primary" />
-                </Link>
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/"
+                        className="p-2 hover:bg-primary hover:bg-opacity-20 transition-all rounded-lg"
+                    >
+                        <LoveIcon className="h-6 w-6 fill-primary" />
+                    </Link>
+                    <span className="text-xs bg-primary/30 px-2.5 py-0.5 uppercase rounded-md font-semibold">Beta</span>
+                </div>
                 <div className="flex items-center ml-auto gap-3">
                     {/* <Popover>
                         <PopoverTrigger asChild>

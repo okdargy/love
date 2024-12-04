@@ -320,6 +320,19 @@ export const appRouter = router({
             console.error(e);
         }
     }),
+    getUsersLatestHistory: publicProcedure.input(z.number().min(1)).query(async (opts) => {
+        try {
+            const res = db.query.tradeHistoryTable.findMany({
+                where: eq(tradeHistoryTable.userId, opts.input),
+                orderBy: [desc(tradeHistoryTable.id)],
+                limit: 5
+            });
+
+            return res;
+        } catch (e) {
+            console.error(e);
+        }
+    }),
 });
 
 export type AppRouter = typeof appRouter;

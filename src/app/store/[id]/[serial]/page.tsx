@@ -46,10 +46,9 @@ export default function Page() {
                             <li key={entry.id} className="flex justify-between">
                                 <div>
                                     <p className="font-semibold">{entry.username}</p>
-                                    <p className="text-sm text-neutral-500">Indexed on {new Date(entry.created_at).toLocaleString()}</p>
+                                    <p className="text-sm text-neutral-500">Indexed on {new Date(entry.created_at + " UTC").toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}</p>
                                 </div>
                                 <div className='flex gap-x-4'>
-                                    <p className="text-sm text-neutral-500 my-auto">#{entry.serial}</p>
                                     <Link href={`/users/${entry.userId}`} className='my-auto'>
                                         <Button className="gap-x-2" variant={'outline'}>
                                             <User />

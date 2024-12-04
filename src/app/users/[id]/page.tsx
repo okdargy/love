@@ -2,6 +2,7 @@ import Error from "@/components/Error";
 import { UserData } from '@/app/_types/api';
 import Image from "next/image";
 import Inventory from "./Inventory";
+import Recent from "./Recent";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRightLeft } from "lucide-react";
@@ -65,6 +66,10 @@ export default async function Page({ params }: { params: { id: string } }) {
             <div>
                 <h2 className="text-2xl font-bold mb-3">Inventory</h2>
                 <Inventory id={id} />
+            </div>
+            <div>
+                <h2 className="text-2xl font-bold mb-3">Recent History</h2>
+                <Recent id={id} />
             </div>
         </div>
     );
