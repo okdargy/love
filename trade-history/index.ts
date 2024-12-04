@@ -19,7 +19,6 @@ they are already in ldb, and if not, add them to ldb and push them to the db. If
 the owner has changed, and if it has, update the owner in the ldb and push the change to the db.
 */
 
-// Only gives 5 owners per page
 const getOwners = async (id: number, page: number = 1, limit: number = 100): Promise<OwnerAPIResponse> => {
     const response = await fetch(`https://api.polytoria.com/v1/store/${id}/owners?page=${page}&limit=${limit}`);
     const data = await response.json();
@@ -122,8 +121,7 @@ async function updateSerials() {
         }
 
         console.log(`(${item.id}) Processing ${allSerials.length} serials...`);
-
-        // Remove both duplicates
+        
         allSerials = allSerials.filter((v, i, a) => a.findIndex(t => (t.serial === v.serial)) === i);
 
         console.log(`(${item.id}) ${allSerials.length} unique serials found...`);

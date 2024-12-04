@@ -44,13 +44,13 @@ export default function Owners({ id }: { id: number }) {
                                     <p className="text-sm text-neutral-500">Owns {owner.serials.length} {owner.serials.length === 1 ? 'copy' : 'copies'}</p>
                                 </div>
                                 <div className='space-x-2'>
-                                    <Link href={`/users/${owner.id}`}>
-                                        <Button className="gap-x-2 my-auto" variant={'outline'}>
+                                    <Link href={`/users/${owner.id}`} className='my-auto'>
+                                        <Button className="gap-x-2" variant={'outline'}>
                                             <User />
                                         </Button>
                                     </Link>
-                                    <Link href={`https://polytoria.com/trade/new/${owner.id}`}>
-                                        <Button className="gap-x-2 my-auto" variant={'outline'}>
+                                    <Link href={`https://polytoria.com/trade/new/${owner.id}`} className='my-auto'>
+                                        <Button className="gap-x-2" variant={'outline'}>
                                             <ArrowRightLeft />
                                         </Button> 
                                     </Link>

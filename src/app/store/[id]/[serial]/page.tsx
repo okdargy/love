@@ -50,8 +50,8 @@ export default function Page() {
                                 </div>
                                 <div className='flex gap-x-4'>
                                     <p className="text-sm text-neutral-500 my-auto">#{entry.serial}</p>
-                                    <Link href={`/users/${entry.userId}`}>
-                                        <Button className="gap-x-2 my-auto" variant={'outline'}>
+                                    <Link href={`/users/${entry.userId}`} className='my-auto'>
+                                        <Button className="gap-x-2" variant={'outline'}>
                                             <User />
                                         </Button>
                                     </Link>
