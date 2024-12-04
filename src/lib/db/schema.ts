@@ -105,3 +105,21 @@ export const auditLogsRelations = relations(auditLogsTable, ({ one }) => ({
         references: [userTable.id],
     }),
 }));
+
+export const tradeHistoryTable = sqliteTable("trade_history", {
+	id: integer("id").notNull().primaryKey({
+		autoIncrement: true
+	}),
+	itemId: integer("itemId").notNull().references(() => collectablesTable.id),
+	serial: integer("serial").notNull(),
+	userId: integer("userId").notNull(),
+	username: text("username").notNull(),
+	created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
+});
+
+export const tradeHistoryRelations = relations(tradeHistoryTable, ({ one }) => ({
+	item: one(collectablesTable, {
+		fields: [tradeHistoryTable.itemId],
+		references: [collectablesTable.id],
+	})
+}));

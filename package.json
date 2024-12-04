@@ -8,7 +8,10 @@
     "start": "next start -p 9031 -H 127.0.0.1",
     "lint": "next lint",
     "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "trade-history": "bun run trade-history/index.ts",
+    "trade-history:push": "drizzle-kit push --config=trade-history/db/drizzle.config.ts",
+    "trade-history:generate": "drizzle-kit generate --config=trade-history/db/drizzle.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
