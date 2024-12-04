@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { ldb } from './db';
 import { OwnerAPIResponse, Inventory, StoreAPIResponse } from './types';
 import { itemsTable, serialsTable } from './db/schema';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { tradeHistoryTable } from '@/lib/db/schema';
 
 const newItemInterval = 1000 * 60 * 5; // Interval to check for new items
@@ -57,7 +57,7 @@ async function loadItems() {
 
 async function updateItems() {
     const items = await getItems();
-    const ldbItems = await ldb.select().from(itemsTable).orderBy(asc(itemsTable.id));
+    const ldbItems = await ldb.select().from(itemsTable).orderBy(desc(itemsTable.id));
 
     for (const item of items.data) {
         if (!ldbItems.find((i) => i.id === item.id)) {
@@ -101,7 +101,7 @@ async function actOnSerial(serial: Inventory, itemId: number) {
 }
 
 async function updateSerials() {
-    const items = await ldb.select().from(itemsTable).orderBy(asc(itemsTable.id));
+    const items = await ldb.select().from(itemsTable).orderBy(desc(itemsTable.id));
 
     for (const item of items) {
         let allSerials: Inventory[] = [];
@@ -113,6 +113,7 @@ async function updateSerials() {
         if(owners.pages > 1) {
             for (let i = 2; i <= owners.pages; i++) {
                 const owners = await getOwners(item.id, i, 100);
+
                 allSerials = allSerials.concat(owners.inventories);
     
                 console.log(`(${item.id}) ${i}/${owners.pages} pages collected, waiting for ${nextPageCooldown}ms before next page`);
@@ -121,6 +122,11 @@ async function updateSerials() {
         }
 
         console.log(`(${item.id}) Processing ${allSerials.length} serials...`);
+
+        // Remove both duplicates
+        allSerials = allSerials.filter((v, i, a) => a.findIndex(t => (t.serial === v.serial)) === i);
+
+        console.log(`(${item.id}) ${allSerials.length} unique serials found...`);
 
         for (const serial of allSerials) {
             await actOnSerial(serial, item.id);

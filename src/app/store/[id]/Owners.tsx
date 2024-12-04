@@ -45,12 +45,12 @@ export default function Owners({ id }: { id: number }) {
                                 </div>
                                 <div className='space-x-2'>
                                     <Link href={`/users/${owner.id}`}>
-                                        <Button className="gap-x-2" variant={'secondary'}>
+                                        <Button className="gap-x-2 my-auto" variant={'outline'}>
                                             <User />
                                         </Button>
                                     </Link>
                                     <Link href={`https://polytoria.com/trade/new/${owner.id}`}>
-                                        <Button className="gap-x-2" variant={'secondary'}>
+                                        <Button className="gap-x-2 my-auto" variant={'outline'}>
                                             <ArrowRightLeft />
                                         </Button> 
                                     </Link>

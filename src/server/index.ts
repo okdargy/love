@@ -2,7 +2,7 @@ import { z } from "zod";
 import { like, eq, count, or, desc, and, inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 
@@ -268,7 +268,58 @@ export const appRouter = router({
         const sortedOwners = Object.values(ownerMap).sort((a, b) => b.serials.length - a.serials.length);
     
         return sortedOwners;
-    })
+    }),
+    getSerialHistory: publicProcedure.input(z.object({
+        id: z.number().min(1),
+        serial: z.number().min(1),
+    })).query(async (opts) => {
+        try {
+            const res = await db.query.tradeHistoryTable.findMany({
+                where: and(
+                    eq(tradeHistoryTable.itemId, opts.input.id),
+                    eq(tradeHistoryTable.serial, opts.input.serial)
+                ),
+                orderBy: [desc(tradeHistoryTable.id)]
+            });
+
+            const itemInfo = await db.query.collectablesTable.findFirst({
+                where: eq(collectablesTable.id, opts.input.id)
+            });
+
+            return { history: res, itemInfo };
+        } catch (e) {
+            console.error(e);
+        }
+    }),
+    getRecentItemHistory: publicProcedure.input(z.number().min(1)).query(async (opts) => {
+        try {
+            const res = db.query.tradeHistoryTable.findMany({
+                where: eq(tradeHistoryTable.itemId, opts.input),
+                orderBy: [desc(tradeHistoryTable.id)],
+                limit: 5
+            });
+
+            return res;
+        } catch (e) {
+            console.error(e);
+        }
+    }),
+    getAllRecentHistory: publicProcedure.input(z.object({
+        limit: z.number().min(1).max(25).optional(),
+        offset: z.number().min(0).optional(),
+    })).mutation(async (opts) => {
+        try {
+            const res = db.query.tradeHistoryTable.findMany({
+                orderBy: [desc(tradeHistoryTable.id)],
+                limit: opts.input.limit ?? 10,
+                offset: opts.input.offset ?? 0
+            });
+
+            return res;
+        } catch (e) {
+            console.error(e);
+        }
+    }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -20,6 +20,7 @@ import Link from 'next/link';
 import Error from '@/components/Error';
 import { Spinner } from '@/components/icons';
 import Owners from './Owners';
+import Recent from './Recent';
 
 export default function Page() {
   const { user } = useSession();
@@ -116,6 +117,10 @@ export default function Page() {
               <div>
                 <h2 className="text-xl font-semibold mb-2">Owners</h2>
                 <Owners id={itemInfo.data.id} />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Recent Activity</h2>
+                <Recent id={itemInfo.data.id} />
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-2">JSON Result</h2>
