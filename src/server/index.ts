@@ -294,7 +294,7 @@ export const appRouter = router({
     getRecentItemHistory: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         try {
             const res = db.query.tradeHistoryTable.findMany({
-                where: eq(tradeHistoryTable.itemId, opts.input),
+                where: and(eq(tradeHistoryTable.itemId, opts.input), eq(tradeHistoryTable.isFirst, false)),
                 orderBy: [desc(tradeHistoryTable.id)],
                 limit: 5
             });
@@ -310,6 +310,7 @@ export const appRouter = router({
     })).mutation(async (opts) => {
         try {
             const res = db.query.tradeHistoryTable.findMany({
+                where: eq(tradeHistoryTable.isFirst, false),
                 orderBy: [desc(tradeHistoryTable.id)],
                 limit: opts.input.limit ?? 10,
                 offset: opts.input.offset ?? 0
@@ -323,7 +324,7 @@ export const appRouter = router({
     getUsersLatestHistory: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         try {
             const res = db.query.tradeHistoryTable.findMany({
-                where: eq(tradeHistoryTable.userId, opts.input),
+                where: and(eq(tradeHistoryTable.userId, opts.input), eq(tradeHistoryTable.isFirst, false)),
                 orderBy: [desc(tradeHistoryTable.id)],
                 limit: 5
             });

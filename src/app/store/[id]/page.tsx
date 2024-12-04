@@ -21,6 +21,7 @@ import Error from '@/components/Error';
 import { Spinner } from '@/components/icons';
 import Owners from './Owners';
 import Recent from './Recent';
+import { Badge } from '@/components/ui/badge';
 
 export default function Page() {
   const { user } = useSession();
@@ -36,11 +37,11 @@ export default function Page() {
       return <Error message="Invalid ID, must be greater than 0" />
   }
 
-  const itemInfo = trpc.getItem.useQuery(id, {
+  const itemInfo = trpc.getItemWithTags.useQuery(id, {
     onError(err) {
       console.error(err)
     }
-  })
+  });
 
   return (
     <main>
@@ -57,7 +58,7 @@ export default function Page() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{itemInfo.data.name}</BreadcrumbPage>
+                <BreadcrumbPage>{itemInfo.data.item.name}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -66,8 +67,8 @@ export default function Page() {
               <div className="relative w-full h-auto max-w-sm mx-auto">
                 <div className="absolute inset-0 bg-[url('/client-background.png')] bg-cover bg-center opacity-30 rounded-lg"></div>
                 <Image
-                  src={itemInfo.data.thumbnailUrl}
-                  alt={itemInfo.data.name}
+                  src={itemInfo.data.item.thumbnailUrl}
+                  alt={itemInfo.data.item.name}
                   width={800}
                   height={800}
                   className="relative w-full h-auto object-cover rounded-lg border data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
@@ -79,19 +80,30 @@ export default function Page() {
               </div>
               <div className="flex-grow min-w-0 space-y-3">
                 <div className="space-y-1">
-                  <h3 className="text-neutral-500 mb-1 capitalize">{itemInfo.data.type}</h3>
-                  <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.name}</h1>
-                  <p className="text-sm text-neutral-400">{itemInfo.data.description}</p>
+                  <h3 className="text-neutral-500 mb-1 capitalize">{itemInfo.data.item.type}</h3>
+                  <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.item.name}</h1>
+                  <p className="text-sm text-neutral-400">{itemInfo.data.item.description}</p>
                 </div>
+                {
+                  (itemInfo.data.item.tags.length > 0 && itemInfo.data.allTags) && (
+                    <div className="flex flex-wrap gap-2">
+                      {itemInfo.data.item.tags.map(tag => itemInfo.data?.allTags.find(t => t.id === tag.tagId) && (
+                        <Badge key={tag.tagId} variant={'outline'}>
+                          {itemInfo.data.allTags.find(t => t.id === tag.tagId)?.name || tag.tagId}
+                        </Badge>
+                      ))}
+                    </div>
+                  )
+                }
                 <div className='space-y-2'>
                   <div className="flex gap-2">
-                    <Link href={"https://polytoria.com/store/" + itemInfo.data.id} className='w-full'>
+                    <Link href={"https://polytoria.com/store/" + itemInfo.data.item.id} className='w-full'>
                       <Button variant={'secondary'} className='w-full'>
                         <ExternalLink className='w-4 h-4' />
                       </Button>
                     </Link>
                     {user && user.role === "admin" && (
-                      <Link href={"/store/" + itemInfo.data.id + "/edit"} className='w-full'>
+                      <Link href={"/store/" + itemInfo.data.item.id + "/edit"} className='w-full'>
                         <Button variant={'secondary'} className='w-full'>
                           <Pencil className='w-4 h-4' />
                         </Button>
@@ -109,18 +121,18 @@ export default function Page() {
             </div>
             <div className="w-full space-y-3">
               <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-2 gap-x-3 gap-y-3 mt-4 md:mt-0'>
-                <InfoCard title="Value" value={itemInfo.data.stats.value} icon={<Coins />} />
-                <InfoCard title="Demand" value={itemInfo.data.stats.demand} icon={<BarChart />} />
-                <InfoCard title="Trend" value={itemInfo.data.stats.trend} icon={<TrendingUp />} />
-                <InfoCard title="Shorthand" value={itemInfo.data.shorthand} icon={<Tag />} />
+                <InfoCard title="Value" value={itemInfo.data.item.stats.value} icon={<Coins />} />
+                <InfoCard title="Demand" value={itemInfo.data.item.stats.demand} icon={<BarChart />} />
+                <InfoCard title="Trend" value={itemInfo.data.item.stats.trend} icon={<TrendingUp />} />
+                <InfoCard title="Shorthand" value={itemInfo.data.item.shorthand} icon={<Tag />} />
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-2">Owners</h2>
-                <Owners id={itemInfo.data.id} />
+                <Owners id={itemInfo.data.item.id} />
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-2">Recent Activity</h2>
-                <Recent id={itemInfo.data.id} />
+                <Recent id={itemInfo.data.item.id} />
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-2">JSON Result</h2>

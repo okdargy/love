@@ -81,7 +81,8 @@ async function actOnSerial(serial: Inventory, itemId: number) {
             ldb.insert(serialsTable).values(payload).execute();
             db.insert(tradeHistoryTable).values({
                 ...payload,
-                username: serial.user.username
+                username: serial.user.username,
+                isFirst: true
             }).execute();
         } else {
             const oldSerial = serials[0];

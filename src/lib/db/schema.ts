@@ -114,6 +114,7 @@ export const tradeHistoryTable = sqliteTable("trade_history", {
 	serial: integer("serial").notNull(),
 	userId: integer("userId").notNull(),
 	username: text("username").notNull(),
+	isFirst: integer("isFirst", { mode: 'boolean' }).default(false).notNull(),
 	created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
 });
 
