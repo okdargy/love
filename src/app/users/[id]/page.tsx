@@ -68,7 +68,14 @@ export default async function Page({ params }: { params: { id: string } }) {
                 <Inventory id={id} />
             </div>
             <div>
-                <h2 className="text-2xl font-bold mb-3">Recent History</h2>
+                <div className="flex justify-between mb-3">
+                    <h2 className="text-2xl font-bold my-auto">Recent History</h2>
+                    <Link href={`/recent`} className="my-auto">
+                        <p className="text-sm text-neutral-500">
+                            View All
+                        </p>
+                    </Link>
+                </div>
                 <Recent id={id} />
             </div>
         </div>

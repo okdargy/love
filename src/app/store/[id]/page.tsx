@@ -131,7 +131,14 @@ export default function Page() {
                 <Owners id={itemInfo.data.item.id} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-2">Recent Activity</h2>
+              <div className="flex justify-between mb-3">
+                    <h2 className="text-2xl font-bold my-auto">Recent History</h2>
+                    <Link href={`/recent`} className="my-auto">
+                        <p className="text-sm text-neutral-500">
+                            View All
+                        </p>
+                    </Link>
+                </div>
                 <Recent id={itemInfo.data.item.id} />
               </div>
               <div>
