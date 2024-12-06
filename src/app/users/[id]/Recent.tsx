@@ -28,13 +28,8 @@ export default function Recent({ id }: { id: number }) {
                                             <p className="text-sm text-neutral-500">Indexed on {new Date(entry.created_at + " UTC").toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}</p>
                                         </div>
                                         <div className='flex gap-x-4'>
-                                            <Link href={`/shop/${entry.itemId}`} className='my-auto'>
+                                            <Link href={`/store/${entry.itemId}`} className='my-auto'>
                                                 <p className="text-sm text-neutral-500 my-auto">#{entry.serial}</p>
-                                            </Link>
-                                            <Link href={`/users/${entry.userId}`} className='my-auto'>
-                                                <Button className="gap-x-2" variant={'outline'}>
-                                                    <User />
-                                                </Button>
                                             </Link>
                                             <Link href={`/store/${entry.itemId}/${entry.serial}`} className='my-auto'>
                                                 <Button className="gap-x-2" variant={'outline'}>
