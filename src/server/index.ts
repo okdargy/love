@@ -232,7 +232,19 @@ export const appRouter = router({
             throw new Error("You do not have permission to add tags");
         }
 
-        return await db.insert(tagsTable).values(opts.input).execute();
+        await db.transaction(async (tx) => {
+            await tx.insert(tagsTable).values(opts.input).execute();
+            await tx.insert(auditLogsTable).values({
+                userId: user.id,
+                action: 'add',
+                where: 'tags',
+                payload: JSON.stringify(opts.input),
+            });
+        });
+
+        return {
+            success: true
+        }
     }),
     searchTags: publicProcedure.input(z.string().optional()).mutation(async (opts) => {
         return await db.query.tagsTable.findMany({
@@ -251,6 +263,13 @@ export const appRouter = router({
         await db.transaction(async (tx) => {
             await tx.delete(itemTagsTable).where(eq(itemTagsTable.tagId, opts.input));
             await tx.delete(tagsTable).where(eq(tagsTable.id, opts.input));
+
+            await tx.insert(auditLogsTable).values({
+                userId: user.id,
+                action: 'remove',
+                where: 'tags',
+                payload: JSON.stringify({ id: opts.input }),
+            });
         });
 
         return {
