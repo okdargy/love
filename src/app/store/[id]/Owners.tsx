@@ -6,14 +6,27 @@ import { ArrowLeft, ArrowRight, ArrowRightLeft, Eye, User } from 'lucide-react';
 import Link from 'next/link';
 import Error from '@/components/Error';
 
-export default function Owners({ id }: { id: number }) {
+export default function Owners({ id, setHoardRate }: { id: number; setHoardRate: React.Dispatch<React.SetStateAction<number>> }) {
     const [page, setPage] = useState(1);
     const LIMIT_PER_PAGE = 5;
     const owners = trpc.getAllItemOwners.useQuery(id);
 
+    useEffect(() => {
+        if (owners.data) {
+            let total = 0;
+
+            for (const owner of owners.data) {
+                total += owner.serials.length;
+            }
+
+            setHoardRate(100 * (1 - owners.data.length / total));
+        }
+    }, [owners.data]);
+
     const handleNextPage = () => {
         console.log('isLoading', owners.isLoading);
         console.log('data', owners.data);
+
         if (!owners.isLoading && owners.data) {
             setPage(prevPage => prevPage + 1);
             console.log('page', page);
@@ -66,6 +79,7 @@ export default function Owners({ id }: { id: number }) {
                         >
                             Previous
                         </Button>
+                        <span className="text-neutral-600 text-sm my-auto">{page * LIMIT_PER_PAGE}/{owners.data.length}</span>
                         <Button
                             onClick={handleNextPage}
                             disabled={owners.data.length <= page * LIMIT_PER_PAGE}

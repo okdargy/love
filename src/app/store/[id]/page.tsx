@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/breadcrumb"
 
 import Image from 'next/image';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/components/SessionContext';
 import Link from 'next/link';
@@ -24,6 +24,7 @@ import Recent from './Recent';
 import { Badge } from '@/components/ui/badge';
 
 export default function Page() {
+  const [hoardRate, setHoardRate] = useState(0);
   const { user } = useSession();
   const pathname = useParams<{ id: string }>()
 
@@ -127,8 +128,11 @@ export default function Page() {
                 <InfoCard title="Shorthand" value={itemInfo.data.item.shorthand} icon={<Tag />} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-3">Owners</h2>
-                <Owners id={itemInfo.data.item.id} />
+                <div className='flex justify-between mb-3'>
+                  <h2 className="text-xl font-semibold my-auto">Owners</h2>
+                  <span className="my-auto text-sm text-neutral-500">{hoardRate == 0 ? "Loading..." : `${hoardRate.toFixed(2)}% Hoard Rate`}</span>
+                </div>
+                <Owners id={itemInfo.data.item.id} setHoardRate={setHoardRate} />
               </div>
               <div>
               <div className="flex justify-between mb-3">
