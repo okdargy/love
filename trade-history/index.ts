@@ -87,7 +87,7 @@ async function actOnSerial(serial: Inventory, itemId: number) {
         } else {
             const oldSerial = serials[0];
 
-            if (oldSerial.userId !== serial.user.id) {
+            if (oldSerial.userId !== serial.user.id) { // if its the same
                 ldb.update(serialsTable).set({ userId: serial.user.id }).where(and(eq(serialsTable.itemId, itemId), eq(serialsTable.serial, serial.serial))).execute();
                 db.insert(tradeHistoryTable).values({ itemId, serial: serial.serial, userId: serial.user.id, username: serial.user.username }).execute();
             }

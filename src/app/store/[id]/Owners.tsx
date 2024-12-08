@@ -62,16 +62,16 @@ export default function Owners({ id }: { id: number }) {
                         <Button
                             onClick={handlePreviousPage}
                             disabled={page === 1}
-                            className="gap-x-2"
+                            variant='secondary'
                         >
-                            <ArrowLeft />
+                            Previous
                         </Button>
                         <Button
                             onClick={handleNextPage}
                             disabled={owners.data.length <= page * LIMIT_PER_PAGE}
-                            className="gap-x-2"
+                            variant='secondary'
                         >
-                            <ArrowRight />
+                            Next
                         </Button>
                     </div>
                 </div>

@@ -42,7 +42,7 @@ export default async function Page({ params }: { params: { id: string } }) {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between">
+            <div className="flex justify-between flex-col md:flex-row gap-y-3">
                 <div className="flex gap-x-3">
                     <Image src={userData.thumbnail.icon} alt={userData.username} width={512} height={512} className="h-20 w-20 rounded-full border-2 border-primary p-2" />
                     <div className="my-auto">
@@ -50,14 +50,14 @@ export default async function Page({ params }: { params: { id: string } }) {
                         <h2 className="text-neutral-400">Value: {formatNumber(userData.netWorth)}</h2>
                     </div>
                 </div>
-                <div className="flex my-auto space-x-2">
-                    <Link href={`https://polytoria.com/users/${id}`}>
-                        <Button variant="secondary">
+                <div className="flex my-auto space-x-2"> 
+                    <Link href={`https://polytoria.com/users/${id}`} className="w-full">
+                        <Button variant="secondary" className="w-full">
                             View on Polytoria
                         </Button>
                     </Link>
-                    <Link href={`https://polytoria.com/trade/new/${id}`}>
-                        <Button variant="secondary">
+                    <Link href={`https://polytoria.com/trade/new/${id}`} className="w-full">
+                        <Button variant="secondary" className="w-full">
                             <ArrowRightLeft />
                         </Button>
                     </Link>

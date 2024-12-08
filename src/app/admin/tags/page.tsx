@@ -1,5 +1,7 @@
 export default async function AdminTags() {
     return (
-        <p>things are also coming here</p>
+        <div>
+            <h1>Admin Tags</h1>
+        </div>
     )
 }

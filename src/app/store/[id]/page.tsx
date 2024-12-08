@@ -127,12 +127,12 @@ export default function Page() {
                 <InfoCard title="Shorthand" value={itemInfo.data.item.shorthand} icon={<Tag />} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-2">Owners</h2>
+                <h2 className="text-xl font-semibold mb-3">Owners</h2>
                 <Owners id={itemInfo.data.item.id} />
               </div>
               <div>
               <div className="flex justify-between mb-3">
-                    <h2 className="text-2xl font-bold my-auto">Recent History</h2>
+                    <h2 className="text-xl font-semibold my-auto">Recent History</h2>
                     <Link href={`/recent`} className="my-auto">
                         <p className="text-sm text-neutral-500">
                             View All
@@ -140,12 +140,6 @@ export default function Page() {
                     </Link>
                 </div>
                 <Recent id={itemInfo.data.item.id} />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold mb-2">JSON Result</h2>
-                <pre className="text-sm border border-neutral-100/10 p-3 rounded-lg grid grid-cols-1 overflow-auto">
-                  {JSON.stringify(itemInfo.data, null, 2)}
-                </pre>
               </div>
             </div>
           </div>

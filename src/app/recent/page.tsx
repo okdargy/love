@@ -18,6 +18,8 @@ export default function Recent() {
         onSuccess: (data) => {
             if(data && data.length < LIMIT) {
                 setUnableForward(true);
+            } else {
+                setUnableForward(false);
             }
         }
     });

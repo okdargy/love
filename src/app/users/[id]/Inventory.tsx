@@ -67,31 +67,31 @@ export default async function Inventory({ id }: { id: number }) {
     inventory.sort((a, b) => b.amount - a.amount);
 
     return (
-        <div className="border border-neutral-100/10 rounded-md p-4">
+        <div className="">
             {isPrivate ? <div className="flex flex-col items-center justify-center space-y-2">
                 <Lock className="h-6 w-6 text-neutral-500" />
                 <p className="text-neutral-500 text-center">This user has a private inventory</p>
             </div> : inventory.length === 0 ? <p className="text-neutral-500 text-center">This user has no items</p> :
-                <ul className="divide-y divide-neutral-900">
+                <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
                     {inventory.map((item, index) => (
-                        <li key={index} className="flex items-center space-x-4 px-3 py-2.5 justify-between">
-                            <Image src={item.asset.thumbnail} alt={item.asset.name} width={64} height={64} className="rounded-md" />
+                        <div key={index} className="flex items-center space-x-4 px-3 py-2.5 justify-between">
+                            <Image src={item.asset.thumbnail} alt={item.asset.name} width={64} height={64} className="rounded-md my-auto" />
                             <div className="text-right">
                                 <Link href={`/store/${item.asset.id}`}>
-                                    <p className="text-lg font-semibold">{item.asset.name}</p>
+                                    <p className="text-md font-semibold">{item.asset.name}</p>
                                 </Link>
                                 <HoverCard>
                                     <HoverCardTrigger asChild>
-                                        <p className="text-right text-neutral-500 cursor-pointer">Owns {item.amount} {item.amount === 1 ? 'copy' : 'copies'}</p>
+                                        <p className="text-sm text-right text-neutral-500 cursor-pointer">Owns {item.amount} {item.amount === 1 ? 'copy' : 'copies'}</p>
                                     </HoverCardTrigger>
                                     <HoverCardContent className="text-left">
                                         <p>{'#' + item.serials.sort((a, b) => a - b).join(', #')}</p>
                                     </HoverCardContent>
                                 </HoverCard>
                             </div>
-                        </li>
+                        </div>
                     ))}
-                </ul>
+                </div>
             }
         </div>
     );
