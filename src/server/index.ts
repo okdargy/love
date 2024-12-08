@@ -2,7 +2,7 @@ import { z } from "zod";
 import { like, eq, count, or, desc, and, inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 
@@ -221,6 +221,41 @@ export const appRouter = router({
         });
 
         return { logs, totalPages };
+    }),
+    addTag: publicProcedure.input(z.object({
+        name: z.string().min(3),
+        emoji: z.string().min(1),
+    })).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user || user.role !== "admin") {
+            throw new Error("You do not have permission to add tags");
+        }
+
+        return await db.insert(tagsTable).values(opts.input).execute();
+    }),
+    searchTags: publicProcedure.input(z.string().optional()).mutation(async (opts) => {
+        return await db.query.tagsTable.findMany({
+            limit: 5,
+            ...(opts.input ? { where: like(tagsTable.name, `%${opts.input}%`) } : {})
+        });
+    }),
+    removeTag: publicProcedure.input(z.number().min(1)).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user || user.role !== "admin") {
+            throw new Error("You do not have permission to remove tags");
+        }  
+
+        // remove it from all items
+        await db.transaction(async (tx) => {
+            await tx.delete(itemTagsTable).where(eq(itemTagsTable.tagId, opts.input));
+            await tx.delete(tagsTable).where(eq(tagsTable.id, opts.input));
+        });
+
+        return {
+            success: true
+        }
     }),
     getAllItemOwners: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         const id = opts.input;
