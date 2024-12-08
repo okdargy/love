@@ -224,7 +224,7 @@ export const appRouter = router({
     }),
     addTag: publicProcedure.input(z.object({
         name: z.string().min(3),
-        emoji: z.string().min(1),
+        emoji: z.string().min(1).regex(/[\p{Emoji_Presentation}|\p{Extended_Pictographic}]/u),
     })).mutation(async (opts) => {
         const { user } = await validateRequest();
 
@@ -269,6 +269,31 @@ export const appRouter = router({
                 action: 'remove',
                 where: 'tags',
                 payload: JSON.stringify({ id: opts.input }),
+            });
+        });
+
+        return {
+            success: true
+        }
+    }),
+    editTag: publicProcedure.input(z.object({
+        id: z.number().min(1),
+        name: z.string().min(3),
+        emoji: z.string().min(1).regex(/[\p{Emoji_Presentation}|\p{Extended_Pictographic}]/u),
+    })).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user || user.role !== "admin") {
+            throw new Error("You do not have permission to edit tags");
+        }
+
+        await db.transaction(async (tx) => {
+            await tx.update(tagsTable).set(opts.input).where(eq(tagsTable.id, opts.input.id));
+            await tx.insert(auditLogsTable).values({
+                userId: user.id,
+                action: 'edit',
+                where: 'tags',
+                payload: JSON.stringify(opts.input),
             });
         });
 

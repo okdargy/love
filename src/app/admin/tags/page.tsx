@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Minus, Plus } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -16,7 +16,15 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/app/_trpc/client";
-import { Form } from "@/components/ui/form";
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+  } from "@/components/ui/sheet"
 
 const isOnlyEmoji = (str: string) => {
     const regex = /^(?:\p{Emoji_Presentation}|\p{Extended_Pictographic})+$/u;
@@ -30,18 +38,18 @@ const RemoveDialog = ({ id, name, onRemove }: { id: number, name: string, onRemo
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button variant="outline" onClick={() => setIsOpen(true)}>
-                    <Minus />
+                    <Trash className="p-0.5" />
                 </Button>
             </DialogTrigger>
             <DialogContent>
-                <DialogHeader className="space-y-2">
+                <DialogHeader>
                     <DialogTitle>
                         Remove &quot;{name}&quot;
                     </DialogTitle>
-                    <DialogDescription>
-                        Are you sure you want to remove this tag?
-                    </DialogDescription>
                 </DialogHeader>
+                <DialogDescription>
+                    Are you sure you want to remove this tag? This will automatically remove this tag from all collectables that have it.
+                </DialogDescription>
                 <DialogFooter>
                     <Button onClick={onRemove}>
                         Remove
@@ -49,6 +57,57 @@ const RemoveDialog = ({ id, name, onRemove }: { id: number, name: string, onRemo
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    )
+}
+
+const EditSheet = ({ id, name, emoji, onEdit }: { id: number, name: string, emoji: string, onEdit: (name: string, emoji: string, setOpen: (open: boolean) => void) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [editName, setEditName] = useState(name);
+    const [editEmoji, setEditEmoji] = useState(emoji);
+
+    return (
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+                <Button variant="outline" onClick={() => setIsOpen(true)}>
+                    Edit
+                </Button>
+            </SheetTrigger>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>
+                        Edit &quot;{name}&quot;
+                    </SheetTitle>
+                    <SheetDescription>
+                        Change the name and emoji of this tag
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right">
+                            ID
+                        </Label>
+                        <Input disabled placeholder="1" className="col-span-3" value={id} />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="tagName" className="text-right">
+                            Name
+                        </Label>
+                        <Input id="tagName" autoComplete="off" placeholder="Example" className="col-span-3" value={editName} onChange={(e) => setEditName(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="emoji" className="text-right">
+                            Emoji
+                        </Label>
+                        <Input id="emoji" className="col-span-3" value={editEmoji} onChange={(e) => setEditEmoji(e.target.value)} />
+                    </div>
+                </div>
+                <SheetFooter>
+                    <Button onClick={() => onEdit(editName, editEmoji, setIsOpen)}>
+                        Save
+                    </Button>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
     )
 }
 
@@ -88,6 +147,16 @@ export default function AdminTags() {
         }
     });
 
+    const editTag = trpc.editTag.useMutation({
+        onSuccess: () => {
+            getTags.mutate();
+            toast.success("Tag edited!");
+        },
+        onError: (error) => {
+            toast.error(error.message);
+        }
+    });
+
     useEffect(() => {
         getTags.mutate();
     }, []);
@@ -111,13 +180,28 @@ export default function AdminTags() {
         setIsDialogOpen(false);
     }
 
+    const handleEditTag = async (id: number, name: string, emoji: string, setOpen: (open: boolean) => void) => {
+        if (name.length < 3) {
+            toast.error("Name must be at least 3 characters long");
+            return;
+        }
+
+        if (!isOnlyEmoji(emoji)) {
+            toast.error("Emoji must be an emoji");
+            return;
+        }
+
+        await editTag.mutate({ id, name, emoji });
+        setOpen(false);
+    }
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
             searchTags(searchQuery);
         }
     }
 
-    const doRemoveTag = async (id: number) => {
+    const handleRemoveTag = async (id: number) => {
         await removeTag.mutate(id);
         getTags.mutate();
     };
@@ -131,7 +215,7 @@ export default function AdminTags() {
                 </Button>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant={"outline"} onClick={() => setIsDialogOpen(true)}>
+                        <Button variant={"secondary"} onClick={() => setIsDialogOpen(true)}>
                             <Plus />
                         </Button>
                     </DialogTrigger>
@@ -174,7 +258,10 @@ export default function AdminTags() {
                                 <p className="pr-3">{tag.emoji}</p>
                                 <p className="pl-3">{tag.name}</p>
                             </div>
-                            <RemoveDialog id={tag.id} name={tag.name} onRemove={() => doRemoveTag(tag.id)} />
+                            <div className="flex gap-x-2">
+                                <RemoveDialog id={tag.id} name={tag.name} onRemove={() => handleRemoveTag(tag.id)} />
+                                <EditSheet id={tag.id} name={tag.name} emoji={tag.emoji} onEdit={(name, emoji, setOpen) => handleEditTag(tag.id, name, emoji, setOpen)} />
+                            </div>
                         </div>
                     ))) : (
                     <p>No tags found</p>

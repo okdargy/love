@@ -93,7 +93,7 @@ export default function AdminLogs() {
                                 </div>
                                 <Sheet>
                                     <SheetTrigger>
-                                        <Button variant='secondary'>View</Button>
+                                        <Button variant='outline'>View</Button>
                                     </SheetTrigger>
                                     <SheetContent>
                                         <SheetHeader>
