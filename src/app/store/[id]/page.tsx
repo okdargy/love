@@ -22,7 +22,8 @@ import { Spinner } from '@/components/icons';
 import Owners from './Owners';
 import Recent from './Recent';
 import { Badge } from '@/components/ui/badge';
-
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { EquationContext } from 'react-equation'
 export default function Page() {
   const [hoardRate, setHoardRate] = useState(0);
   const { user } = useSession();
@@ -130,7 +131,24 @@ export default function Page() {
               <div>
                 <div className='flex justify-between mb-3'>
                   <h2 className="text-xl font-semibold my-auto">Owners</h2>
-                  <span className="my-auto text-sm text-neutral-500">{hoardRate == 0 ? "Loading..." : `${hoardRate.toFixed(2)}% Hoard Rate`}</span>
+                  <HoverCard>
+                    <HoverCardTrigger>
+                      <span className="my-auto text-sm text-neutral-500">{hoardRate == 0 ? "Loading..." : `${hoardRate.toFixed(2)}% Hoard Rate`}</span>
+                    </HoverCardTrigger>
+                    <HoverCardContent>
+                    <p className="text-neutral-400 text-sm">
+                      The hoard rate is a measure of how many copies of <span className="font-semibold">{itemInfo.data.item.name}</span> are owned by people with more than 1 copy.
+                      <br></br><br></br>
+                      We calculate this using the formula:
+                      <br></br><br></br>
+                      <span className="overflow-hidden">
+                        <EquationContext render={(equation) => (
+                          <span>{equation('(Hoarded Total)/(Total) * 100')}</span>
+                        )} />
+                      </span>
+                    </p>
+                    </HoverCardContent>
+                  </HoverCard>
                 </div>
                 <Owners id={itemInfo.data.item.id} setHoardRate={setHoardRate} />
               </div>

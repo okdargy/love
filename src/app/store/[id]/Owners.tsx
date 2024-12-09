@@ -14,12 +14,17 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
     useEffect(() => {
         if (owners.data) {
             let total = 0;
+            let hoardedTotal = 0;
 
-            for (const owner of owners.data) {
+            owners.data.forEach(owner => {
                 total += owner.serials.length;
-            }
 
-            setHoardRate(100 * (1 - owners.data.length / total));
+                if (owner.serials.length > 1) {
+                    hoardedTotal += owner.serials.length - 1;
+                }
+            });
+
+            setHoardRate(hoardedTotal / total * 100);
         }
     }, [owners.data]);
 
@@ -79,7 +84,7 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
                         >
                             Previous
                         </Button>
-                        <span className="text-neutral-600 text-sm my-auto">{page * LIMIT_PER_PAGE}/{owners.data.length}</span>
+                        <span className="text-neutral-600 text-sm my-auto">{owners.data.length <= page * LIMIT_PER_PAGE ? owners.data.length : page * LIMIT_PER_PAGE}/{owners.data.length}</span>
                         <Button
                             onClick={handleNextPage}
                             disabled={owners.data.length <= page * LIMIT_PER_PAGE}
