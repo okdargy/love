@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/breadcrumb"
 
 import Image from 'next/image';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/components/SessionContext';
 import Link from 'next/link';
@@ -24,6 +24,7 @@ import Recent from './Recent';
 import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { EquationContext } from 'react-equation'
+
 export default function Page() {
   const [hoardRate, setHoardRate] = useState(0);
   const { user } = useSession();
@@ -44,6 +45,12 @@ export default function Page() {
       console.error(err)
     }
   });
+
+  useEffect(() => {
+    if (itemInfo.data) {
+      document.title = itemInfo.data.item.name + " - LOVE";
+    }
+  }, [itemInfo.data]);
 
   return (
     <main>
@@ -165,6 +172,20 @@ export default function Page() {
               </div>
             </div>
           </div>
+          {(itemInfo.data.item.stats.funFact && itemInfo.data.item.stats.funFact.trim() !== "") && (
+            <div className="flex flex-col space-y-1">
+              <div>
+                <div className="flex justify-between mb-3">
+                  <h2 className="text-xl font-semibold my-auto">Fun Fact</h2>
+                </div>
+                <div className="border border-neutral-100/10 p-4 rounded-lg shadow-md">
+                    <p>
+                      {itemInfo.data.item.stats.funFact}
+                    </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <Error message="Could not find item" />
