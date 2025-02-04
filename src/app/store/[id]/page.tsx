@@ -32,14 +32,6 @@ export default function Page() {
 
   const id = parseInt(pathname.id);
 
-  if(isNaN(id)) {
-      return <Error message="Invalid ID, must be a number" />
-  }
-
-  if(id < 1) {
-      return <Error message="Invalid ID, must be greater than 0" />
-  }
-
   const itemInfo = trpc.getItemWithTags.useQuery(id, {
     onError(err) {
       console.error(err)
@@ -51,6 +43,14 @@ export default function Page() {
       document.title = itemInfo.data.item.name + " - LOVE";
     }
   }, [itemInfo.data]);
+
+  if(isNaN(id)) {
+      return <Error message="Invalid ID, must be a number" />
+  }
+
+  if(id < 1) {
+      return <Error message="Invalid ID, must be greater than 0" />
+  }
 
   return (
     <main>

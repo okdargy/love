@@ -90,7 +90,7 @@ main {
   font-family: Polytoria Icons;
   font-style: normal;
   font-weight: 400;
-  src: url(https://c0.ptacdn.com/static/fonts/PolytoriaIcon.7a3d7e8f.woff2) format("woff2")
+  src: url(/fonts/PolytoriaIcon.woff2) format("woff2")
 }
 
 .pi {

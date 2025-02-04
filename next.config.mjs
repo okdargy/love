@@ -16,6 +16,18 @@ const nextConfig = {
             },
             {
                 protocol: 'https',
+                hostname: 'cdn.polytoria.com',
+                port: '',
+                pathname: '/thumbnails/assets/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'cdn.polytoria.com',
+                port: '',
+                pathname: '/thumbnails/avatars/**',
+            },
+            {
+                protocol: 'https',
                 hostname: 'cdn.discordapp.com',
                 port: '',
                 pathname: '/avatars/**',
