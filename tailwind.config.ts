@@ -102,12 +102,17 @@ const config = {
   				'50%': {
   					transform: 'scale(1)'
   				}
-  			}
+  			},
+			'grid-movement': {
+				'0%': { backgroundPosition: '0 0' },
+				'100%': { backgroundPosition: '20px 20px' }
+			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-  			heartbeat: 'heartbeat 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+  			heartbeat: 'heartbeat 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+			'grid-movement': 'grid-movement 4s linear infinite'
   		}
   	}
   },

@@ -43,7 +43,7 @@ export const appRouter = router({
         filters: z.object({
             sortBy: z.string(),
             order: z.string(),
-            types: z.array(z.string())
+            types: z.array(z.string().regex(/^[a-zA-Z0-9]+$/)),
         }).optional(),
     })).mutation(async (opts) => {
         const offset = (opts.input.page - 1) * opts.input.total;

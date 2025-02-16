@@ -142,13 +142,3 @@ async function fetchAllItems(previousData?: {
 
   return allItems;
 }
-
-async function fetchFirstItem() {
-  const response = await fetch("https://polytoria.com/api/store/items?collectiblesOnly=true");
-  if (!response.ok) {
-    throw new Error("Failed to fetch store items");
-  }
-
-  const pageData: StoreItemsResponse = await response.json();
-  return pageData.data[0];
-}
