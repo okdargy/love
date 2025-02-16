@@ -6,7 +6,11 @@ export const storeItemsTask = schedules.task({
   id: "store-items",
   run: async () => {
     // Fetch the first item from the database and the first item from Polytoria
-    const response = await fetch("https://polytoria.com/api/store/items?collectiblesOnly=true&sort=createdAt");
+    const response = await fetch("https://polytoria.com/api/store/items?collectiblesOnly=true&sort=createdAt", {
+        headers: {
+          'User-Agent': 'Trigger/storeItems (https://polytoria.trade; hello@dargy.party)'
+      }
+    });
 
     if (!response.ok) {
       throw new Error("Failed to fetch store items");

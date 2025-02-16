@@ -10,23 +10,24 @@ const newItemInterval = 1000 * 60 * 5; // Interval to check for new items
 const nextPageCooldown = 5 * 1000; // Amount of time to wait before getting the next page
 const nextItemCooldown = 30 * 1000; // Amount of time to wait before getting the next item
 
-const cycleCooldown = 1000 * 60 * 10; // Amount of time to wait before repeating
-
-/*
-1. First, we need to have a interval to find new items and store them in the ldb.
-2. Then, we need to go thru each item of the ldb, and get serials for each item. With these serials, we should first check if 
-they are already in ldb, and if not, add them to ldb and push them to the db. If the serial is already in ldb, we should check if
-the owner has changed, and if it has, update the owner in the ldb and push the change to the db.
-*/
+const cycleCooldown = 1000 * 60 * 30; // Amount of time to wait before repeating
 
 const getOwners = async (id: number, page: number = 1, limit: number = 100): Promise<OwnerAPIResponse> => {
-    const response = await fetch(`https://api.polytoria.com/v1/store/${id}/owners?page=${page}&limit=${limit}`);
+    const response = await fetch(`https://api.polytoria.com/v1/store/${id}/owners?page=${page}&limit=${limit}`, {
+        headers: {
+            'User-Agent': 'TradeHistory/1.0 (https://polytoria.trade; hello@dargy.party)'
+        }
+    });
     const data = await response.json();
     return data;
 }
 
 const getItems = async (page: number = 1): Promise<StoreAPIResponse> => {
-    const response = await fetch('https://polytoria.com/api/store/items?sort=createdAt&order=desc&showOffsale=true&collectiblesOnly=true&page=' + page);
+    const response = await fetch('https://polytoria.com/api/store/items?sort=createdAt&order=desc&showOffsale=true&collectiblesOnly=true&page=' + page, {
+        headers: {
+            'User-Agent': 'TradeHistory/1.0 (https://polytoria.trade; hello@dargy.party)'
+        }
+    });
     const data = await response.json();
     return data;
 }
