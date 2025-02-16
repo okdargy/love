@@ -100,16 +100,16 @@ export default function Recent() {
                 <Button
                     onClick={handlePrevPage}
                     disabled={page === 1}
-                    className="gap-x-2"
+                    variant='secondary'
                 >
-                    <ArrowLeft />
+                    Previous
                 </Button>
                 <Button
                     onClick={handleNextPage}
                     disabled={unableForward}
-                    className="gap-x-2"
+                    variant='secondary'
                 >
-                    <ArrowRight />
+                    Next
                 </Button>
             </div>
         </div>

@@ -54,7 +54,7 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                     >
                         <LoveIcon className="h-6 w-6 fill-primary" />
                     </Link>
-                    <span className="text-xs bg-primary/30 px-2.5 py-0.5 uppercase rounded-md font-semibold">Beta</span>
+                    <span className="text-xs bg-primary/30 px-2.5 py-0.5 uppercase rounded-md font-semibold shine-effect">Beta</span>
                 </div>
                 <div className="flex items-center ml-auto gap-3">
                     {/* <Popover>
@@ -100,7 +100,7 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                         </>
                     ) : (
                         <Link href="/login/discord" prefetch={false}>
-                            <Button variant="outline" className="">Login</Button>
+                            <Button variant="ghost" className="">Login</Button>
                         </Link>
                     )}
                 </div>

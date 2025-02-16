@@ -106,3 +106,24 @@ main {
 .pi.pi-brick:before {
   content:"$"
 }
+
+.shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-effect::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transition: all 0.5s;
+}
+
+.shine-effect:hover::before {
+  left: 100%;
+  transition: all 0.5s;
+}

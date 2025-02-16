@@ -20,11 +20,11 @@ export const Polytoria = ({ ...props }) => (
     </svg>
 );
 
-export default function Footer({ sha }: { sha: string }) {
+export default function Footer({ sha, lastUpdate }: { sha: string, lastUpdate: string }) {
     return (
         <footer className="flex items-center gap-4 border-t bg-background">
             <div className="flex flex-row w-full max-w-screen-lg mx-auto gap-6 p-4 sm:p-6 justify-between">
-                <div className="flex gap-x-3">
+                <div className="flex gap-x-3 text-muted-foreground">
                     <Link href="https://discord.gg/jUFET2fN3p" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-md font-semibold hover:fill-primary hover:text-primary transition-colors">
                         <Discord className='h-5 w-5 fill-current' />
                     </Link>
@@ -40,7 +40,7 @@ export default function Footer({ sha }: { sha: string }) {
                     <div className='flex gap-x-1'>
                         <GitBranch className="h-3 w-3 fill-current my-auto" />
                         <a href={`https://github.com/neverfirst/love/commit/${sha}`} target="_blank" rel="noopener noreferrer" className="text-xs">
-                            {sha.slice(0, 7)}
+                            {sha.slice(0, 7)} — {lastUpdate}
                         </a>
                     </div>
                 </div>
