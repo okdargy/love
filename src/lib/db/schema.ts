@@ -124,3 +124,20 @@ export const tradeHistoryRelations = relations(tradeHistoryTable, ({ one }) => (
 		references: [collectablesTable.id],
 	})
 }));
+
+export const listingsHistoryTable = sqliteTable("listings_history", {
+	id: integer("id").notNull().primaryKey({
+		autoIncrement: true
+	}),
+	itemId: integer("itemId").notNull().references(() => collectablesTable.id),
+	bestPrice: integer("price").notNull(),
+	sellers: integer("sellers").notNull(),
+	created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
+});
+
+export const listingsHistoryRelations = relations(listingsHistoryTable, ({ one }) => ({
+	item: one(collectablesTable, {
+		fields: [listingsHistoryTable.itemId],
+		references: [collectablesTable.id],
+	})
+}));
