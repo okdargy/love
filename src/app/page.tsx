@@ -28,6 +28,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import Hero from "@/components/Hero";
 
 const ITEMS_PER_PAGE = 25;
 const DEFAULT_PAGE = 1;
@@ -171,6 +172,7 @@ export default function Home() {
 
   return (
     <div className="space-y-3">
+      <Hero />
       <div className="flex gap-x-2">
         <Input
           type="search"
