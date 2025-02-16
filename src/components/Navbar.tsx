@@ -58,34 +58,30 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                 </div>
                 <div className="flex items-center ml-auto gap-3">
                     {user ? (
-                        <>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="secondary" size="icon" className="rounded-full">
-                                        <Image src={
-                                            "https://cdn.discordapp.com/avatars/" + user.discordId + "/" + user.avatar + ".png"
-                                        } alt={user.username} width={32} height={32} className="rounded-full" />
-                                        <span className="sr-only">Toggle user menu</span>
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-64 my-auto p-2 space-y-1" align="center">
-                                    {user.role === "admin" && (
-                                        <Link href="/admin">
-                                            <Button variant="ghost" className="w-full flex items-center justify-between">
-                                                <Wrench className="h-5 w-5 mr-2" />
-                                                Admin Panel
-                                            </Button>
-                                        </Link>
-                                    )}
-                                    <form action={logout} id="logoutForm" className="w-full">
-                                        <Button variant="ghost" type="submit" className="w-full flex items-center justify-between">
-                                            <LogOut className="h-5 w-5 mr-2" />
-                                            Logout
+                        <Popover>
+                            <PopoverTrigger>
+                                <Image src={
+                                    "https://cdn.discordapp.com/avatars/" + user.discordId + "/" + user.avatar + ".png"
+                                } alt={user.username} width={32} height={32} className="rounded-full" />
+                                <span className="sr-only">Toggle user menu</span>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64 my-auto p-2 space-y-1" align="center">
+                                {user.role === "admin" && (
+                                    <Link href="/admin">
+                                        <Button variant="ghost" className="w-full flex items-center justify-between">
+                                            <Wrench className="h-5 w-5 mr-2" />
+                                            Admin Panel
                                         </Button>
-                                    </form>
-                                </PopoverContent>
-                            </Popover>
-                        </>
+                                    </Link>
+                                )}
+                                <form action={logout} id="logoutForm" className="w-full">
+                                    <Button variant="ghost" type="submit" className="w-full flex items-center justify-between">
+                                        <LogOut className="h-5 w-5 mr-2" />
+                                        Logout
+                                    </Button>
+                                </form>
+                            </PopoverContent>
+                        </Popover>
                     ) : (
                         <Link href="/login/discord" prefetch={false}>
                             <Button variant="ghost" className="">Login</Button>

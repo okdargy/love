@@ -236,26 +236,28 @@ export default function Home() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {safeResult.items.map((item, index) => (
               <Link key={index} href={`/store/${item.id}`} passHref={true}>
-                <div className="p-4 space-y-3 border hover:border-primary transition-all rounded-lg shadow-sm flex flex-col justify-between relative">
-                  <Image
-                    src={item.thumbnailUrl}
-                    alt={item.name}
-                    width={200}
-                    height={200}
-                    className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
-                    data-loaded='false'
-                    onLoad={event => {
-                      event.currentTarget.setAttribute('data-loaded', 'true')
-                    }}
-                    unoptimized
-                  />
-                  <div className="mt-auto">
-                    <h2 className="text-md text-gray-100 font-bold truncate">{item.name}</h2>
-                    <p className="text-sm text-gray-400 overflow-hidden">
-                      <i className="pi pi-brick me-2"></i>{formatPrice(item.price)}
-                    </p>
+                <div className="border hover:border-primary transition-all rounded-lg shadow-sm flex flex-col justify-between relative">
+                  <div className="space-y-3 p-4">
+                    <Image
+                      src={item.thumbnailUrl}
+                      alt={item.name}
+                      width={200}
+                      height={200}
+                      className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                      data-loaded='false'
+                      onLoad={event => {
+                        event.currentTarget.setAttribute('data-loaded', 'true')
+                      }}
+                      unoptimized
+                    />
+                    <div className="mt-auto">
+                      <h2 className="text-md text-gray-100 font-bold truncate">{item.name}</h2>
+                      <p className="text-sm text-gray-400 overflow-hidden">
+                        <i className="pi pi-brick me-2"></i>{formatPrice(item.price)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="absolute -top-3 right-0 p-2 space-x-1.5">
+                  <div className="absolute right-0 p-2">
                     {item.tags.map((tag, index) => {
                       const correspondingTag = safeResult.allTags.find(t => t.id === tag.tagId);
 
@@ -263,9 +265,9 @@ export default function Home() {
                         <TooltipProvider key={index}>
                           <Tooltip>
                             <TooltipTrigger>
-                              <span key={index} className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-100/10 text-white rounded-md px-2 py-1">
+                              <div key={index} className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-100/10 text-white rounded-md px-2 py-1 ml-1.5">
                                 {correspondingTag ? correspondingTag.emoji : tag.itemId}
-                              </span>
+                              </div>
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>{correspondingTag ? correspondingTag.name : tag.itemId}</p>
