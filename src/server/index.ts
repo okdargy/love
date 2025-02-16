@@ -288,7 +288,7 @@ export const appRouter = router({
         }
 
         await db.transaction(async (tx) => {
-            await tx.update(tagsTable).set(opts.input).where(eq(tagsTable.id, opts.input.id));
+            await tx.update(tagsTable).set(opts.input).where(eq(tagsTable.id, Number(opts.input.id)));
             await tx.insert(auditLogsTable).values({
                 userId: user.id,
                 action: 'edit',

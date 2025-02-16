@@ -1,16 +1,17 @@
 "use client";
 
 import { trpc } from "@/app/_trpc/client";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { TRPCClientErrorLike } from "@trpc/client";
 import { BuildProcedure } from "@trpc/server";
-import Error from "@/components/Error";
+import { toast } from "sonner";
+import Link from "next/link";
+
+import { ItemInfo } from "./Content";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch"
 import { Spinner } from "@/components/icons";
-import { toast } from "sonner";
-import { ItemInfo } from "./page";
 import { useRouter } from "next/navigation";
 import {
     Select,
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/select"
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Textarea } from "@/components/ui/textarea";
-import Link from "next/link";
 import { Lock } from "lucide-react";
 
 export default function Form({ data }: { data: ItemInfo }) {
@@ -111,21 +111,19 @@ export default function Form({ data }: { data: ItemInfo }) {
         const { name, value } = e.target;
         setFormData((prevData) => ({
             ...prevData,
-            [name]: value,
+            [name]: value || '',
         }));
     };
 
     const handleInputChange = (key: string, value: string) => {
-        console.log(key, value);
-
         if (value === "null") {
             setFormData((prevData) => ({
                 ...prevData,
-                [key]: null,
+                [key]: '',
             }));
             return;
         }
-
+    
         setFormData((prevData) => ({
             ...prevData,
             [key]: value,
@@ -221,7 +219,7 @@ export default function Form({ data }: { data: ItemInfo }) {
                             <Textarea
                                 id={option.key}
                                 name={option.key}
-                                value={formData[option.key] as string}
+                                value={formData[option.key] || ''}
                                 onChange={handleTextareaChange}
                                 className="border rounded p-2"
                             />
@@ -269,7 +267,7 @@ export default function Form({ data }: { data: ItemInfo }) {
                                 id={option.key}
                                 name={option.key}
                                 type={option.type}
-                                value={formData[option.key] as string}
+                                value={formData[option.key] || ''}
                                 onChange={handleChange}
                                 className="border rounded p-2"
                             />

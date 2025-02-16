@@ -33,7 +33,7 @@ async function logout(): Promise<void> {
     await lucia.invalidateSession(session.id);
 
     const sessionCookie = lucia.createBlankSessionCookie();
-    cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+    (await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
     redirect("/");
 }
 
@@ -57,23 +57,11 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                     <span className="text-xs bg-primary/30 px-2.5 py-0.5 uppercase rounded-md font-semibold shine-effect">Beta</span>
                 </div>
                 <div className="flex items-center ml-auto gap-3">
-                    {/* <Popover>
-                        <PopoverTrigger asChild>
-                        <div
-                            className="p-2 hover:bg-neutral-100 hover:bg-opacity-20 transition-all rounded-lg cursor-pointer"
-                        >
-                            <Calculator className="h-6 w-6 p-0.5" />
-                        </div>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-72 h-96" align="center">
-                            <p className="text-lg font-semibold text-center">Coming soon...</p>
-                        </PopoverContent>
-                    </Popover> */}
                     {user ? (
                         <>
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant="secondary" size="icon" className="rounded-full bg-transparent">
+                                    <Button variant="secondary" size="icon" className="rounded-full">
                                         <Image src={
                                             "https://cdn.discordapp.com/avatars/" + user.discordId + "/" + user.avatar + ".png"
                                         } alt={user.username} width={32} height={32} className="rounded-full" />
@@ -85,7 +73,7 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                                         <Link href="/admin">
                                             <Button variant="ghost" className="w-full flex items-center justify-between">
                                                 <Wrench className="h-5 w-5 mr-2" />
-                                                Admin
+                                                Admin Panel
                                             </Button>
                                         </Link>
                                     )}

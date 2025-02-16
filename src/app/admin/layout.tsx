@@ -1,12 +1,13 @@
 import { validateRequest } from "@/lib/auth";
 import Link from "next/link";
 import { ReactNode } from "react";
+import { forbidden } from 'next/navigation'
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
     const { user } = await validateRequest();
     
     if (!user || user.role !== "admin") {
-        return <div>You do not have permission to access this page</div>;
+        return forbidden();
     }
 
     const Links = [

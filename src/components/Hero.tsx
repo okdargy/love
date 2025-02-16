@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Button } from "./ui/button";
 
 export default function Hero() {
     const [isVisible, setIsVisible] = useState<boolean | null>(null);
@@ -52,7 +51,7 @@ export default function Hero() {
             <div className="relative z-10 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-white">Welcome to LOVE!</h1>
-                    <p className="text-md text-white/90 w-96">Here you'll find the most reliable information for trading collectables on Polytoria</p>
+                    <p className="text-md text-white/90 w-96">Here you&apos;ll find the most reliable information for trading collectables on Polytoria</p>
                 </div>
                 <Image src="/icon-white.svg" alt="LOVE Icon" width={75} height={75} className="mr-4 drop-shadow-lg filter hover:animate-heartbeat" />
             </div>

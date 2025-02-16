@@ -9,7 +9,8 @@ import { ArrowRightLeft } from "lucide-react";
 
 const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page(props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     if(!params.id) {
         return (
             <Error message="User ID not provided" />
