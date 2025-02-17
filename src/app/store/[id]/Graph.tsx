@@ -1,6 +1,6 @@
 "use client"
 
-import { Bar, Brush, CartesianGrid, ComposedChart, Line, LineChart, XAxis } from "recharts"
+import { Bar, Brush, CartesianGrid, ComposedChart, Line, LineChart, XAxis, YAxis } from "recharts"
 import {
     ChartConfig,
     ChartContainer,
@@ -48,7 +48,7 @@ export default function Graph({ data }: { data: GraphData }) {
     // Convert timestamps to dates and merge data points for the same date
     if(data.res && data.res.success) {
         data.res.data.price.forEach((point, i) => {
-            const date = new Date(point.x).toLocaleDateString("en-US", {timeZone: "UTC"})
+            const date = new Date(point.x)
             if (!chartData.has(date)) {
                 chartData.set(date, {
                     date,
@@ -61,7 +61,7 @@ export default function Graph({ data }: { data: GraphData }) {
 
     if(data.listings.length > 0) {
         data.listings.forEach(listing => {
-            const date = new Date(listing.created_at).toLocaleDateString("en-US", {timeZone: "UTC"})
+            const date = new Date(listing.created_at)
             const existing = chartData.get(date) || { date }
     
             if (listing.sellers !== -1) {
@@ -89,6 +89,7 @@ export default function Graph({ data }: { data: GraphData }) {
             <ComposedChart
                 data={sortedChartData}
                 margin={{
+                    top: 12,
                     left: 12,
                     right: 12,
                 }}
@@ -99,10 +100,24 @@ export default function Graph({ data }: { data: GraphData }) {
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
+                    tickFormatter={(date) => {
+                        return new Intl.DateTimeFormat("en-US", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            year: "numeric"
+                        }).format(new Date(date))
+                    }}
                 />
                 <ChartTooltip
                     cursor={false}
                     content={<ChartTooltipContent hideLabel />}
+                />
+                <Bar
+                    dataKey="volume"
+                    barSize={8}
+                    stackId="a"
+                    fill={chartConfig.volume.color}
+                    opacity={0.5}
                 />
                 <Line
                     dataKey="average"
@@ -110,23 +125,18 @@ export default function Graph({ data }: { data: GraphData }) {
                     dot={false}
                     stroke={chartConfig.average.color}
                 />
-                <Bar
-                    dataKey="volume"
-                    barSize={20}
-                    fill={chartConfig.volume.color}
-                    opacity={0.5}
-                />
-                <Bar
-                    dataKey="listings"
-                    barSize={20}
-                    fill={chartConfig.listings.color}
-                    opacity={0.5}
-                />
                 <Line
                     dataKey="bestPrice"
                     type="linear"
-                    dot={true}
+                    dot={false}
                     stroke={chartConfig.bestPrice.color}
+                />
+                <Bar
+                    dataKey="listings"
+                    type="linear"
+                    stackId="a"
+                    fill={chartConfig.listings.color}
+                    opacity={0.5}
                 />
                 <Brush
                     dataKey="date"
@@ -135,6 +145,13 @@ export default function Graph({ data }: { data: GraphData }) {
                     fill="hsl(var(--primary)/0.1)"
                     travellerWidth={8}
                     startIndex={0}
+                    tickFormatter={(date) => {
+                        return new Intl.DateTimeFormat("en-US", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            year: "numeric"
+                        }).format(new Date(date))
+                    }}
                 />
             </ComposedChart>
         </ChartContainer>
