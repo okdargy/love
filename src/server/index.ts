@@ -92,7 +92,7 @@ export const appRouter = router({
                 thumbnailUrl: true,
             } : undefined,
             with: { tags: true, listings: {
-                orderBy: [desc(listingsHistoryTable.id)],
+                orderBy: [desc(listingsHistoryTable.created_at)],
                 limit: 1
             } }
         });
@@ -424,6 +424,26 @@ export const appRouter = router({
             console.error(e);
         }
     }),
+    getItemGraph: publicProcedure.input(z.number().min(1)).query(async (opts) => {
+        try {
+            const res = await fetch("https://polytoria.com/api/store/price-data/" + opts.input);
+            const json = await res.json();
+
+            const listings = await db.query.listingsHistoryTable.findMany({
+                where: eq(listingsHistoryTable.itemId, opts.input),
+                orderBy: [desc(listingsHistoryTable.id)],
+                columns: {
+                    bestPrice: true,
+                    sellers: true,
+                    created_at: true
+                }
+            });
+
+            return { res: json, listings: listings };
+        } catch (e) {
+            console.error(e);
+        }
+    })
 });
 
 export type AppRouter = typeof appRouter;

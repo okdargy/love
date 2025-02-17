@@ -50,7 +50,7 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                 <div className="flex items-center gap-3">
                     <Link
                         href="/"
-                        className="p-2 hover:bg-primary hover:bg-opacity-20 transition-all rounded-lg"
+                        className="p-2 hover:bg-primary/20 transition-all rounded-lg"
                     >
                         <LoveIcon className="h-6 w-6 fill-primary" />
                     </Link>

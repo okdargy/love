@@ -24,6 +24,7 @@ import Recent from './Recent';
 import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { EquationContext } from 'react-equation'
+import Graph from './Graph';
 
 export default function Page() {
   const [hoardRate, setHoardRate] = useState(0);
@@ -33,6 +34,12 @@ export default function Page() {
   const id = parseInt(pathname.id);
 
   const itemInfo = trpc.getItemWithTags.useQuery(id, {
+    onError(err) {
+      console.error(err)
+    }
+  });
+
+  const itemGraph = trpc.getItemGraph.useQuery(id, {
     onError(err) {
       console.error(err)
     }
@@ -186,6 +193,15 @@ export default function Page() {
               </div>
             </div>
           )}
+          <div>
+              <div className="flex justify-between mb-3">
+                <h2 className="text-xl font-semibold my-auto">Graph</h2>
+                <span className="text-xs bg-primary/30 px-2.5 py-0.5 uppercase rounded-md font-semibold my-auto">In Development</span>
+              </div>
+              <div className="border border-neutral-100/10 p-4 rounded-lg shadow-md">
+                {itemGraph.data?.listings && <Graph data={itemGraph.data} />}
+              </div>
+          </div>
         </div>
       ) : (
         <Error message="Could not find item" />
