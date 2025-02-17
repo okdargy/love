@@ -77,7 +77,8 @@ export const collectablesRelations = relations(collectablesTable, ({ one, many }
         fields: [collectablesTable.id],
         references: [collectablesStatsTable.id],
     }),
-    tags: many(itemTagsTable)
+    tags: many(itemTagsTable),
+	listings: many(listingsHistoryTable),
 }));
 
 export const tagsRelations = relations(itemTagsTable, ({ one }) => ({
@@ -137,6 +138,7 @@ export const listingsHistoryTable = sqliteTable("listings_history", {
 
 export const listingsHistoryRelations = relations(listingsHistoryTable, ({ one }) => ({
 	item: one(collectablesTable, {
+		relationName: 'listings',
 		fields: [listingsHistoryTable.itemId],
 		references: [collectablesTable.id],
 	})

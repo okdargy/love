@@ -2,11 +2,12 @@ import { z } from "zod";
 import { like, eq, count, or, desc, and, inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 
-const sanitizeSearchInput = (input: string) => {
+const sanitizeSearchInput = (input: string | undefined) => {
+    if(!input) return input;
     return input.replace(/[^a-zA-Z0-9\s']/g, '');
 }; 
 
@@ -37,9 +38,10 @@ export const appRouter = router({
         return await db.query.collectablesTable.findMany({ limit, offset, with: { stats: true }});
     }),
     getItemsByPage: publicProcedure.input(z.object({
-        page: z.number().min(1),
-        total: z.number().min(1).max(25),
-        search: z.string(),
+        page: z.number().min(1).default(1),
+        total: z.number().min(1).max(25).default(10),
+        search: z.string().optional(),
+        homepage: z.boolean().optional(),
         filters: z.object({
             sortBy: z.string(),
             order: z.string(),
@@ -49,7 +51,7 @@ export const appRouter = router({
         const offset = (opts.input.page - 1) * opts.input.total;
         const limit = opts.input.total;
 
-        const sanitizedSearch = sanitizeSearchInput(opts.input.search);
+        const sanitizedSearch = sanitizeSearchInput(opts.input.search) ?? "";
         let searchCondition = opts.input.search
         ? or(
             like(collectablesTable.shorthand, `%${sanitizedSearch}%`),
@@ -83,7 +85,16 @@ export const appRouter = router({
             offset,
             where: searchCondition,
             orderBy: sortOrder,
-            with: { stats: true, tags: true }
+            columns: opts.input.homepage ? {
+                id: true,
+                name: true,
+                shorthand: true,
+                thumbnailUrl: true,
+            } : undefined,
+            with: { tags: true, listings: {
+                orderBy: [desc(listingsHistoryTable.id)],
+                limit: 1
+            } }
         });
 
         const searchItem = items.findIndex(item => item.shorthand && item.shorthand.toLowerCase() === sanitizedSearch.toLowerCase());
