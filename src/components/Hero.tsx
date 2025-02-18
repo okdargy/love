@@ -2,7 +2,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export default function Hero() {
-    const [isVisible, setIsVisible] = useState<boolean | null>(null);
+    const [isVisible, setIsVisible] = useState<boolean | undefined>(undefined);
 
     useEffect(() => {
         const dismissed = localStorage.getItem('heroBoxDismissed');
@@ -14,11 +14,10 @@ export default function Hero() {
         localStorage.setItem('heroBoxDismissed', 'true');
     };
 
-    if (isVisible === null) return null;
-    if (!isVisible) return null;
+    if (isVisible === null || !isVisible) return null;
 
     return (
-        <div className="flex flex-col p-4 justify-center bg-primary h-36 rounded-md relative overflow-hidden">
+        <div className="flex flex-col justify-center p-4 bg-primary min-h-[9rem] rounded-md relative overflow-hidden">
             <button
                 onClick={handleDismiss}
                 className="absolute top-2 right-2 z-20 opacity-50 hover:opacity-100 transition-opacity"
@@ -48,12 +47,22 @@ export default function Hero() {
                     maskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)'
                 }}
             />
-            <div className="relative z-10 flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-white">Welcome to LOVE!</h1>
-                    <p className="text-sm text-white/75 w-96">Here you&apos;ll find the most reliable information for trading collectables on Polytoria</p>
+            <div className="z-10 flex flex-col sm:flex-row items-center gap-4 justify-between">
+                <div className="text-center sm:text-left">
+                    <h1 className="text-xl sm:text-2xl font-bold text-white">Welcome to LOVE!</h1>
+                    <p className="text-sm text-white/75 max-w-96">
+                        Here you&apos;ll find the most reliable information for trading collectables on Polytoria
+                    </p>
                 </div>
-                <Image src="/icon-white.svg" alt="LOVE Icon" width={75} height={75} className="mr-4 drop-shadow-lg filter hover:animate-heartbeat" />
+                <div className="flex">
+                    <Image
+                        src="/icon-white.svg"
+                        alt="LOVE Icon"
+                        width={75}
+                        height={75}
+                        className="drop-shadow-lg filter hover:animate-heartbeat w-16 sm:w-[75px] h-auto mr-0 sm:mr-4"
+                    />
+                </div>
             </div>
         </div>
     );

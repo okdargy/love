@@ -45,53 +45,68 @@ type GraphData = {
 export default function Graph({ data }: { data: GraphData }) {
     let chartData = new Map()
 
-    // Convert timestamps to dates and merge data points for the same date
-    if(data.res && data.res.success) {
+    // Helper function to get date key (strips time component)
+    const getDateKey = (date: Date) => {
+        return new Date(date).toISOString()
+    }
+
+    if (data.res && data.res.success) {
         data.res.data.price.forEach((point, i) => {
             const date = new Date(point.x)
-            if (!chartData.has(date)) {
-                chartData.set(date, {
+            const dateKey = getDateKey(date)
+            
+            if (!chartData.has(dateKey)) {
+                chartData.set(dateKey, {
                     date,
                     average: point.y,
-                    volume: data.res ? data.res.data.volume[i].y : 0
+                    volume: data.res ? data.res.data.volume[i].y : 0,
+                    listings: null,
+                    bestPrice: null,
                 })
             }
         })
     }
 
-    if(data.listings.length > 0) {
+    if (data.listings.length > 0) {
         data.listings.forEach(listing => {
             const date = new Date(listing.created_at)
-            const existing = chartData.get(date) || { date }
-    
+            const dateKey = getDateKey(date)
+            console.log(dateKey, date, listing)
+
+            const existing = chartData.get(dateKey) || { 
+                date,
+                volume: undefined,
+                average: undefined
+            }
+
             if (listing.sellers !== -1) {
-                chartData.set(date, {
+                chartData.set(dateKey, {
                     ...existing,
                     listings: listing.sellers,
                     bestPrice: listing.bestPrice
                 })
             } else {
-                chartData.set(date, {
+                chartData.set(dateKey, {
                     ...existing,
                     bestPrice: listing.bestPrice
                 })
             }
         })
     }
-
-    // Convert to array and sort by date
     const sortedChartData = Array.from(chartData.values())
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .sort((a, b) => a.date.getTime() - b.date.getTime())
 
+    console.log(sortedChartData)
 
     return (
         <ChartContainer config={chartConfig}>
             <ComposedChart
                 data={sortedChartData}
                 margin={{
-                    top: 12,
-                    left: 12,
-                    right: 12,
+                    left: 24,
+                    right: 24,
+                    top: 24,
+                    bottom: 24,
                 }}
             >
                 <CartesianGrid vertical={false} />
@@ -99,6 +114,7 @@ export default function Graph({ data }: { data: GraphData }) {
                     dataKey="date"
                     tickLine={false}
                     axisLine={false}
+                    scale="time"
                     tickMargin={8}
                     tickFormatter={(date) => {
                         return new Intl.DateTimeFormat("en-US", {
@@ -123,12 +139,14 @@ export default function Graph({ data }: { data: GraphData }) {
                     dataKey="average"
                     type="linear"
                     dot={false}
+                    connectNulls={true}
                     stroke={chartConfig.average.color}
                 />
                 <Line
                     dataKey="bestPrice"
                     type="linear"
                     dot={false}
+                    connectNulls={true}
                     stroke={chartConfig.bestPrice.color}
                 />
                 <Bar
@@ -141,6 +159,7 @@ export default function Graph({ data }: { data: GraphData }) {
                 <Brush
                     dataKey="date"
                     height={20}
+                    alwaysShowText={false}
                     stroke="hsl(var(--primary))"
                     fill="hsl(var(--primary)/0.1)"
                     travellerWidth={8}

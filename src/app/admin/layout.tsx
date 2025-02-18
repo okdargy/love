@@ -1,3 +1,5 @@
+"use server"
+
 import { validateRequest } from "@/lib/auth";
 import Link from "next/link";
 import { ReactNode } from "react";
