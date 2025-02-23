@@ -58,11 +58,11 @@ export interface Listings {
     inventoryID: number;
     sellerID: number;
     price: number;
-    inventory: Inventory;
+    inventory: ListingInventory;
     seller: Seller;
 }
 
-export interface Inventory {
+export interface ListingInventory {
     serial: number;
 }
 

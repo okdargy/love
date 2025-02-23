@@ -2,13 +2,14 @@ import { db } from "@/lib/db";
 import { ldb } from "./db";
 import {
     Inventory,
+    Listings,
     ListingsAPIResponse,
     OwnerAPIResponse,
     StoreAPIResponse,
 } from "./types";
 import { itemsTable, serialsTable } from "./db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
-import { listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
+import { collectablesTable, listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
 
 const newItemInterval = 1000 * 60 * 5; // Interval to check for new items
 
@@ -16,6 +17,8 @@ const nextPageCooldown = 5 * 1000; // Amount of time to wait before getting the 
 const nextItemCooldown = 30 * 1000; // Amount of time to wait before getting the next item
 
 const cycleCooldown = 1000 * 60 * 30; // Amount of time to wait before repeating
+
+const tags = await db.query.tagsTable.findMany();
 
 const getOwners = async (
     id: number,
@@ -75,6 +78,68 @@ const getListings = async (id: number): Promise<ListingsAPIResponse | null> => {
         return null;
     }
 };
+
+const processDeal = async (item: {
+    id: number;
+    bestPrice: number;
+    totalSellers: number;
+}, listing: Listings, date?: Date) => {
+    // make sure its at least 10% deal, 
+    const deal = (item.bestPrice - listing.price) / item.bestPrice * 100;
+    if (deal < 10) return console.log(`Deal for ${item.id} is less than 10%, skipping (${deal.toFixed(2)}%)`);
+    
+    const itemInfo = await db.query.collectablesTable.findFirst({
+        where: eq(collectablesTable.id, item.id),
+        with: { tags: true }
+    });
+
+    if(!itemInfo) return console.error(`Failed to find item ${item.id} in db, cannot post webhook`);
+
+    const payload = JSON.stringify({
+        username: "LOVE Deals",
+        avatar_url: "https://polytoria.trade/bot_icon.png",
+        embeds: [
+            {
+                title: itemInfo.name + (itemInfo.shorthand ? ` (${itemInfo.shorthand})` : ""),
+                description: itemInfo.description + (itemInfo.tags.length > 0) ? `\n\n${itemInfo.tags.map(t => {
+                    let i = tags.find(tag => tag.id === t.tagId)
+                    return "`" + (i ? i.emoji + " " + i.name : "Unknown") + "`"
+                }).join("  ")}` : "",
+                color: 15680580,
+                thumbnail: {
+                    url: itemInfo.thumbnailUrl,
+                },
+                fields: [
+                    {
+                        name: "Price",
+                        value: item.bestPrice + "  ➡  " + listing.price + " (" + Math.round(deal) + "%)",
+                        inline: true
+                    },
+                    {
+                        "name": "Item",
+                        "value": "[Visit here](https://polytoria.com/store/" + item.id + ")",
+                        "inline": true
+                    }
+                ],
+                footer: {
+                    "text": "polytoria.trade",
+                    "icon_url": "https://polytoria.trade/bot_icon.png"
+                },
+                timestamp: date ? date.toISOString() : new Date().toISOString(),
+            }
+        ]
+    });
+
+    const res = await fetch(process.env.DEALS_WEBHOOK_URL!, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: payload
+    });
+    const json = await res.json();
+    console.log(res.status, json);
+}
 
 const getItems = async (page: number = 1): Promise<StoreAPIResponse | null> => {
     try {
@@ -239,6 +304,10 @@ async function updateSerials() {
                         bestPrice: itemInfo.data[0].price,
                         sellers: itemInfo.meta.total,
                     }).execute();
+
+                    processDeal(item, itemInfo.data[0]);
+
+                    console.log(`(${item.id}) Found new best listing for ${itemInfo.data[0].price} (was ${item.bestPrice}) with ${itemInfo.meta.total} sellers (was ${item.totalSellers})`);
                 }
             }
 

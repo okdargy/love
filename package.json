@@ -9,6 +9,7 @@
     "lint": "next lint",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio --port 9033 --host 127.0.0.1",
     "trade-history": "bun run trade-history/index.ts",
     "trade-history:push": "drizzle-kit push --config=trade-history/db/drizzle.config.ts",
     "trade-history:generate": "drizzle-kit generate --config=trade-history/db/drizzle.config.ts"
