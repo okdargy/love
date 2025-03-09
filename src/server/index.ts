@@ -151,7 +151,6 @@ export const appRouter = router({
             throw new Error("You do not have permission to edit items");
         }
 
-        // check if item exists
         const item = await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, id), with: { tags: true } });
 
         if (!item) {
@@ -165,13 +164,10 @@ export const appRouter = router({
         return await db.transaction(async (tx) => {
             let logData: { id: number; tags: number[] | undefined; shorthand?: string } = { id, ...filteredStats, tags };
 
-            console.log(filteredStats)
             if (Object.keys(filteredStats).length > 0) {
-                console.log("Updating stats");
                 await tx.update(collectablesStatsTable).set(filteredStats).where(eq(collectablesStatsTable.id, id));
             }
 
-            // Update tags
             if (tags && tags.length > 0) {
                 const existingTagIds = item.tags.map(tag => tag.tagId);
         
@@ -194,7 +190,6 @@ export const appRouter = router({
                 await tx.delete(itemTagsTable).where(eq(itemTagsTable.itemId, id));
             }
 
-            // Update shorthand if it's changed and user is an admin
             if (shorthand && shorthand !== item.shorthand && user.role === "admin") {
                 logData = { ...logData, shorthand: shorthand };
                 await tx.update(collectablesTable).set({ shorthand: shorthand }).where(eq(collectablesTable.id, id));
@@ -270,7 +265,6 @@ export const appRouter = router({
             throw new Error("You do not have permission to remove tags");
         }  
 
-        // remove it from all items
         await db.transaction(async (tx) => {
             await tx.delete(itemTagsTable).where(eq(itemTagsTable.tagId, opts.input));
             await tx.delete(tagsTable).where(eq(tagsTable.id, opts.input));
@@ -342,7 +336,6 @@ export const appRouter = router({
             }
         } while (hasMore);
     
-        // Create a map to count the number of items each owner has
         const ownerMap: { [key: string]: { username: string; id: number; serials: number[] } } = {};
     
         allOwners.forEach(inventory => {
@@ -354,7 +347,6 @@ export const appRouter = router({
             ownerMap[owner.id].serials.push(inventory.serial);
         });
     
-        // Convert the map to an array and sort it by the number of items in descending order
         const sortedOwners = Object.values(ownerMap).sort((a, b) => b.serials.length - a.serials.length);
     
         return sortedOwners;

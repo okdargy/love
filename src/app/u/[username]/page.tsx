@@ -4,7 +4,6 @@ import { redirect, notFound } from 'next/navigation';
 
 export default async function Page(props: { params: Promise<{ username: string }> }) {
     const params = await props.params;
-    console.log(params.username);
     let redirectPath: string | null = null
 
     if (!params.username) {

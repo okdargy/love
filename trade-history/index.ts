@@ -84,7 +84,6 @@ const processDeal = async (item: {
     bestPrice: number;
     totalSellers: number;
 }, listing: Listings, date?: Date) => {
-    // make sure its at least 10% deal, 
     const deal = (item.bestPrice - listing.price) / item.bestPrice * 100;
     if (deal < 10) return console.log(`Deal for ${item.id} is less than 10%, skipping (${deal.toFixed(2)}%)`);
     
@@ -259,7 +258,7 @@ async function actOnSerial(serial: Inventory, itemId: number) {
         } else {
             const oldSerial = serials[0];
 
-            if (oldSerial.userId !== serial.user.id) { // if its the same
+            if (oldSerial.userId !== serial.user.id) {
                 ldb.update(serialsTable).set({ userId: serial.user.id }).where(
                     and(
                         eq(serialsTable.itemId, itemId),

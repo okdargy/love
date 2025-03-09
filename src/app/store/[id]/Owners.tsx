@@ -29,12 +29,8 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
     }, [owners.data]);
 
     const handleNextPage = () => {
-        console.log('isLoading', owners.isLoading);
-        console.log('data', owners.data);
-
         if (!owners.isLoading && owners.data) {
             setPage(prevPage => prevPage + 1);
-            console.log('page', page);
         }
     };
 

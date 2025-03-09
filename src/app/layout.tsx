@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/sonner"
 
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import { ThemeProvider } from "@/components/Theme";
 import { SessionProvider } from "@/components/SessionContext";
 import { validateRequest } from "@/lib/auth";
 import Footer from "@/components/Footer";
@@ -82,7 +81,6 @@ export default async function RootLayout({
     <html lang="en">
       <body className={poppins.className}>
         <Provider>
-          <ThemeProvider defaultTheme="dark" storageKey="theme">
             <SessionProvider value={session}>
                 <div id="container">
                   <Navbar session={session} />
@@ -93,7 +91,6 @@ export default async function RootLayout({
                 </div>
               <Toaster richColors />
             </SessionProvider>
-          </ThemeProvider>
         </Provider>
       </body>
     </html>

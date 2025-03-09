@@ -9,7 +9,6 @@ import { Spinner } from "@/components/icons";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -20,11 +19,10 @@ import { Button } from "@/components/ui/button";
 import { TRPCClientErrorLike } from "@trpc/client";
 import { BuildProcedure } from "@trpc/server";
 import Error from "@/components/Error";
-import { Filter, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { Popover } from "@radix-ui/react-popover";
 import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -112,7 +110,7 @@ export default function Home() {
   };
 
   const handleSearch = () => {
-    setCurrentPage(DEFAULT_PAGE); // Reset to the first page on new search
+    setCurrentPage(DEFAULT_PAGE);
     setLoading(true);
     const queryParams = new URLSearchParams({ page: DEFAULT_PAGE.toString() });
 
@@ -136,7 +134,6 @@ export default function Home() {
   };
 
   const handlePageChange = (newPage: number) => {
-    // Ensure the new page is within the bounds of the total pages
     newPage = Math.max(1, Math.min(newPage, safeResult.totalPages));
 
     setCurrentPage(newPage);
@@ -227,7 +224,7 @@ export default function Home() {
           Search
         </Button>
       </div>
-      {loading ? ( // Step 2: Show a loading icon when the data is being fetched
+      {loading ? (
         <div className="flex justify-center items-center p-2">
           <Spinner width="24" height="24" className="fill-primary" />
         </div>

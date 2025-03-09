@@ -148,7 +148,6 @@ export default function Form({ data }: { data: ItemInfo }) {
                 updatedData[key] = value.map(tag => Number(tag));
             }
 
-            console.log(updatedData);
             return updatedData;
         });
     }
@@ -167,7 +166,6 @@ export default function Form({ data }: { data: ItemInfo }) {
             router.replace("/store/" + data.item.id);
         },
         onMutate() {
-            console.log(formData);
             setLoading(true);
         }
     });
@@ -175,7 +173,6 @@ export default function Form({ data }: { data: ItemInfo }) {
     const filterChangedValues = (originalData: Record<string, any>, newData: Record<string, any>) => {
         const changedData: Record<string, any> = {};
         for (const key in newData) {
-            console.log(key, newData[key], originalData[key]);
             if (newData[key] !== originalData[key] && newData[key] !== null) {
                 changedData[key] = newData[key];
             }

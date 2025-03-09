@@ -9,7 +9,7 @@ async function grabItemizedInventory(id: number): Promise<{
     isPrivate: boolean;
     inventory: AggregatedInventoryItem[];
 }> {
-    const limit = 100; // Adjust the limit as needed
+    const limit = 100;
     let page = 1;
     let totalPages = 1;
     let inventory: InventoryItem[] = [];
@@ -43,7 +43,6 @@ async function grabItemizedInventory(id: number): Promise<{
         }
     }
 
-    // Aggregate inventory by asset
     const aggregatedInventory: Record<number, AggregatedInventoryItem> = {};
 
     inventory.forEach(item => {

@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
+// This was supposed to be a feature, but ended up being scrapped because of:
+// https://discord.com/channels/350679908390797313/1341613731033120838 
 export default async function Page() {
     const { user } = await validateRequest();
 
     // if (!user) {
     //     return redirect("/login");
-    // }
+    // } 
 
     return (
         <div className="container max-w-4xl py-2">

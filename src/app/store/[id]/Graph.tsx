@@ -45,7 +45,6 @@ type GraphData = {
 export default function Graph({ data }: { data: GraphData }) {
     let chartData = new Map()
 
-    // Helper function to get date key (strips time component)
     const getDateKey = (date: Date) => {
         return new Date(date).toISOString()
     }
@@ -71,7 +70,6 @@ export default function Graph({ data }: { data: GraphData }) {
         data.listings.forEach(listing => {
             const date = new Date(listing.created_at)
             const dateKey = getDateKey(date)
-            console.log(dateKey, date, listing)
 
             const existing = chartData.get(dateKey) || { 
                 date,
@@ -95,8 +93,6 @@ export default function Graph({ data }: { data: GraphData }) {
     }
     const sortedChartData = Array.from(chartData.values())
         .sort((a, b) => a.date.getTime() - b.date.getTime())
-
-    console.log(sortedChartData)
 
     return (
         <ChartContainer config={chartConfig}>
