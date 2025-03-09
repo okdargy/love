@@ -1,5 +1,11 @@
 import { notFound } from 'next/navigation'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Metadata, ResolvingMetadata } from 'next';
+
+type Props = {
+    params: { slug: string }
+    searchParams: { [key: string]: string | string[] | undefined }
+}
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -8,7 +14,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         const { default: Post, frontmatter } = await import(`@/content/${slug}.mdx`);
 
         return (
-            <div className="space-y-6 my-2">
+            <div className="space-y-5 my-2">
                 <div className="space-y-2">
                     <div className="flex items-center justify-center">
                             <div className="flex items-center gap-3 border border-neutral-500 px-4 py-2 rounded-full">
@@ -57,7 +63,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                         alt={frontmatter.title}
                         className="rounded-lg mx-auto"
                     />
-                    <Post className="py-2" />
+                    <div className="px-2 space-y-4">
+                        <Post />
+                    </div>
                 </div>
             </div>
         );
@@ -66,9 +74,33 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     }
 }
 
+export async function generateMetadata(
+    { params }: { params: Promise<{ slug: string }> },
+    parent: ResolvingMetadata
+): Promise<Metadata> {
+    try {
+      const { frontmatter } = await import(`@/content/${(await params).slug}.mdx`);
+      const previousImages = (await parent).openGraph?.images || []
+  
+      return {
+        title: frontmatter.title,
+        description: frontmatter.summary,
+        openGraph: {
+          images: [`/thumbnails/${frontmatter.thumbnail}`, ...previousImages],
+        },
+      }
+    } catch (e) {
+      return {
+        title: 'LOVE',
+        description: 'The requested blog post could not be found.'
+      }
+    }
+  }
+  
+
 export function generateStaticParams() {
     return [
-        { slug: 'ceasing-operations' } 
+        { params: { slug: 'ceasing-operations' } },
     ]
 }
 

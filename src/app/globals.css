@@ -132,3 +132,16 @@ main {
   pointer-events: none;
   z-index: -1;
 }
+
+.link {
+  text-decoration: underline;
+  text-underline-offset: 0.1em;
+  text-decoration-color: rgba(255, 255, 255, 0.25) !important;
+  transition-property: text-decoration-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.link:hover {
+  text-decoration-color: rgba(255, 255, 255, 0.5) !important
+}
