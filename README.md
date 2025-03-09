@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+<div align="center">
+  <img src="https://raw.githubusercontent.com/okdargy/love/refs/heads/main/public/favicon.svg" alt="favicon" width="100" height="100"><br />
 
-## Getting Started
+  # LOVE
 
-First, run the development server:
+  <p>A Next.js website for trading & economy information for Polytoria</p>
+</div>
+
+## Stack
+
+- [Next.js](https://nextjs.org/)
+- [Drizzle ORM](https://orm.drizzle.team/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [LibSQL](https://turso.tech/libsql)
+
+<br>
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="https://github.com/user-attachments/assets/fcfabb83-4e9a-4d7b-ac37-86c27bfe1197" alt="Website Preview" style="border-radius: 8px; max-width: 100%; height: auto;">
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <em>Website Preview</em>
+      </td>
+    </tr>
+  </table>
+</div>
+
+## Environment Setup
+
+Copy the example environment file and configure your variables:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then, install the necessary dependencies with the package manager of your choosing:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+You need to then push the SQL schema to your database:
 
-## Learn More
+```bash
+pnpm run db:push
+```
 
-To learn more about Next.js, take a look at the following resources:
+Finally, either build for production or start a dev server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Production
+pnpm run build
+pnpm run start
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+# Development
+pnpm run dev
+```
