@@ -252,7 +252,14 @@ export default function Home() {
                     <div className="mt-auto">
                       <h2 className="text-md text-gray-100 font-bold truncate">{item.name}</h2>
                       <p className="text-sm text-gray-400 overflow-hidden">
-                        <i className="pi pi-brick me-2"></i>{formatPrice(item.listings[0].bestPrice)}
+                        {item.listings && item.listings[0] ? (
+                          <>
+                            <i className="pi pi-brick me-2"></i>
+                            {formatPrice(item.listings[0].bestPrice)}
+                          </>
+                        ) : (
+                          "None listed"
+                        )}
                       </p>
                     </div>
                   </div>
