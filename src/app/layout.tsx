@@ -9,7 +9,6 @@ import { SessionProvider } from "@/components/SessionContext";
 import { validateRequest } from "@/lib/auth";
 import Footer from "@/components/Footer";
 import { execSync } from 'child_process';
-import Attention from "@/components/Attention";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -84,7 +83,6 @@ export default async function RootLayout({
         <Provider>
             <SessionProvider value={session}>
                 <div id="container">
-                  <Attention />
                   <Navbar session={session} />
                   <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
                     {children}

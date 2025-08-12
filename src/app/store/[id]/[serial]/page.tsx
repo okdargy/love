@@ -6,7 +6,8 @@ import { trpc } from '@/app/_trpc/client';
 import { Spinner } from '@/components/icons';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { User } from 'lucide-react';
+import { ArrowDownUp, User } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Page() {
     const pathname = useParams<{ id: string, serial: string }>()
@@ -51,20 +52,25 @@ export default function Page() {
                         <ul className="space-y-4">
                             {history.data.history.length === 0 ? (
                                 <p className="text-neutral-500">No recent history</p>
-                            ) : history.data.history.map(entry => (
-                                <li key={entry.id} className="flex justify-between">
-                                    <div>
-                                        <p className="font-semibold">{entry.username}</p>
-                                        <p className="text-sm text-neutral-500">Indexed on {new Date(entry.created_at + " UTC").toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}</p>
-                                    </div>
-                                    <div className='flex gap-x-4'>
-                                        <Link href={`/users/${entry.userId}`} className='my-auto'>
-                                            <Button className="gap-x-2" variant={'outline'}>
-                                                <User />
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                </li>
+                            ) : history.data.history.map((entry, index) => (
+                                <div key={entry.id}>
+                                    <li className="flex justify-between">
+                                        <div>
+                                            <p className="font-semibold">{entry.username}</p>
+                                            <p className="text-sm text-neutral-500">
+                                                Indexed on {new Date(entry.created_at + " UTC").toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}
+                                            </p>
+                                        </div>
+                                        <div className='flex gap-x-4'>
+                                            <Link href={`/users/${entry.userId}`} className='my-auto'>
+                                                <Button className="gap-x-2" variant={'outline'}>
+                                                    <User />
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    </li>
+                                    {history.data && index !== history.data.history.length - 1 && <ArrowDownUp className='mx-auto text-muted' />}
+                                </div>
                             ))}
                         </ul>
                     </div>

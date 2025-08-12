@@ -104,7 +104,13 @@ export const appRouter = router({
             items.unshift(item);
         }
 
-        const allTags = await db.query.tagsTable.findMany();
+        const allTags = await db.query.tagsTable.findMany({
+            columns: {
+                id: true,
+                name: true,
+                emoji: true
+            }
+        });
 
         return { items, totalPages, allTags };
     }),
@@ -125,7 +131,13 @@ export const appRouter = router({
                 throw new Error("Item not found");
             }
 
-            const allTags = await db.query.tagsTable.findMany();
+            const allTags = await db.query.tagsTable.findMany({
+                columns: {
+                    id: true,
+                    name: true,
+                    emoji: true
+                }
+            });
 
             return { item, allTags };
         } catch (e) {
@@ -239,12 +251,13 @@ export const appRouter = router({
         }
 
         await db.transaction(async (tx) => {
-            await tx.insert(tagsTable).values(opts.input).execute();
+            const { name, emoji } = opts.input;
+            await tx.insert(tagsTable).values({ name, emoji }).execute();
             await tx.insert(auditLogsTable).values({
                 userId: user.id,
                 action: 'add',
                 where: 'tags',
-                payload: JSON.stringify(opts.input),
+                payload: JSON.stringify({ name, emoji }),
             });
         });
 

@@ -26,6 +26,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
           url: `${process.env.NEXT_PUBLIC_APP_URL}/api/trpc`,
         }),
       ],
+      transformer: undefined
     })
   );
   return (

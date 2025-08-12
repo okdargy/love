@@ -22,7 +22,7 @@ export default function Attention() {
     if (isVisible === null || !isVisible) return null;
 
     return (
-        <div className="w-full h-8 bg-primary striped flex items-center relative">
+        <div className="attention-alert w-full h-8 flex items-center relative">
             <button
                 onClick={handleDismiss}
                 className="absolute right-2 z-20 opacity-50 hover:opacity-100 transition-opacity"
@@ -36,7 +36,7 @@ export default function Attention() {
             >
                 <p className="text-sm">
                     <span className="font-bold mr-1">Please read!</span>
-                    We are ceasing operations as of February 27, 2025, read the blog post here
+                    We are ceasing operations as of March 11, 2025, read the blog post here
                 </p>
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
