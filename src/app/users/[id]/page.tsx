@@ -9,6 +9,37 @@ import { ArrowRightLeft } from "lucide-react";
 
 const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
+const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    switch (true) {
+        case diffInSeconds < 60:
+            return 'Just now';
+        
+        case diffInSeconds < 3600:
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+        
+        case diffInSeconds < 86400:
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+        
+        case diffInSeconds < 2592000:
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+        
+        case diffInSeconds < 31536000:
+            const months = Math.floor(diffInSeconds / 2592000);
+            return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+        
+        default:
+            const years = Math.floor(diffInSeconds / 31536000);
+            return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+    }
+};
+
 export default async function Page(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     if(!params.id) {
@@ -44,11 +75,15 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     return (
         <div className="space-y-4">
             <div className="flex justify-between flex-col md:flex-row gap-y-3">
-                <div className="flex gap-x-3">
+                <div className="flex gap-x-5">
                     <Image src={userData.thumbnail.icon} alt={userData.username} width={512} height={512} className="h-20 w-20 rounded-full border-2 border-primary p-2" />
                     <div className="my-auto">
                         <h1 className="font-semibold text-2xl">{userData.username}</h1>
-                        <h2 className="text-neutral-400">Value: {formatNumber(userData.netWorth)}</h2>
+                        <div className="flex space-x-2">
+                            <h2 className="text-neutral-400">Value: {formatNumber(userData.netWorth)}</h2>
+                            <div className="border-l border-neutral-700 mx-1 h-3 my-auto"></div>
+                            <h2 className="text-neutral-400">{formatRelativeTime(userData.lastSeenAt)}</h2>
+                        </div>
                     </div>
                 </div>
                 <div className="flex my-auto space-x-2"> 

@@ -1,10 +1,8 @@
+import 'dotenv/config';
 import { type Config } from "drizzle-kit";
-import { config } from 'dotenv';
-
-config({ path: '.env' });
 
 export default {
-	schema: "./trade-history/db/schema.ts",
+	schema: "./injestor/db/schema.ts",
 	out: "./drizzle",
     dialect: "sqlite",
 	dbCredentials: {

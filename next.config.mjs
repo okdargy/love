@@ -41,7 +41,7 @@ const nextConfig = {
                 pathname: '/avatars/**',
             },
         ]
-    },
+    }
 };
 
 const withMDX = createMDX({

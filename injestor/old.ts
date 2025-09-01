@@ -2,14 +2,12 @@ import { db } from "@/lib/db";
 import { ldb } from "./db";
 import {
     Inventory,
-    Listings,
-    ListingsAPIResponse,
-    OwnerAPIResponse,
-    StoreAPIResponse,
+    Listing,
 } from "./types";
 import { itemsTable, serialsTable } from "./db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { collectablesTable, listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
+import { getItems, getListings, getOwners } from "./api";
 
 const newItemInterval = 1000 * 60 * 5; // Interval to check for new items
 
@@ -20,70 +18,11 @@ const cycleCooldown = 1000 * 60 * 30; // Amount of time to wait before repeating
 
 const tags = await db.query.tagsTable.findMany();
 
-const getOwners = async (
-    id: number,
-    page: number = 1,
-    limit: number = 100,
-): Promise<OwnerAPIResponse | null> => {
-    try {
-        const response = await fetch(
-            `https://api.polytoria.com/v1/store/${id}/owners?page=${page}&limit=${limit}`,
-            {
-                headers: {
-                    "User-Agent":
-                        "TradeHistory/1.0 (https://polytoria.trade; hello@dargy.party)",
-                },
-            },
-        );
-        if (!response.ok) {
-            console.error(
-                `Failed to get owners for item ${id} page ${page}: ${response.status}`,
-            );
-            return null;
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error(
-            `Error fetching owners for item ${id} page ${page}:`,
-            error,
-        );
-        return null;
-    }
-};
-
-const getListings = async (id: number): Promise<ListingsAPIResponse | null> => {
-    try {
-        const response = await fetch(
-            `https://polytoria.com/api/store/listings/${id}`,
-            {
-                headers: {
-                    "User-Agent":
-                        "TradeHistory/1.0 (https://polytoria.trade; hello@dargy.party)",
-                },
-            },
-        );
-
-        if (!response.ok) {
-            console.error(
-                `Failed to get listings for item ${id}: ${response.status}`,
-            );
-            return null;
-        }
-
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error(`Error fetching listings for item ${id}:`, error);
-        return null;
-    }
-};
-
 const processDeal = async (item: {
     id: number;
     bestPrice: number;
     totalSellers: number;
-}, listing: Listings, date?: Date) => {
+}, listing: Listing, date?: Date) => {
     const deal = (item.bestPrice - listing.price) / item.bestPrice * 100;
     if (deal < 10) return console.log(`Deal for ${item.id} is less than 10%, skipping (${deal.toFixed(2)}%)`);
     
@@ -139,32 +78,6 @@ const processDeal = async (item: {
     const json = await res.json();
     console.log(res.status, json);
 }
-
-const getItems = async (page: number = 1): Promise<StoreAPIResponse | null> => {
-    try {
-        const response = await fetch(
-            "https://polytoria.com/api/store/items?sort=createdAt&order=desc&showOffsale=true&collectiblesOnly=true&page=" +
-                page,
-            {
-                headers: {
-                    "User-Agent":
-                        "TradeHistory/1.0 (https://polytoria.trade; hello@dargy.party)",
-                },
-            },
-        );
-        if (!response.ok) {
-            console.error(
-                `Failed to get items page ${page}: ${response.status}`,
-            );
-            return null;
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error(`Error fetching items page ${page}:`, error);
-        return null;
-    }
-};
 
 async function loadItems() {
     try {
@@ -314,6 +227,9 @@ async function updateSerials() {
 
             if (!owners) {
                 console.error(`Skipping item ${item.id} due to failed request`);
+                await new Promise((resolve) =>
+                    setTimeout(resolve, nextPageCooldown)
+                );
                 continue;
             }
 

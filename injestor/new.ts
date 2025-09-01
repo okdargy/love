@@ -1,0 +1,355 @@
+import { desc, eq, InferInsertModel, InferSelectModel, sql } from "drizzle-orm";
+
+import { ldb } from "./db";
+import { db } from "@/lib/db";
+
+import { itemsTable, serialsTable } from "./db/schema";
+import { collectablesTable, listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
+
+import { APIItem, Inventory, Item, ListingsAPIResponse, WebsiteItem } from "./types";
+import { getAPIItems, getListings, getOwners, getWebsiteItems } from "./api";
+import { helpfulPrint, processDeal } from "./utils";
+
+const INTERVALS = {
+    NEW_ITEMS: 1000 * 60 * 5, // 5 minutes, checking for new items/deals
+    NEXT_PAGE: 5 * 1000, // 5 seconds, after getting one page, wait X amount of time
+    NEXT_ITEM: 30 * 1000, // 30 seconds, after getting one item, wait X amount of time (for heavy tasks that require a lot of pagination)
+    CYCLE: 1000 * 60 * 30, // 30 minutes, for the entire item cycle (listinsHistory, tradeHistory), indepedent from new items
+};
+
+type NullableOptional<T> = {
+  [K in keyof T]?: T[K] | null;
+};
+
+type MergedItem = Item & NullableOptional<Omit<WebsiteItem, keyof Item> & Omit<APIItem, keyof Item>>;
+
+// price in getShopData will always be the best price, aka. the top reseller. if the website request fails, it will be null.
+async function getShopData() {
+    const items: MergedItem[] = [];
+    const wresponse = await getWebsiteItems();
+
+    // first push whatever we get from website, could be null because of cloudflare
+    if (wresponse && wresponse.meta && wresponse.data.length > 0) {
+        items.push(...wresponse.data);
+
+        for (let page = 2; page <= wresponse.meta.lastPage; page++) {
+            await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_PAGE));
+
+            const pageResponse = await getWebsiteItems(page);
+            if (pageResponse) {
+                items.push(...pageResponse.data);
+            }
+        }
+    }
+
+    const aresponse = await getAPIItems();
+
+    if (aresponse && aresponse.assets.length > 0) {
+        // if we have recieve stuff from website, we want to merge it with API data
+        if (items.length > 0) {
+            const pushInto = (item: APIItem) => {
+                const existingItem = items.find((i) => i.id === item.id);
+                if (existingItem) {
+                    item.originalPrice = item.price;
+                    item.price = null;
+                    Object.assign(existingItem, item);
+                } else {
+                    items.push(item);
+                }
+            };
+
+            aresponse.assets.forEach((apiItem) => pushInto(apiItem));
+            for (let page = 2; page <= aresponse.pages; page++) {
+                await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_PAGE));
+
+                const pageResponse = await getAPIItems(page);
+                if (pageResponse) {
+                    pageResponse.assets.forEach((apiItem) =>
+                        pushInto(apiItem)
+                    );
+                }
+            }
+        } else { // if no items from website, we just add API items just always to get the latest items
+            items.forEach(item => item.price = null);
+            items.push(...aresponse.assets);
+
+            for (let page = 2; page <= aresponse.pages; page++) {
+                await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_PAGE));
+
+                const pageResponse = await getAPIItems(page);
+                if (pageResponse) {
+                    const modifiedAssets = pageResponse.assets.map(asset => ({
+                        ...asset,
+                        price: null
+                    }));
+                    items.push(...modifiedAssets);
+                }
+            }
+        }
+    }
+
+    return items;
+}
+
+async function handleShopData(items: MergedItem[]) {
+    if (items.length == 0) return;
+
+    let itemsToUpdate = [];
+    const localItems = await ldb.query.itemsTable.findMany({
+        orderBy: desc(itemsTable.id),
+    });
+
+    // 1. getting new items
+    const highestIds = localItems.map((item) => item.id);
+    const newItems = items.filter((item) => !highestIds.includes(item.id));
+    itemsToUpdate.push(...newItems);
+
+    // 2. getting updated averagePrice/price
+    items.forEach((item) => {
+        const existingItem = localItems.find((i) => i.id === item.id);
+
+        if (existingItem) {
+            if ((item.price && item.price !== existingItem.bestPrice) || (item.averagePrice && item.averagePrice !== existingItem.averagePrice)) {
+                if(item.price && item.price < existingItem.bestPrice) processDeal(existingItem, { price: item.price });
+                itemsToUpdate.push(item);
+            }
+        }
+    });
+
+    helpfulPrint(`Inserting/updating ${itemsToUpdate.length} items into the database, ${newItems.length} new`, "INFO", true);
+    await insertNewItems(itemsToUpdate);
+}
+
+async function insertNewItems(values: MergedItem[]) {
+    if(values.length === 0) return;
+
+    const collectableValues: InferInsertModel<typeof collectablesTable>[] = values.map(i => ({
+        id: i.id,
+        type: i.type,
+        name: i.name,
+        description: i.description,
+        thumbnailUrl: (i.thumbnailUrl || i.thumbnail) ?? "https://cdn.polytoria.com/placeholders/asset/pending.png",
+        recentAverage: i.averagePrice ?? 0,
+        price: i.originalPrice ?? 0,
+    }));
+
+    await db.insert(collectablesTable).values(collectableValues).onConflictDoUpdate({
+        target: collectablesTable.id,
+        set: {
+            recentAverage: sql.raw(`excluded.${collectablesTable.recentAverage.name}`),
+            price: sql.raw(`excluded.${collectablesTable.price.name}`)
+        }
+    });
+    await ldb.insert(itemsTable).values(values).onConflictDoUpdate({
+        target: itemsTable.id,
+        set: {
+            bestPrice: sql.raw(`excluded.${itemsTable.bestPrice.name}`),
+            averagePrice: sql.raw(`excluded.${itemsTable.averagePrice.name}`)
+        }
+    });
+}
+
+async function getAllItemOwners(itemId: number) {
+    const owners: Inventory[] = []
+    const response = await getOwners(itemId);
+
+    if(response && response.inventories) {
+        owners.push(...response.inventories);
+        
+        for (let page = 2; page <= response.pages; page++) {
+            await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_PAGE));
+            
+            const pageResponse = await getOwners(itemId, page);
+            if (pageResponse && pageResponse.inventories) {
+                owners.push(...pageResponse.inventories);
+            }
+        }
+        
+        return owners;
+    } else {
+        return [];
+    }
+}
+
+async function handleOwnersData(itemId: number, owners: Inventory[]) {
+    if (owners.length === 0) return;
+
+    let serialsToUpdate: {
+        itemId: number,
+        serial: number,
+        userId: number,
+        username: string,
+        isFirst?: boolean
+    }[] = []
+    const localItems = await ldb.query.serialsTable.findMany({
+        where: eq(serialsTable.itemId, itemId),
+    });
+
+    // for fuckass duplicates
+    const serialMap = new Map<number, Inventory>();
+    for (const owner of owners) {
+        const existing = serialMap.get(owner.serial);
+        if (!existing || new Date(owner.purchasedAt) > new Date(existing.purchasedAt)) {
+            serialMap.set(owner.serial, owner);
+        }
+    }
+
+    for (const owner of serialMap.values()) {
+        const existingOwner = localItems.find((item) => item.serial === owner.serial);
+
+        if (existingOwner) {
+            if(existingOwner.userId !== owner.user.id) {
+                serialsToUpdate.push({
+                    itemId,
+                    userId: owner.user.id,
+                    username: owner.user.username,
+                    serial: owner.serial
+                });
+            }
+        } else {
+            serialsToUpdate.push({
+                itemId,
+                userId: owner.user.id,
+                username: owner.user.username,
+                serial: owner.serial,
+                isFirst: true
+            });
+        }
+    }
+
+    helpfulPrint(`Inserting/updating ${serialsToUpdate.length} serials for item ${itemId}`, "INFO", true);
+    await insertSerialLogs(serialsToUpdate);
+}
+
+async function insertSerialLogs(inventories: {
+    itemId: number,
+    serial: number,
+    userId: number,
+    username: string,
+    isFirst?: boolean
+}[]) {
+    if (inventories.length === 0) return;
+
+    await db.insert(tradeHistoryTable).values(inventories);
+    
+    await ldb.insert(serialsTable).values(inventories)
+    .onConflictDoUpdate({
+        target: [serialsTable.itemId, serialsTable.serial],
+        set: {
+            userId: sql.raw(`excluded.${serialsTable.userId.name}`),
+        },
+    });
+}
+
+async function handleListingData(item: InferSelectModel<typeof itemsTable> , response: ListingsAPIResponse) {
+    if (!response || !item || response.data.length === 0) return;
+
+    const cheapestSeller = response.data.reduce((prev, curr) => (prev.price < curr.price ? prev : curr)); // just in case, alyx does write some weird code
+    const price = cheapestSeller.price;
+    const totalSellers = response.meta.total;
+
+    if (price !== item.bestPrice || totalSellers !== item.totalSellers) {
+        if(price < item.bestPrice) processDeal(item, cheapestSeller);
+
+        await db.insert(listingsHistoryTable).values({
+            itemId: item.id,
+            bestPrice: price,
+            sellers: totalSellers,
+        });
+
+        await ldb.insert(itemsTable).values({
+            id: item.id,
+            bestPrice: price,
+            totalSellers: totalSellers,
+        }).onConflictDoUpdate({
+            target: itemsTable.id,
+            set: {
+                bestPrice: price,
+                totalSellers: totalSellers
+            }
+        })
+        helpfulPrint(`Updated item ${item.id} with new price ${price} and ${totalSellers} sellers`, "INFO", true);
+    }
+}
+
+class ItemCycleManager {
+    private looping: boolean = true;
+    private isRunning: boolean = false;
+    private cycleTimeout?: NodeJS.Timeout;
+
+    start() {
+        this.looping = true;
+        if(!this.isRunning) this.runCycle();
+    }
+    
+    stop() {
+        this.looping = false;
+        if (this.cycleTimeout) {
+            clearTimeout(this.cycleTimeout);
+            this.cycleTimeout = undefined;
+        }
+    }
+
+    private async runCycle() {
+        let startTime = Date.now();
+        const localItems = await ldb.query.itemsTable.findMany({
+            orderBy: desc(itemsTable.id),
+        });
+
+        let itemsCompleted = 0;
+        for (const item of localItems) {
+            try {
+                const owners = await getAllItemOwners(item.id);
+                if(owners) await handleOwnersData(item.id, owners);
+
+                const listings = await getListings(item.id);
+                if(listings) await handleListingData(item, listings);
+
+                itemsCompleted++;
+            } catch (error) {
+                helpfulPrint(`Error processing item ${item.id}: ${error}`, "ERROR");
+            }
+
+            await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_ITEM));
+        }
+
+        helpfulPrint(`Cycle complete in \`${Date.now() - startTime}ms\` with **${itemsCompleted}/${localItems.length}** items processed`);
+        if (this.looping) {
+            this.cycleTimeout = setTimeout(() => this.runCycle(), INTERVALS.CYCLE);
+        } else {
+            this.isRunning = false;
+        }
+    }
+}
+
+const STARTUP = Date.now();
+
+const cycleManager = new ItemCycleManager();
+cycleManager.start();
+
+setInterval(async () => {
+    const shopData = await getShopData();
+    handleShopData(shopData);
+}, INTERVALS.NEW_ITEMS);
+
+const msToRelative = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d ${hours % 24}h`;
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    if (minutes > 0) {
+        const remainingSeconds = seconds % 60;
+        return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+    }
+    return `${seconds}s`;
+};
+
+let startupMessage = `Startup complete! The time is \`${new Date().toISOString()}\`.\n`;
+Object.entries(INTERVALS).forEach(([name, interval]) => {
+    startupMessage += `> - ${name}: \`${msToRelative(interval)}\`\n`;
+});
+
+helpfulPrint(startupMessage);

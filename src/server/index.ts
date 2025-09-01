@@ -90,11 +90,9 @@ export const appRouter = router({
                 name: true,
                 shorthand: true,
                 thumbnailUrl: true,
+                recentAverage: true
             } : undefined,
-            with: { tags: true, listings: {
-                orderBy: [desc(listingsHistoryTable.created_at)],
-                limit: 1
-            } }
+            with: { tags: true }
         });
 
         const searchItem = items.findIndex(item => item.shorthand && item.shorthand.toLowerCase() === sanitizedSearch.toLowerCase());

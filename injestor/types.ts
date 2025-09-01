@@ -15,9 +15,9 @@ export interface User {
     username: string;
 }
 
-export interface StoreAPIResponse {
+export interface WebsiteStoreResponse {
     meta: Meta;
-    data: Item[];
+    data: WebsiteItem[];
 }
 
 export interface Meta {
@@ -31,29 +31,41 @@ export interface Meta {
     nextPageURL: string;
     previousPageURL: any;
 }
-
 export interface Item {
     id: number;
     type: string;
     name: string;
     description: string;
-    price: number;
     isLimited: boolean;
-    onSaleUntil?: string;
     accessoryType?: string;
+    price?: number;
+    originalPrice?: number;
+}
+
+export interface WebsiteItem extends Item {
+    onSaleUntil?: string;
     creatorName: string;
     recentlyUploaded: boolean;
     isSoldOut: boolean;
     thumbnailUrl: string;
     creatorUrl: string;
 }
+export interface APIItem extends Item {
+    tags: string[];
+    creator: Creator;
+    thumbnail: string;
+    owners: number;
+    averagePrice: number;
+    createdAt: string;
+    updatedAt: string;
+}
 
 export interface ListingsAPIResponse {
     meta: Meta;
-    data: Listings[];
+    data: Listing[];
 }
 
-export interface Listings {
+export interface Listing {
     id: number;
     inventoryID: number;
     sellerID: number;
@@ -72,4 +84,17 @@ export interface Seller {
     avatarID: string;
     isOnline: boolean;
     avatarIconUrl: string;
+}
+
+export interface APIStoreResponse {
+    assets: APIItem[];
+    pages: number;
+    total: number;
+}
+
+export interface Creator {
+    type: string;
+    id: number;
+    name: string;
+    thumbnail: string;
 }

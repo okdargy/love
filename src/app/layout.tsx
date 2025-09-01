@@ -52,7 +52,7 @@ function formatRelativeTime(date: Date): string {
   return `${seconds} ${seconds === 1 ? 'second' : 'seconds'} ago`;
 }
 
-export async function getFooterInfo() {
+async function getFooterInfo() {
   let sha = '';
   let lastUpdate = '';
   
@@ -67,7 +67,6 @@ export async function getFooterInfo() {
 
   return { sha, lastUpdate };
 }
-
 
 export default async function RootLayout({
   children,

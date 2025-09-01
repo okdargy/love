@@ -40,10 +40,9 @@ export const collectablesTable = sqliteTable("collectables", {
 	name: text("name").notNull(),
 	shorthand: text("shorthand"),
 	description: text("description").notNull(),
-	thumbnailUrl: text("thumbnailUrl").notNull(),
+	thumbnailUrl: text("thumbnailUrl"),
 	price: integer("price").notNull(),
-	onSaleUntil: integer("onSaleUntil", { mode: 'timestamp' }).notNull(),
-	isSoldOut: integer('isSoldOut', { mode: 'boolean' }).default(false).notNull(),
+	recentAverage: integer("recentAverage"),
 	created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
 	updated_at: integer("updated_at").notNull().default(sql`(current_timestamp)`)
 });

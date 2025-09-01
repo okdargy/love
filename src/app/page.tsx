@@ -231,92 +231,92 @@ export default function Home() {
       ) : error ? (
         <Error message={error.message} />
       ) : (
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {safeResult.items.map((item, index) => (
-              <Link key={index} href={`/store/${item.id}`} passHref={true}>
-                <div className="border hover:border-primary transition-all rounded-lg shadow-sm flex flex-col justify-between relative">
-                  <div className="space-y-3 p-4">
-                    <Image
-                      src={item.thumbnailUrl}
-                      alt={item.name}
-                      width={200}
-                      height={200}
-                      className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
-                      data-loaded='false'
-                      onLoad={event => {
-                        event.currentTarget.setAttribute('data-loaded', 'true')
-                      }}
-                      unoptimized
-                    />
-                    <div className="mt-auto">
-                      <h2 className="text-md text-gray-100 font-bold truncate">{item.name}</h2>
-                      <p className="text-sm text-gray-400 overflow-hidden">
-                        {item.listings && item.listings[0] ? (
-                          <>
-                            <i className="pi pi-brick me-2"></i>
-                            {formatPrice(item.listings[0].bestPrice)}
-                          </>
-                        ) : (
-                          "None listed"
-                        )}
-                      </p>
+        <TooltipProvider>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {safeResult.items.map((item, index) => (
+                <Link key={index} href={`/store/${item.id}`} passHref={true}>
+                  <div className="border hover:border-primary transition-all rounded-lg shadow-sm flex flex-col justify-between relative">
+                    <div className="space-y-3 p-4">
+                      <Image
+                        src={item.thumbnailUrl}
+                        alt={item.name}
+                        width={200}
+                        height={200}
+                        className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                        data-loaded='false'
+                        onLoad={event => {
+                          event.currentTarget.setAttribute('data-loaded', 'true')
+                        }}
+                        unoptimized
+                      />
+                      <div className="mt-auto">
+                        <h2 className="text-md text-gray-100 font-bold truncate">{item.name}</h2>
+                        <p className="text-sm text-gray-400 overflow-hidden">
+                          {item.recentAverage && item.recentAverage ? (
+                            <>
+                              <i className="pi pi-brick me-2"></i>
+                              {formatPrice(item.recentAverage)}
+                            </>
+                          ) : (
+                            "No Data"
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="absolute right-0 p-2">
+                      {item.tags.map((tag, index) => {
+                        const correspondingTag = safeResult.allTags.find(t => t.id === tag.tagId);
+
+                        return (
+                            <Tooltip key={index}> 
+                              <TooltipTrigger>
+                                <div className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-100/10 text-white rounded-md px-2 py-1 ml-1.5">
+                                  {correspondingTag ? correspondingTag.emoji : tag.itemId}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{correspondingTag ? correspondingTag.name : tag.itemId}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="absolute right-0 p-2">
-                    {item.tags.map((tag, index) => {
-                      const correspondingTag = safeResult.allTags.find(t => t.id === tag.tagId);
-
-                      return (
-                        <TooltipProvider key={index}>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <div key={index} className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-100/10 text-white rounded-md px-2 py-1 ml-1.5">
-                                {correspondingTag ? correspondingTag.emoji : tag.itemId}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{correspondingTag ? correspondingTag.name : tag.itemId}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      );
-                    })}
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? 'disabled' : ''}
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  {Array.from({ length: result?.totalPages ?? 1 }).map((_, index) => (
+                    <PaginationLink
+                      key={index}
+                      onClick={() => handlePageChange(index + 1)}
+                      className={`cursor-pointer ${currentPage === index + 1 ? 'active' : ''}`}
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  ))}
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === (result?.totalPages ?? 1) ? 'disabled' : ''}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  className={currentPage === 1 ? 'disabled' : ''}
-                />
-              </PaginationItem>
-              <PaginationItem>
-                {Array.from({ length: result?.totalPages ?? 1 }).map((_, index) => (
-                  <PaginationLink
-                    key={index}
-                    onClick={() => handlePageChange(index + 1)}
-                    className={`cursor-pointer ${currentPage === index + 1 ? 'active' : ''}`}
-                  >
-                    {index + 1}
-                  </PaginationLink>
-                ))}
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className={currentPage === (result?.totalPages ?? 1) ? 'disabled' : ''}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+        </TooltipProvider>
       )}
     </div>
   );

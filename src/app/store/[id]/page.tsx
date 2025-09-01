@@ -27,7 +27,7 @@ import { EquationContext } from 'react-equation'
 import Graph from './Graph';
 
 export default function Page() {
-  const [hoardRate, setHoardRate] = useState(0);
+  const [hoardRate, setHoardRate] = useState(-1);
   const { user } = useSession();
   const pathname = useParams<{ id: string }>()
 
@@ -147,7 +147,7 @@ export default function Page() {
                   <h2 className="text-xl font-semibold my-auto">Owners</h2>
                   <HoverCard>
                     <HoverCardTrigger>
-                      <span className="my-auto text-sm text-neutral-500">{hoardRate == 0 ? "Loading..." : `${hoardRate.toFixed(2)}% Hoard Rate`}</span>
+                      <span className="my-auto text-sm text-neutral-500">{hoardRate == -1 ? "Loading..." : `${hoardRate.toFixed(2)}% Hoard Rate`}</span>
                     </HoverCardTrigger>
                     <HoverCardContent>
                     <p className="text-neutral-400 text-sm">

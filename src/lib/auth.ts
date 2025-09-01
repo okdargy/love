@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 
 import type { Session, User } from "lucia";
 
+// @ts-ignore
 const adapter = new DrizzleSQLiteAdapter(db, sessionTable, userTable);
 
 export const lucia = new Lucia(adapter, {

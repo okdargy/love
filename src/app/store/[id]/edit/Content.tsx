@@ -32,10 +32,7 @@ export default function Content({ id }: { id: number }) {
                     </div>
                     <div className="py-3">
                         <Form data={{
-                            item: {
-                                ...itemInfo.data.item,
-                                onSaleUntil: new Date(itemInfo.data.item.onSaleUntil)
-                            },
+                            item: itemInfo.data.item,
                             allTags: itemInfo.data.allTags
                         }} />
                     </div>
