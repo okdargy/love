@@ -39,25 +39,49 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
     const userColors = React.useMemo(() => {
         if (!owners.data) return {};
 
-        const colors = [
-            '#3b82f6', // blue
-            '#10b981', // emerald
-            '#f59e0b', // amber
-            '#ef4444', // red
-            '#8b5cf6', // violet
-            '#06b6d4', // cyan
-            '#f97316', // orange
-            '#84cc16', // lime
-            '#ec4899', // pink
-            '#6366f1', // indigo
+        const baseColors = [
+            'blue',
+            'emerald', 
+            'amber',
+            'red',
+            'violet',
+            'cyan',
+            'orange',
+            'lime',
+            'pink',
+            'indigo',
         ];
+
+        const shades = ['', '-500', '-700', '-300']; // default, then variations
+
+        const getColorValue = (colorName: string, shade: string) => {
+            const colorMap: Record<string, Record<string, string>> = {
+                blue: { '': '#3b82f6', '-500': '#3b82f6', '-700': '#1d4ed8', '-300': '#93c5fd' },
+                emerald: { '': '#10b981', '-500': '#10b981', '-700': '#047857', '-300': '#6ee7b7' },
+                amber: { '': '#f59e0b', '-500': '#f59e0b', '-700': '#b45309', '-300': '#fcd34d' },
+                red: { '': '#ef4444', '-500': '#ef4444', '-700': '#b91c1c', '-300': '#fca5a5' },
+                violet: { '': '#8b5cf6', '-500': '#8b5cf6', '-700': '#6d28d9', '-300': '#c4b5fd' },
+                cyan: { '': '#06b6d4', '-500': '#06b6d4', '-700': '#0e7490', '-300': '#67e8f9' },
+                orange: { '': '#f97316', '-500': '#f97316', '-700': '#c2410c', '-300': '#fdba74' },
+                lime: { '': '#84cc16', '-500': '#84cc16', '-700': '#4d7c0f', '-300': '#bef264' },
+                pink: { '': '#ec4899', '-500': '#ec4899', '-700': '#be185d', '-300': '#f9a8d4' },
+                indigo: { '': '#6366f1', '-500': '#6366f1', '-700': '#4338ca', '-300': '#a5b4fc' },
+            };
+            return colorMap[colorName]?.[shade] || '#6b7280';
+        };
 
         const colorMap: Record<number, string> = {};
         let colorIndex = 0;
 
         owners.data.forEach(owner => {
             if (owner.serials.length > 1) {
-                colorMap[owner.id] = colors[colorIndex % colors.length];
+                const baseColorIndex = colorIndex % baseColors.length;
+                const shadeIndex = Math.floor(colorIndex / baseColors.length) % shades.length;
+                
+                const baseColor = baseColors[baseColorIndex];
+                const shade = shades[shadeIndex];
+                
+                colorMap[owner.id] = getColorValue(baseColor, shade);
                 colorIndex++;
             }
         });
@@ -73,8 +97,8 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
             owners.data.forEach(owner => {
                 total += owner.serials.length;
 
-                if (owner.serials.length > 1) {
-                    hoardedTotal += owner.serials.length - 1;
+                if (owner.serials.length > 2) {
+                    hoardedTotal += owner.serials.length;
                 }
             });
 

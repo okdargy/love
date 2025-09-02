@@ -12,9 +12,9 @@ import { helpfulPrint, processDeal } from "./utils";
 
 const INTERVALS = {
     NEW_ITEMS: 1000 * 60 * 5, // 5 minutes, checking for new items/deals
-    NEXT_PAGE: 5 * 1000, // 5 seconds, after getting one page, wait X amount of time
-    NEXT_ITEM: 30 * 1000, // 30 seconds, after getting one item, wait X amount of time (for heavy tasks that require a lot of pagination)
-    CYCLE: 1000 * 60 * 30, // 30 minutes, for the entire item cycle (listinsHistory, tradeHistory), indepedent from new items
+    NEXT_PAGE: 10 * 1000, // 10 seconds, after getting one page, wait X amount of time (increased from 5s)
+    NEXT_ITEM: 60 * 1000, // 60 seconds, after getting one item, wait X amount of time (increased from 30s)
+    CYCLE: 1000 * 60 * 60, // 60 minutes, for the entire item cycle (listinsHistory, tradeHistory), indepedent from new items
 };
 
 type NullableOptional<T> = {
@@ -45,15 +45,16 @@ async function getShopData() {
     const aresponse = await getAPIItems();
 
     if (aresponse && aresponse.assets.length > 0) {
-        // if we have recieve stuff from website, we want to merge it with API data
+        // if we have received stuff from website, we want to merge it with API data
         if (items.length > 0) {
             const pushInto = (item: APIItem) => {
                 const existingItem = items.find((i) => i.id === item.id);
                 if (existingItem) {
+                    existingItem.originalPrice = item.price;
+                    Object.assign(existingItem, { ...item, price: existingItem.price, originalPrice: item.price });
+                } else {
                     item.originalPrice = item.price;
                     item.price = null;
-                    Object.assign(existingItem, item);
-                } else {
                     items.push(item);
                 }
             };
@@ -70,7 +71,10 @@ async function getShopData() {
                 }
             }
         } else { // if no items from website, we just add API items just always to get the latest items
-            items.forEach(item => item.price = null);
+            items.forEach(item => {
+                item.originalPrice = item.price;
+                item.price = null;
+            });
             items.push(...aresponse.assets);
 
             for (let page = 2; page <= aresponse.pages; page++) {
@@ -80,8 +84,10 @@ async function getShopData() {
                 if (pageResponse) {
                     const modifiedAssets = pageResponse.assets.map(asset => ({
                         ...asset,
+                        originalPrice: asset.price,
                         price: null
                     }));
+                    
                     items.push(...modifiedAssets);
                 }
             }
@@ -98,6 +104,7 @@ async function handleShopData(items: MergedItem[]) {
     const localItems = await ldb.query.itemsTable.findMany({
         orderBy: desc(itemsTable.id),
     });
+    helpfulPrint(`Loaded ${localItems.length} local items`, "INFO", true);
 
     // 1. getting new items
     const highestIds = localItems.map((item) => item.id);
@@ -241,8 +248,16 @@ async function insertSerialLogs(inventories: {
     });
 }
 
-async function handleListingData(item: InferSelectModel<typeof itemsTable> , response: ListingsAPIResponse) {
-    if (!response || !item || response.data.length === 0) return;
+async function handleListingData(itemId: number , response: ListingsAPIResponse) {
+    if (!response || response.data.length === 0) return;
+
+    // why get the iem again when you can just pass it through the cycle? OUTDATED!!!
+    // the shop function could reach it after this function is called since it has to loop through all the items with the delays provided
+    const item = await ldb.query.itemsTable.findFirst({
+        where: eq(itemsTable.id, itemId)
+    });
+
+    if(!item) return;
 
     const cheapestSeller = response.data.reduce((prev, curr) => (prev.price < curr.price ? prev : curr)); // just in case, alyx does write some weird code
     const price = cheapestSeller.price;
@@ -294,6 +309,9 @@ class ItemCycleManager {
         let startTime = Date.now();
         const localItems = await ldb.query.itemsTable.findMany({
             orderBy: desc(itemsTable.id),
+            columns: {
+                id: true
+            }
         });
 
         let itemsCompleted = 0;
@@ -303,7 +321,7 @@ class ItemCycleManager {
                 if(owners) await handleOwnersData(item.id, owners);
 
                 const listings = await getListings(item.id);
-                if(listings) await handleListingData(item, listings);
+                if(listings) await handleListingData(item.id, listings);
 
                 itemsCompleted++;
             } catch (error) {

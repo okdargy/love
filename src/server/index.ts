@@ -92,7 +92,7 @@ export const appRouter = router({
                 thumbnailUrl: true,
                 recentAverage: true
             } : undefined,
-            with: { tags: true }
+            with: { tags: true, stats: true }
         });
 
         const searchItem = items.findIndex(item => item.shorthand && item.shorthand.toLowerCase() === sanitizedSearch.toLowerCase());
@@ -200,9 +200,10 @@ export const appRouter = router({
                 await tx.delete(itemTagsTable).where(eq(itemTagsTable.itemId, id));
             }
 
-            if (shorthand && shorthand !== item.shorthand && user.role === "admin") {
-                logData = { ...logData, shorthand: shorthand };
-                await tx.update(collectablesTable).set({ shorthand: shorthand }).where(eq(collectablesTable.id, id));
+            if (shorthand !== undefined && shorthand !== item.shorthand && user.role === "admin") {
+                const shorthandValue = shorthand === "" ? null : shorthand;
+                logData = { ...logData, shorthand: shorthandValue };
+                await tx.update(collectablesTable).set({ shorthand: shorthandValue }).where(eq(collectablesTable.id, id));
             }
             
             await tx.insert(auditLogsTable).values({

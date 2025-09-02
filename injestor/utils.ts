@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 
 const tags = await db.query.tagsTable.findMany();
 
+const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
 /**
  * Post deal to the webhook
  * @param item the old item data, before the deal
@@ -45,7 +47,7 @@ export const processDeal = async (item: {
                 fields: [
                     {
                         name: "Price",
-                        value: item.bestPrice + "  ➡  " + listing.price + " (" + Math.round(deal) + "%)",
+                        value: formatNumber(item.bestPrice) + "  ➡  " + formatNumber(listing.price) + " (" + Math.round(deal) + "%)",
                         inline: true
                     },
                     {

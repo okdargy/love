@@ -252,14 +252,19 @@ export default function Home() {
                       />
                       <div className="mt-auto">
                         <h2 className="text-md text-gray-100 font-bold truncate">{item.name}</h2>
-                        <p className="text-sm text-gray-400 overflow-hidden">
-                          {item.recentAverage && item.recentAverage ? (
+                        <p className="text-sm overflow-hidden">
+                          {item.stats.value ? (
                             <>
-                              <i className="pi pi-brick me-2"></i>
-                              {formatPrice(item.recentAverage)}
+                              <i className="pi pi-brick me-2 text-[#4F95E7]"></i>
+                              <span className="text-[#4F95E7]">{formatPrice(item.stats.value)}</span>
+                            </>
+                          ) : item.recentAverage ? (
+                            <>
+                              <i className="pi pi-brick me-2 text-[#4FE883]"></i>
+                              <span className="text-[#4FE883]">{formatPrice(item.recentAverage)}</span>
                             </>
                           ) : (
-                            "No Data"
+                            <span className="text-gray-400">No Data</span>
                           )}
                         </p>
                       </div>
