@@ -28,6 +28,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Lock } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
+const randomPlaceholders = [
+    "my cat told me to",
+    "because i felt like it",
+    "everlast is holding me at gunpoint",
+    "ermm ermm uhh :3",
+    "sometimes i think therefore i am",
+]
+const pickedPlaceholder = randomPlaceholders[Math.floor(Math.random() * randomPlaceholders.length)];
+
 export default function Form({ data }: { data: ItemInfo }) {
     const router = useRouter();
 
@@ -216,7 +225,12 @@ export default function Form({ data }: { data: ItemInfo }) {
         }
 
         try {
-            await submitItem.mutateAsync({ ...changedData, id: data.item.id });
+            await submitItem.mutateAsync({ 
+                ...changedData, 
+                id: data.item.id,
+                alertOthers,
+                alertReason: alertOthers ? alertReason : undefined
+            });
         } catch (error) {
             console.error(error);
             setLoading(false);
@@ -297,15 +311,13 @@ export default function Form({ data }: { data: ItemInfo }) {
                         
                         {/* Value change alert card */}
                         {option.key === 'value' && valueChanged && (
-                            <Card className="mt-3">
+                            <Card className="mt-2">
                                 <CardContent className="p-4 space-y-3">
                                     <div className="flex items-start gap-3">
                                         <Checkbox
                                             id="alert-others"
                                             checked={alertOthers}
-                                            onCheckedChange={(e) => {
-                                                setAlertOthers(e);
-                                            }}
+                                            onCheckedChange={(checked) => setAlertOthers(checked === true)}
                                         />
                                         <Label htmlFor="alert-others">Alert others about this value change</Label>
                                     </div>
@@ -318,10 +330,13 @@ export default function Form({ data }: { data: ItemInfo }) {
                                                 id="alert-reason"
                                                 value={alertReason}
                                                 onChange={(e) => setAlertReason(e.target.value)}
-                                                placeholder="Enter reason for value change..."
+                                                placeholder={pickedPlaceholder}
                                                 className="border rounded p-2"
                                                 required={alertOthers}
                                             />
+                                            <div className="text-sm text-muted-foreground">
+                                                This will trigger a webhook in the Discord server to notify users about the change
+                                            </div>
                                         </div>
                                     )}
                                 </CardContent>

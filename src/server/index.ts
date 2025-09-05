@@ -1,15 +1,81 @@
 import { z } from "zod";
-import { like, eq, count, or, desc, and, inArray } from "drizzle-orm";
+import { like, eq, count, or, desc, and, inArray, InferSelectModel } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
+import type { User } from "lucia";
 
 const sanitizeSearchInput = (input: string | undefined) => {
     if(!input) return input;
     return input.replace(/[^a-zA-Z0-9\s']/g, '');
 }; 
+
+const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+const RISING_EMOJI = "<:rising:1226349827843948586>"
+const DECREASING_EMOJI = "<:decreasing:1226349823985193030>"
+
+const sendValueChangeAlert = ({
+    item,
+    stats,
+    author,
+    newValue,
+    reason,
+}: {
+    item: InferSelectModel<typeof collectablesTable>;
+    stats: InferSelectModel<typeof collectablesStatsTable>;
+    author: User;
+    newValue: number | null;
+    reason: string;
+}) => {
+    // Determine embed color based on value change
+    let embedColor: number;
+    
+    if (stats.value !== null && newValue === null) {
+        embedColor = 2303786;
+    } else if (stats.value === null && newValue !== null) {
+        embedColor = 2850815;
+    } else if (stats.value !== null && newValue !== null) {
+        if (newValue > stats.value) {
+            embedColor = 5763719;
+        } else if (newValue < stats.value) {
+            embedColor = 15548997;
+        } else {
+            embedColor = 16777215;
+        }
+    }
+
+    const payload = JSON.stringify({
+        username: "LOVE Updates",
+        avatar_url: "https://polytoria.trade/bot_icon.png",
+        content: `<@&${process.env.TRADES_ROLE_ID}>`,
+        embeds: [
+            {
+                title: `${item.name} ${item.shorthand ? "(" + item.shorthand + ")" : ""}`,
+                description: `${stats.value !== null ? formatNumber(stats.value) : "N/A"} ➡ ${newValue === null ? "N/A" : formatNumber(newValue)}   ${newValue !== null && stats.value ? (newValue > stats.value ? RISING_EMOJI : newValue < stats.value ? DECREASING_EMOJI : "") : ""}${reason ? `\n> **Reason:** ${reason}` : ""}`,
+                thumbnail: {
+                    url: item.thumbnailUrl,
+                },
+                footer: {
+                    "text": author.display_name || author.username,
+                    "icon_url": author.avatar ? `https://cdn.discordapp.com/avatars/${author.discordId}/${author.avatar}.webp?size=44` : "https://polytoria.trade/bot_icon.png"
+                },
+                timestamp: new Date().toISOString(),
+                ...(embedColor ? { color: embedColor } : {})
+            }
+        ]
+    });
+
+    fetch(process.env.TRADES_WEBHOOK_URL!, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: payload
+    });
+}
 
 export const appRouter = router({
     searchItems: publicProcedure.input(z.object({
@@ -153,18 +219,30 @@ export const appRouter = router({
         projected: z.boolean().optional(),
         tags: z.array(z.number()).optional(),
         shorthand: z.string().optional(),
+        alertOthers: z.boolean().optional(),
+        alertReason: z.string().optional(),
     })).mutation(async (opts) => {
-        const { id, tags, shorthand, ...stats } = opts.input;
+        const { id, tags, shorthand, alertOthers, alertReason, ...stats } = opts.input;
         const { user } = await validateRequest();
 
         if (!user || user.role === "user") {
             throw new Error("You do not have permission to edit items");
         }
 
-        const item = await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, id), with: { tags: true } });
+        const item = await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, id), with: { tags: true, stats: true } });
 
         if (!item) {
             throw new Error("Item does not exist");
+        }
+
+        if (alertOthers && alertReason) {
+            sendValueChangeAlert({
+                item,
+                stats: item.stats,
+                author: user,
+                newValue: stats.value ?? null,
+                reason: alertReason,
+            });
         }
 
         const filteredStats = Object.fromEntries(
@@ -452,7 +530,7 @@ export const appRouter = router({
 
 export type AppRouter = typeof appRouter;
 
-export interface User {
+export interface InvUser {
     id: number;
     username: string;
 }
@@ -460,7 +538,7 @@ export interface User {
 export interface Inventory {
     serial: number;
     purchasedAt: string;
-    user: User;
+    user: InvUser;
 }
 
 export interface OwnersResponse {
