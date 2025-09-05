@@ -181,6 +181,19 @@ export const appRouter = router({
     getItem: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         return await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, opts.input), with: { stats: true, tags: true } });
     }),
+    getMetadataItem: publicProcedure.input(z.number().min(1)).mutation(async (opts) => {
+        const item = await db.query.collectablesTable.findFirst({
+            where: eq(collectablesTable.id, opts.input),
+            columns: {
+                id: true,
+                name: true,
+                description: true,
+                thumbnailUrl: true,
+            }
+        });
+
+        return (item ? item : {})
+    }),
     getItemWithTags: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         try {
             const item = await db.query.collectablesTable.findFirst({

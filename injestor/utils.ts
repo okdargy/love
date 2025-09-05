@@ -1,7 +1,7 @@
-import { collectablesTable } from "@/lib/db/schema";
+import { collectablesTable, tradeHistoryTable } from "@/lib/db/schema";
 import { Listing } from "./types";
 import { db } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { eq, InferSelectModel } from "drizzle-orm";
 
 const tags = await db.query.tagsTable.findMany();
 
@@ -66,6 +66,75 @@ export const processDeal = async (item: {
     });
 
     const res = await fetch(process.env.DEALS_WEBHOOK_URL!, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: payload
+    });
+    const json = await res.json();
+    console.log(res.status, json);
+}
+
+type TradeHistoryWithItem = InferSelectModel<typeof tradeHistoryTable> & {
+  item: InferSelectModel<typeof collectablesTable>
+}
+
+export const processTrade = async (newOwner: {
+    id: number;
+    username: string;
+}, oldOwner: {
+    id: number;
+}, history: TradeHistoryWithItem[]) => {
+    let isBlank = true;
+    const newOwnerHistory = history.filter(h => h.userId === newOwner.id);
+    const oldOwnerHistory = history.filter(h => h.userId === oldOwner.id);
+
+    if (newOwnerHistory.length === 0 && oldOwnerHistory.length === 0) {
+        console.log(`No trade history found for users ${newOwner.id} and ${oldOwner.id}, skipping trade webhook`);
+        return;
+    }
+
+    let desc = `Side 1: **${newOwner.username}** (${newOwner.id})`;
+    let title = `${newOwner.username} (${newOwner.id}) transferred items with`;
+
+    if (newOwnerHistory.length > 0) {
+        isBlank = false;
+        for (const h of newOwnerHistory) {
+            desc += `\n> [${h.item.name}](https://polytoria.trade/store/${h.item.id}) - <t:${Math.floor(new Date(h.created_at).getTime() / 1000)}:R>`;
+        }
+    } else {
+        desc += `\n> No recent trades found`;
+    }
+
+    if (oldOwnerHistory.length > 0) {
+        isBlank = false;
+        title += ` ${oldOwnerHistory[0].username} (${oldOwner.id})`;
+        desc += `\n\nSide 2: **${oldOwnerHistory[0].username}** (${oldOwner.id})`;
+
+        for (const h of oldOwnerHistory) {
+            desc += `\n> [${h.item.name}](https://polytoria.trade/store/${h.item.id}) - <t:${Math.floor(new Date(h.created_at).getTime() / 1000)}:R>`;
+        }
+    } else {
+        title += ` - (${oldOwner.id})`;
+        desc += `\n\nSide 2: **-** (${oldOwner.id})\n> No recent trades found`;
+    }
+
+
+    const payload = JSON.stringify({
+        username: "LOVE Trades",
+        avatar_url: "https://polytoria.trade/bot_icon.png",
+        embeds: [
+            {
+                title: title,
+                description: desc,
+                color: isBlank ? 0 : 15680580,
+                timestamp: new Date().toISOString(),
+            }
+        ]
+    });
+
+    const res = await fetch(process.env.TRADES_WEBHOOK_URL!, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

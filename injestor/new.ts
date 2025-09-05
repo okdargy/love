@@ -1,4 +1,4 @@
-import { desc, eq, InferInsertModel, InferSelectModel, sql } from "drizzle-orm";
+import { and, desc, eq, gt, InferInsertModel, or, sql } from "drizzle-orm";
 
 import { ldb } from "./db";
 import { db } from "@/lib/db";
@@ -8,13 +8,13 @@ import { collectablesTable, listingsHistoryTable, tradeHistoryTable } from "@/li
 
 import { APIItem, Inventory, Item, ListingsAPIResponse, WebsiteItem } from "./types";
 import { getAPIItems, getListings, getOwners, getWebsiteItems } from "./api";
-import { helpfulPrint, processDeal } from "./utils";
+import { helpfulPrint, processDeal, processTrade } from "./utils";
 
 const INTERVALS = {
     NEW_ITEMS: 1000 * 60 * 5, // 5 minutes, checking for new items/deals
-    NEXT_PAGE: 10 * 1000, // 10 seconds, after getting one page, wait X amount of time (increased from 5s)
-    NEXT_ITEM: 60 * 1000, // 60 seconds, after getting one item, wait X amount of time (increased from 30s)
-    CYCLE: 1000 * 60 * 60, // 60 minutes, for the entire item cycle (listinsHistory, tradeHistory), indepedent from new items
+    NEXT_PAGE: 5 * 1000, // 5 seconds, after getting one page, wait X amount of time (increased from 5s)
+    NEXT_ITEM: 30 * 1000, // 30 seconds, after getting one item, wait X amount of time (increased from 30s)
+    CYCLE: 1000 * 60 * 60, // 60 minutes, to wait after the entire item cycle (listinsHistory, tradeHistory) is done, indepedent from new items
 };
 
 type NullableOptional<T> = {
@@ -186,7 +186,8 @@ async function handleOwnersData(itemId: number, owners: Inventory[]) {
         serial: number,
         userId: number,
         username: string,
-        isFirst?: boolean
+        isFirst?: boolean,
+        oldUserId?: number
     }[] = []
     const localItems = await ldb.query.serialsTable.findMany({
         where: eq(serialsTable.itemId, itemId),
@@ -210,7 +211,8 @@ async function handleOwnersData(itemId: number, owners: Inventory[]) {
                     itemId,
                     userId: owner.user.id,
                     username: owner.user.username,
-                    serial: owner.serial
+                    serial: owner.serial,
+                    oldUserId: existingOwner.userId
                 });
             }
         } else {
@@ -233,11 +235,38 @@ async function insertSerialLogs(inventories: {
     serial: number,
     userId: number,
     username: string,
-    isFirst?: boolean
+    isFirst?: boolean,
+    oldUserId?: number
 }[]) {
     if (inventories.length === 0) return;
 
     await db.insert(tradeHistoryTable).values(inventories);
+
+    const nonFirstTimeOwners = inventories.filter(inv => !inv.isFirst && inv.oldUserId);
+    
+    for (const inv of nonFirstTimeOwners) {
+        const recentTrades = await db.query.tradeHistoryTable.findMany({
+            where: and(
+                gt(tradeHistoryTable.created_at, sql`datetime('now', '-6 hours')`),
+                or(
+                    eq(tradeHistoryTable.userId, inv.userId),
+                    eq(tradeHistoryTable.userId, inv.oldUserId)
+                )
+            ),
+            with: { item: true }
+        });
+
+        processTrade(
+            {
+                id: inv.userId,
+                username: inv.username
+            },
+            {
+                id: inv.oldUserId,
+            },
+            recentTrades
+        );
+    }
     
     await ldb.insert(serialsTable).values(inventories)
     .onConflictDoUpdate({
