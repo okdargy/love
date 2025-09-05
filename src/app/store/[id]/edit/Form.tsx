@@ -23,13 +23,21 @@ import {
 } from "@/components/ui/select"
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
 import { Lock } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 export default function Form({ data }: { data: ItemInfo }) {
     const router = useRouter();
 
     const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
     const [loading, setLoading] = useState(false);
+    
+    // State for value change alert
+    const [valueChanged, setValueChanged] = useState(false);
+    const [alertOthers, setAlertOthers] = useState(false);
+    const [alertReason, setAlertReason] = useState("");
 
     const options = [
         {
@@ -101,6 +109,16 @@ export default function Form({ data }: { data: ItemInfo }) {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;
         const parsedValue = type === 'number' ? parseFloat(value) : value;
+        
+        // Check if value field is being changed
+        if (name === 'value' && parsedValue !== data.item.stats.value) {
+            setValueChanged(true);
+        } else if (name === 'value' && parsedValue === data.item.stats.value) {
+            setValueChanged(false);
+            setAlertOthers(false);
+            setAlertReason("");
+        }
+        
         setFormData((prevData) => ({
             ...prevData,
             [name]: parsedValue,
@@ -183,6 +201,13 @@ export default function Form({ data }: { data: ItemInfo }) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (loading) return;
+        
+        // Check if alert is enabled but reason is blank
+        if (alertOthers && alertReason.trim() === '') {
+            toast.error("Please provide a reason for the value change alert");
+            return;
+        }
+        
         const changedData = filterChangedValues(data.item.stats, formData);
 
         if (Object.keys(changedData).length === 0) {
@@ -268,6 +293,39 @@ export default function Form({ data }: { data: ItemInfo }) {
                                 onChange={handleChange}
                                 className="border rounded p-2"
                             />
+                        )}
+                        
+                        {/* Value change alert card */}
+                        {option.key === 'value' && valueChanged && (
+                            <Card className="mt-3">
+                                <CardContent className="p-4 space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <Checkbox
+                                            id="alert-others"
+                                            checked={alertOthers}
+                                            onCheckedChange={(e) => {
+                                                setAlertOthers(e);
+                                            }}
+                                        />
+                                        <Label htmlFor="alert-others">Alert others about this value change</Label>
+                                    </div>
+                                    {alertOthers && (
+                                        <div className="space-y-2">
+                                            <label htmlFor="alert-reason" className="block text-sm font-medium text-muted-foreground">
+                                                Reason for change *
+                                            </label>
+                                            <Textarea
+                                                id="alert-reason"
+                                                value={alertReason}
+                                                onChange={(e) => setAlertReason(e.target.value)}
+                                                placeholder="Enter reason for value change..."
+                                                className="border rounded p-2"
+                                                required={alertOthers}
+                                            />
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         )}
                     </div>
                 ))}
