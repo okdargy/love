@@ -97,7 +97,7 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
             owners.data.forEach(owner => {
                 total += owner.serials.length;
 
-                if (owner.serials.length > 2) {
+                if (owner.serials.length > 1) {
                     hoardedTotal += owner.serials.length;
                 }
             });

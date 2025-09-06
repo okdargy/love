@@ -101,7 +101,7 @@ export const processTrade = async (newOwner: {
     if (newOwnerHistory.length > 0) {
         isBlank = false;
         for (const h of newOwnerHistory) {
-            desc += `\n> [${h.item.name}](https://polytoria.trade/store/${h.item.id}) - <t:${Math.floor(new Date(h.created_at).getTime() / 1000)}:R>`;
+            desc += `\n> [${h.item.name}](https://polytoria.trade/store/${h.item.id}) - <t:${Math.floor(h.created_at / 1000)}:R>`;
         }
     } else {
         desc += `\n> No recent trades found`;
@@ -113,7 +113,7 @@ export const processTrade = async (newOwner: {
         desc += `\n\nSide 2: **${oldOwnerHistory[0].username}** (${oldOwner.id})`;
 
         for (const h of oldOwnerHistory) {
-            desc += `\n> [${h.item.name}](https://polytoria.trade/store/${h.item.id}) - <t:${Math.floor(new Date(h.created_at).getTime() / 1000)}:R>`;
+            desc += `\n> [${h.item.name}](https://polytoria.trade/store/${h.item.id}) - <t:${Math.floor(h.created_at / 1000)}:R>`;
         }
     } else {
         title += ` - (${oldOwner.id})`;

@@ -50,7 +50,7 @@ const sendValueChangeAlert = ({
     const payload = JSON.stringify({
         username: "LOVE Updates",
         avatar_url: "https://polytoria.trade/bot_icon.png",
-        content: `<@&${process.env.TRADES_ROLE_ID}>`,
+        content: `<@&${process.env.VALUE_WEBHOOK_URL}>`,
         embeds: [
             {
                 title: `${item.name} ${item.shorthand ? "(" + item.shorthand + ")" : ""}`,
@@ -68,7 +68,7 @@ const sendValueChangeAlert = ({
         ]
     });
 
-    fetch(process.env.TRADES_WEBHOOK_URL!, {
+    fetch(process.env.VALUE_WEBHOOK_URL!, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

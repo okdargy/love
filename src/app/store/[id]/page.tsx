@@ -151,7 +151,7 @@ export default function Page() {
                       </HoverCardTrigger>
                       <HoverCardContent>
                         <p className="text-neutral-400 text-sm">
-                          The hoard rate is a measure of how many copies of <span className="font-semibold">{itemInfo.data.item.name}</span> are owned by people with more than 2 copies.
+                          The hoard rate is a measure of how many copies of <span className="font-semibold">{itemInfo.data.item.name}</span> are owned by people with more than 1 copy.
                           <br></br><br></br>
                           We calculate this using the formula:
                           <br></br><br></br>
