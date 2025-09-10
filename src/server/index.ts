@@ -17,6 +17,29 @@ const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d
 const RISING_EMOJI = "<:rising:1226349827843948586>"
 const DECREASING_EMOJI = "<:decreasing:1226349823985193030>"
 
+const userConnectionCodes = new Map<string, {
+    code: string;
+    polytoriaUserId: number;
+    polytoriaUsername: string;
+    expiresAt: number;
+    userId: string;
+}>();
+
+const connectionRateLimit = new Map<string, number>();
+
+const generateConnectionCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+setInterval(() => {
+    const now = Date.now();
+    for (const [userId, data] of userConnectionCodes.entries()) {
+        if (now > data.expiresAt) {
+            userConnectionCodes.delete(userId);
+        }
+    }
+}, 5 * 60 * 1000);
+
 const sendValueChangeAlert = ({
     item,
     stats,
@@ -30,7 +53,6 @@ const sendValueChangeAlert = ({
     newValue: number | null;
     reason: string;
 }) => {
-    // Determine embed color based on value change
     let embedColor: number;
     
     if (stats.value !== null && newValue === null) {
@@ -538,7 +560,115 @@ export const appRouter = router({
         } catch (e) {
             console.error(e);
         }
-    })
+    }),
+    initializeUserConnection: publicProcedure.input(z.object({
+        username: z.string().min(1).max(50),
+    })).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user) {
+            throw new Error("You must be logged in to connect a Polytoria account");
+        }
+
+        const now = Date.now();
+        const lastRequest = connectionRateLimit.get(user.id);
+        if (lastRequest && now - lastRequest < 30000) {
+            const remainingTime = Math.ceil((30000 - (now - lastRequest)) / 1000);
+            throw new Error(`Please wait ${remainingTime} seconds before requesting another code`);
+        }
+
+        try {
+            const response = await fetch(`https://api.polytoria.com/v1/users/find?username=${encodeURIComponent(opts.input.username)}`);
+            
+            if (!response.ok) {
+                throw new Error("Failed to find user on Polytoria");
+            }
+
+            const polytoriaUser = await response.json();
+            
+            if (!polytoriaUser.id || !polytoriaUser.username) {
+                throw new Error("User not found on Polytoria");
+            }
+
+            userConnectionCodes.delete(user.id);
+
+            const rawCode = generateConnectionCode();
+            const code = "pt-" + rawCode;
+            const expiresAt = now + (5 * 60 * 1000); // 5 minutes from now
+
+            userConnectionCodes.set(user.id, {
+                code,
+                polytoriaUserId: polytoriaUser.id,
+                polytoriaUsername: polytoriaUser.username,
+                expiresAt,
+                userId: user.id
+            });
+
+            connectionRateLimit.set(user.id, now);
+
+            return {
+                code,
+                polytoriaUsername: polytoriaUser.username,
+                polytoriaUserId: polytoriaUser.id,
+                expiresAt,
+                message: `Add the code "${code}" to your Polytoria bio and then verify your account.`
+            };
+        } catch (error) {
+            console.error("Error initializing user connection:", error);
+            throw new Error("Failed to initialize connection. Please check the username and try again.");
+        }
+    }),
+    verifyUser: publicProcedure.mutation(async () => {
+        const { user } = await validateRequest();
+
+        if (!user) {
+            throw new Error("You must be logged in to verify a Polytoria account");
+        }
+
+        const codeData = userConnectionCodes.get(user.id);
+        
+        if (!codeData) {
+            throw new Error("No connection code found. Please initialize a connection first.");
+        }
+
+        if (Date.now() > codeData.expiresAt) {
+            userConnectionCodes.delete(user.id);
+            throw new Error("Connection code has expired. Please request a new one.");
+        }
+
+        try {
+            const response = await fetch(`https://api.polytoria.com/v1/users/${codeData.polytoriaUserId}`);
+            
+            if (!response.ok) {
+                throw new Error("Failed to fetch user profile from Polytoria");
+            }
+
+            const polytoriaProfile = await response.json();
+            
+            const bio = polytoriaProfile.description || "";
+            
+            if (!bio.includes(codeData.code)) {
+                throw new Error(`Code "${codeData.code}" not found in your Polytoria bio. Please add it to your bio and try again.`);
+            }
+
+            userConnectionCodes.delete(user.id);
+
+            // TODO: Store the verified connection in the database
+            console.log(`User ${user.id} successfully verified Polytoria account ${polytoriaProfile.username} (ID: ${polytoriaProfile.id})`);
+
+            return {
+                success: true,
+                polytoriaUsername: polytoriaProfile.username,
+                polytoriaUserId: polytoriaProfile.id,
+                message: "Successfully verified your Polytoria account!"
+            };
+        } catch (error) {
+            console.error("Error verifying user connection:", error);
+            throw new Error(error instanceof Error ? error.message : "Failed to verify connection. Please try again.");
+        }
+    }),
+    
+
 });
 
 export type AppRouter = typeof appRouter;
