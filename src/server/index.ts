@@ -238,7 +238,17 @@ export const appRouter = router({
                 }
             });
 
-            return { item, allTags };
+            const latestListing = await db.query.listingsHistoryTable.findFirst({
+                where: eq(listingsHistoryTable.itemId, opts.input),
+                orderBy: [desc(listingsHistoryTable.created_at)],
+                columns: {
+                    bestPrice: true,
+                    sellers: true,
+                    created_at: true
+                }
+            });
+
+            return { item, allTags, latestListing };
         } catch (e) {
             console.error(e);
         }

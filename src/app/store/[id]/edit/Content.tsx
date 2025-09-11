@@ -31,10 +31,7 @@ export default function Content({ id }: { id: number }) {
                         <p className="text-sm text-neutral-400">{itemInfo.data.item.description}</p>
                     </div>
                     <div className="py-3">
-                        <Form data={{
-                            item: itemInfo.data.item,
-                            allTags: itemInfo.data.allTags
-                        }} />
+                        <Form data={itemInfo.data} />
                     </div>
                 </div>
             ) : (

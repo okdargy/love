@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Error from '@/components/Error';
 
-export default function Owners({ id, setHoardRate }: { id: number; setHoardRate: React.Dispatch<React.SetStateAction<number>> }) {
+export default function Owners({ id, setHoardRate, setOwnersAmount }: { id: number; setHoardRate: React.Dispatch<React.SetStateAction<number>>; setOwnersAmount: React.Dispatch<React.SetStateAction<number>> }) {
     const [page, setPage] = useState(1);
     const LIMIT_PER_PAGE = 5;
     const owners = trpc.getAllItemOwners.useQuery(id);
@@ -91,6 +91,7 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
 
     useEffect(() => {
         if (owners.data) {
+            setOwnersAmount(owners.data.length);
             let total = 0;
             let hoardedTotal = 0;
 
@@ -101,7 +102,6 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
                     hoardedTotal += owner.serials.length;
                 }
             });
-
 
             const hoardRate = hoardedTotal / total * 100;
             setHoardRate(hoardRate);
@@ -144,7 +144,7 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
                     </li>
                 ))}
             </ul>
-            <div className="flex justify-between">
+            <div className="relative flex justify-between items-center">
                 <Button
                     onClick={handlePreviousPage}
                     disabled={page === 1}
@@ -152,7 +152,7 @@ export default function Owners({ id, setHoardRate }: { id: number; setHoardRate:
                 >
                     Previous
                 </Button>
-                <span className="text-neutral-600 text-sm my-auto">{owners.data!.length <= page * LIMIT_PER_PAGE ? owners.data!.length : page * LIMIT_PER_PAGE}/{owners.data!.length}</span>
+                <span className="text-neutral-600 text-sm absolute left-1/2 transform -translate-x-1/2">{page}/{Math.ceil(owners.data!.length / LIMIT_PER_PAGE)}</span>
                 <Button
                     onClick={handleNextPage}
                     disabled={owners.data!.length <= page * LIMIT_PER_PAGE}
