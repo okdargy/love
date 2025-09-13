@@ -9,7 +9,7 @@ import type { User } from "lucia";
 
 const sanitizeSearchInput = (input: string | undefined) => {
     if(!input) return input;
-    return input.replace(/[^a-zA-Z0-9\s']/g, '');
+    return input.replace(/[^a-zA-Z0-9+\s']/g, '');
 }; 
 
 const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -677,8 +677,36 @@ export const appRouter = router({
             throw new Error(error instanceof Error ? error.message : "Failed to verify connection. Please try again.");
         }
     }),
-    
+    searchCalculatorItems: publicProcedure.input(z.object({
+        input: z.string(),
+        limit: z.number().min(1).max(25).optional(),
+        offset: z.number().min(1).optional(),
+    })).mutation(async (opts) => {
+        const sanitizedInput = sanitizeSearchInput(opts.input.input);
 
+        return await db.query.collectablesTable.findMany({
+            where: (collectables, { like, or }) => or(
+                like(collectables.shorthand, `%${sanitizedInput}%`),
+                like(collectables.name, `%${sanitizedInput}%`)
+            ),
+            limit: opts.input.limit ?? 10,
+            offset: opts.input.offset ?? 0,
+            columns: {
+                id: true,
+                name: true,
+                shorthand: true,
+                thumbnailUrl: true,
+                recentAverage: true
+            },
+            with: {
+                stats: {
+                    columns: {
+                        value: true,
+                    }
+                }
+            }
+        });
+    })
 });
 
 export type AppRouter = typeof appRouter;
