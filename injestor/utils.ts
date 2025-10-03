@@ -39,7 +39,7 @@ export const processDeal = async (item: {
                 description: itemInfo.description + (itemInfo.tags.length > 0) ? `\n\n${itemInfo.tags.map(t => {
                     let i = tags.find(tag => tag.id === t.tagId)
                     return "`" + (i ? i.emoji + " " + i.name : "Unknown") + "`"
-                }).join("  ")}` : "",
+                }).join("\n")}` : "",
                 color: 15680580,
                 thumbnail: {
                     url: itemInfo.thumbnailUrl,

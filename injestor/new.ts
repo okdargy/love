@@ -4,7 +4,7 @@ import { ldb } from "./db";
 import { db } from "@/lib/db";
 
 import { itemsTable, serialsTable } from "./db/schema";
-import { collectablesTable, listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
+import { collectablesTable, collectablesStatsTable, listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
 
 import { APIItem, Inventory, Item, ListingsAPIResponse, WebsiteItem } from "./types";
 import { getAPIItems, getListings, getOwners, getWebsiteItems } from "./api";
@@ -140,6 +140,14 @@ async function insertNewItems(values: MergedItem[]) {
         price: i.originalPrice ?? 0,
     }));
 
+    const collectableStatsValues: InferInsertModel<typeof collectablesStatsTable>[] = values.map(i => ({
+        id: i.id,
+        value: i.averagePrice ?? null,
+        demand: null,
+        trend: null,
+        funFact: null,
+    }));
+
     await db.insert(collectablesTable).values(collectableValues).onConflictDoUpdate({
         target: collectablesTable.id,
         set: {
@@ -147,6 +155,9 @@ async function insertNewItems(values: MergedItem[]) {
             price: sql.raw(`excluded.${collectablesTable.price.name}`)
         }
     });
+
+    await db.insert(collectablesStatsTable).values(collectableStatsValues).onConflictDoNothing();
+
     await ldb.insert(itemsTable).values(values).onConflictDoUpdate({
         target: itemsTable.id,
         set: {
