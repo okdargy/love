@@ -71,11 +71,13 @@ async function getShopData() {
                 }
             }
         } else { // if no items from website, we just add API items just always to get the latest items
-            items.forEach(item => {
-                item.originalPrice = item.price;
-                item.price = null;
-            });
-            items.push(...aresponse.assets);
+            const modifiedAssets = aresponse.assets.map(asset => ({
+                ...asset,
+                originalPrice: asset.price,
+                price: null
+            }));
+            
+            items.push(...modifiedAssets);
 
             for (let page = 2; page <= aresponse.pages; page++) {
                 await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_PAGE));
@@ -117,7 +119,7 @@ async function handleShopData(items: MergedItem[]) {
 
         if (existingItem) {
             if ((item.price && item.price !== existingItem.bestPrice) || (item.averagePrice && item.averagePrice !== existingItem.averagePrice)) {
-                if(item.price && item.price < existingItem.bestPrice) processDeal(existingItem, { price: item.price });
+                if(item.price && existingItem.bestPrice && item.price < existingItem.bestPrice) processDeal(existingItem, { price: item.price });
                 itemsToUpdate.push(item);
             }
         }
@@ -158,7 +160,14 @@ async function insertNewItems(values: MergedItem[]) {
 
     await db.insert(collectablesStatsTable).values(collectableStatsValues).onConflictDoNothing();
 
-    await ldb.insert(itemsTable).values(values).onConflictDoUpdate({
+    const itemsValues = values.map(i => ({
+        id: i.id,
+        bestPrice: i.price ?? null,
+        totalSellers: null,
+        averagePrice: i.averagePrice ?? null
+    }));
+
+    await ldb.insert(itemsTable).values(itemsValues).onConflictDoUpdate({
         target: itemsTable.id,
         set: {
             bestPrice: sql.raw(`excluded.${itemsTable.bestPrice.name}`),
@@ -304,7 +313,7 @@ async function handleListingData(itemId: number , response: ListingsAPIResponse)
     const totalSellers = response.meta.total;
 
     if (price !== item.bestPrice || totalSellers !== item.totalSellers) {
-        if(price < item.bestPrice) processDeal(item, cheapestSeller);
+        if(item.bestPrice && price < item.bestPrice) processDeal(item, cheapestSeller);
 
         await db.insert(listingsHistoryTable).values({
             itemId: item.id,
