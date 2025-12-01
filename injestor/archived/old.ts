@@ -1,13 +1,13 @@
 import { db } from "@/lib/db";
-import { ldb } from "./db";
+import { ldb } from "../db";
 import {
     Inventory,
     Listing,
-} from "./types";
-import { itemsTable, serialsTable } from "./db/schema";
+} from "../types";
+import { itemsTable, serialsTable } from "../db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { collectablesTable, listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
-import { getItems, getListings, getOwners } from "./api";
+import { getItems, getListings, getOwners } from "../api";
 
 const newItemInterval = 1000 * 60 * 5; // Interval to check for new items
 

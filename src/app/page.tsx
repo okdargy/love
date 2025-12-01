@@ -71,6 +71,8 @@ export default function Home() {
       value: filters.sortBy,
       options: [
         { value: "date", label: "Date added" },
+        { value: "recent", label: "Recent Average" },
+        { value: "stock", label: "Stock" },
       ],
     },
     {

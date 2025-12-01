@@ -26,6 +26,17 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { EquationContext } from 'react-equation'
 import Graph from './Graph';
 
+// Function to determine value symbol based on range
+function getValueSymbol(value: number, valueLow?: number | null, valueHigh?: number | null): string {
+  if (!valueLow || !valueHigh) return '';
+  
+  if (value < valueLow) return '+';
+  if (value > valueHigh) return '-';
+  if (value >= valueLow && value <= valueHigh) return '~';
+  
+  return '';
+}
+
 // Function to calculate new average price after purchase
 function calculateNewAveragePrice(currentAverage: number, purchasePrice: number): number {
   if (purchasePrice > currentAverage) {
@@ -153,7 +164,14 @@ export default function Page() {
             </div>
             <div className="w-full space-y-3">
               <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-2 gap-x-3 gap-y-3 mt-4 md:mt-0'>
-                <InfoCard title="Value" value={itemInfo.data.item.stats.value} icon={<Coins />} />
+                <InfoCard 
+                  title="Value" 
+                  value={itemInfo.data.item.stats.value} 
+                  icon={<Coins />}
+                  valueLow={itemInfo.data.item.stats.valueLow}
+                  valueHigh={itemInfo.data.item.stats.valueHigh}
+                  valueNote={itemInfo.data.item.stats.valueNote}
+                />
                 <InfoCard title="Demand" value={itemInfo.data.item.stats.demand} icon={<BarChart />} />
                 <InfoCard title="Trend" value={itemInfo.data.item.stats.trend} icon={<TrendingUp />} />
                 <InfoCard title="Shorthand" value={itemInfo.data.item.shorthand} icon={<Tag />} />
@@ -234,24 +252,38 @@ export default function Page() {
   )
 }
 
-function InfoCard({ title, value, icon }: {
+function InfoCard({ title, value, icon, valueLow, valueHigh, valueNote }: {
   title: string;
   value: string | number | null;
   icon: ReactNode;
+  valueLow?: number | null;
+  valueHigh?: number | null;
+  valueNote?: string | null;
 }) {
+  let displayValue: string | number | null = value;
+  let symbol = '';
+  
   if (typeof value === 'number') {
-    value = new Intl.NumberFormat().format(value);
+    displayValue = new Intl.NumberFormat().format(value);
+    if (title === 'Value' && valueLow && valueHigh) {
+      symbol = getValueSymbol(value, valueLow, valueHigh);
+    }
   } else if (typeof value === 'string') {
-    value = value.charAt(0).toUpperCase() + value.slice(1);
+    displayValue = value.charAt(0).toUpperCase() + value.slice(1);
   }
 
-  return (
+  const cardContent = (
     <div className="relative bg-neutral-900 border border-neutral-100/10 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       <div className="relative flex items-center justify-between">
         <div>
           <h3 className="text-neutral-400 text-sm uppercase tracking-wide">{title}</h3>
           <p className="text-xl font-semibold text-white mt-2">
-            {value !== null && value !== "" ? value : "N/A"}
+            {displayValue !== null && displayValue !== "" ? (
+              <>
+                {symbol && <span className="mr-1">{symbol}</span>}
+                {displayValue}
+              </>
+            ) : "N/A"}
           </p>
         </div>
         <div className="ml-2 text-white" style={{ fontSize: '2rem' }}>
@@ -260,6 +292,35 @@ function InfoCard({ title, value, icon }: {
       </div>
     </div>
   );
+
+  if (title === 'Value' && symbol && (valueLow || valueHigh)) {
+    return (
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          {cardContent}
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          <div className="space-y-2">
+            <h4 className="font-semibold">Value Range</h4>
+            <div className="text-sm text-neutral-400">
+              <p>Range: {valueLow ? new Intl.NumberFormat().format(valueLow) : 'N/A'} - {valueHigh ? new Intl.NumberFormat().format(valueHigh) : 'N/A'}</p>
+              {symbol === '+' && <p className="mt-1">Current value is <span className="text-green-400 font-semibold">below</span> the estimated range (good deal)</p>}
+              {symbol === '-' && <p className="mt-1">Current value is <span className="text-red-400 font-semibold">above</span> the estimated range (overpriced)</p>}
+              {symbol === '~' && <p className="mt-1">Current value is <span className="text-blue-400 font-semibold">within</span> the estimated range</p>}
+              {valueNote && (
+                <>
+                  <hr className="my-2 border-neutral-700" />
+                  <p className="italic">{valueNote}</p>
+                </>
+              )}
+            </div>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+    );
+  }
+
+  return cardContent;
 }
 
 function ProjectedAverageCard({ currentAverage, lowestPrice }: {

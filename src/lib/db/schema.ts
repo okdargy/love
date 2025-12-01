@@ -43,6 +43,7 @@ export const collectablesTable = sqliteTable("collectables", {
 	thumbnailUrl: text("thumbnailUrl"),
 	price: integer("price").notNull(),
 	recentAverage: integer("recentAverage"),
+	stock: integer("stock"),
 	created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
 	updated_at: integer("updated_at").notNull().default(sql`(current_timestamp)`)
 });
@@ -61,11 +62,14 @@ export const itemTagsTable = sqliteTable("item_tags", {
 });
 
 export const collectablesStatsTable = sqliteTable("collectables_stats", {
-    id: integer("id").notNull().references(() => collectablesTable.id),
+    id: integer("id").notNull().references(() => collectablesTable.id).primaryKey().unique(),
     value: integer("value"),
     demand: text("demand", { enum: ["awful", "low", "normal", "high", "great"] }),
     trend: text("trend", { enum: ["stable", "unstable", "fluctuating", "rising", "lowering"] }),
     funFact: text("funFact"),
+    valueLow: integer("valueLow"),
+    valueHigh: integer("valueHigh"),
+    valueNote: text("valueNote"),
     created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
     updated_at: integer("updated_at").notNull().default(sql`(current_timestamp)`)
 });
