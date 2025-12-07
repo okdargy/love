@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { eq, relations, sql } from 'drizzle-orm';
 
 export const userTable = sqliteTable("user", {
@@ -59,7 +59,9 @@ export const tagsTable = sqliteTable("tags", {
 export const itemTagsTable = sqliteTable("item_tags", {
     itemId: integer("itemId").notNull().references(() => collectablesTable.id),
     tagId: integer("tagId").notNull().references(() => tagsTable.id),
-});
+}, (table) => [
+	index("item_tags_item_id_index").on(table.itemId),
+]);
 
 export const collectablesStatsTable = sqliteTable("collectables_stats", {
     id: integer("id").notNull().references(() => collectablesTable.id).primaryKey().unique(),
@@ -72,7 +74,9 @@ export const collectablesStatsTable = sqliteTable("collectables_stats", {
     valueNote: text("valueNote"),
     created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
     updated_at: integer("updated_at").notNull().default(sql`(current_timestamp)`)
-});
+}, (table) => [
+	uniqueIndex("collectable_stats_id_unique").on(table.id)
+]);
 
 export const collectablesRelations = relations(collectablesTable, ({ one, many }) => ({
     stats: one(collectablesStatsTable, {
@@ -120,7 +124,9 @@ export const tradeHistoryTable = sqliteTable("trade_history", {
 	username: text("username").notNull(),
 	isFirst: integer("isFirst", { mode: 'boolean' }).default(false).notNull(),
 	created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
-});
+}, (table) => [
+	index("trade_history_user_id_index").on(table.userId),
+]);
 
 export const tradeHistoryRelations = relations(tradeHistoryTable, ({ one }) => ({
 	item: one(collectablesTable, {
@@ -137,7 +143,9 @@ export const listingsHistoryTable = sqliteTable("listings_history", {
 	bestPrice: integer("price").notNull(),
 	sellers: integer("sellers").notNull(),
 	created_at: integer("created_at").notNull().default(sql`(current_timestamp)`),
-});
+}, (table) => [
+	index("listings_history_item_id_index").on(table.itemId),
+]);
 
 export const listingsHistoryRelations = relations(listingsHistoryTable, ({ one }) => ({
 	item: one(collectablesTable, {

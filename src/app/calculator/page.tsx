@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { trpc } from '@/app/_trpc/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Search, TrendingUp, TrendingDown, Equal } from 'lucide-react';
+import { Minus, Plus, TrendingUp, TrendingDown, Equal, Trophy, Calculator as CalcIcon } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/icons';
@@ -16,6 +16,7 @@ interface CalculatorItem {
     thumbnailUrl: string | null;
     recentAverage: number | null;
     stats?: { value: number | null } | null;
+    value?: number | null;
 }
 
 interface TradeItem extends CalculatorItem {
@@ -30,15 +31,25 @@ export default function CalculatorPage() {
     const [itemCache, setItemCache] = useState<Map<number, CalculatorItem>>(new Map());
     const [offerBricks, setOfferBricks] = useState<number>(0);
     const [requestBricks, setRequestBricks] = useState<number>(0);
+    const [searchResultsCache, setSearchResultsCache] = useState<Map<string, any[]>>(new Map());
 
     const searchItems = trpc.searchCalculatorItems.useMutation();
+    const topValueItems = trpc.getTopValueItems.useQuery({ limit: 25 });
 
     const handleSearch = async () => {
         if (searchQuery.trim()) {
-            await searchItems.mutateAsync({
+            const cacheKey = searchQuery.toLowerCase().trim();
+            if (searchResultsCache.has(cacheKey)) {
+                searchItems.data = searchResultsCache.get(cacheKey);
+                return;
+            }
+            const results = await searchItems.mutateAsync({
                 input: searchQuery,
-                limit: 10
+                limit: 25
             });
+            setSearchResultsCache(prev => new Map(prev.set(cacheKey, results)));
+        } else {
+            searchItems.reset();
         }
     };
 
@@ -49,7 +60,8 @@ export default function CalculatorPage() {
             shorthand: item.shorthand,
             thumbnailUrl: item.thumbnailUrl,
             recentAverage: item.recentAverage,
-            stats: item.stats || null
+            stats: item.stats || null,
+            value: item.value || item.stats?.value || null
         };
 
         setItemCache(prev => new Map(prev.set(item.id, cachedItem)));
@@ -150,10 +162,10 @@ export default function CalculatorPage() {
 
     const calculateTotal = (items: TradeItem[], useValue: boolean = false) => {
         return items.reduce((total, item) => {
-            const price = useValue && item.stats?.value
-                ? item.stats.value
+            const price = useValue && (item.value || item.stats?.value)
+                ? (item.value || item.stats?.value)
                 : item.recentAverage || 0;
-            return total + (price * item.quantity);
+            return total + (price! * item.quantity);
         }, 0);
     };
 
@@ -173,155 +185,160 @@ export default function CalculatorPage() {
     const formatNumber = (num: number) => new Intl.NumberFormat().format(Math.round(num));
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">Offer</h2>
-                        <div className="text-sm text-neutral-400">
-                            Value: <span className="text-blue-400">{formatNumber(calculateTotal(offerItems, true))}</span>
-                            {offerBricks > 0 && <span className="text-orange-400"> + {formatNumber(offerBricks)} bricks</span>} |
-                            RAP: <span className="text-green-400">{formatNumber(calculateTotal(offerItems, false))}</span>
-                            {offerBricks > 0 && <span className="text-orange-400"> + {formatNumber(offerBricks)} bricks</span>}
+        <div className="space-y-4">
+            <div className="space-y-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">Offer</h3>
+                            <div className="text-xs text-neutral-400 space-x-2">
+                                <span className="text-blue-400">{formatNumber(calculateTotal(offerItems, true))}</span>
+                                {offerBricks > 0 && <span className="text-orange-400">+{formatNumber(offerBricks)}</span>}
+                                <span className="text-neutral-600">|</span>
+                                <span className="text-green-400">{formatNumber(calculateTotal(offerItems, false))}</span>
+                                {offerBricks > 0 && <span className="text-orange-400">+{formatNumber(offerBricks)}</span>}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-400">Bricks:</span>
+                            <Input
+                                type="number"
+                                value={offerBricks || ''}
+                                onChange={(e) => setOfferBricks(Number(e.target.value) || 0)}
+                                placeholder="0"
+                                className="w-28 h-9"
+                                min="0"
+                            />
+                        </div>
+                        <div className="border border-neutral-100/10 rounded-lg p-3 min-h-[200px]">
+                            <div className="grid grid-cols-3 gap-3">
+                                {offerItems.map(item => (
+                                    <CalculatorItemSlot
+                                        key={`offer-${item.id}`}
+                                        item={item}
+                                        onUpdateQuantity={(change) => updateQuantity(item.id, 'offer', change)}
+                                        onRemove={() => removeItem(item.id, 'offer')}
+                                    />
+                                ))}
+                                {Array.from({ length: Math.max(0, 6 - offerItems.length) }).map((_, i) => (
+                                    <EmptySlot key={`offer-empty-${i}`} />
+                                ))}
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-neutral-400">Bricks:</span>
-                        <Input
-                            type="number"
-                            value={offerBricks || ''}
-                            onChange={(e) => setOfferBricks(Number(e.target.value) || 0)}
-                            placeholder="0"
-                            className="w-24 h-8 text-sm"
-                            min="0"
-                        />
-                    </div>
-                    <div className="border border-neutral-500/20 bg-neutral-900/5 rounded-lg">
-                        <div className="grid grid-cols-3 gap-2 p-3 min-h-[200px]">
-                            {offerItems.map(item => (
-                                <CalculatorItemSlot
-                                    key={`offer-${item.id}`}
-                                    item={item}
-                                    onUpdateQuantity={(change) => updateQuantity(item.id, 'offer', change)}
-                                    onRemove={() => removeItem(item.id, 'offer')}
-                                />
-                            ))}
-                            {Array.from({ length: Math.max(0, 6 - offerItems.length) }).map((_, i) => (
-                                <EmptySlot key={`offer-empty-${i}`} />
-                            ))}
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">Request</h3>
+                            <div className="text-xs text-neutral-400 space-x-2">
+                                <span className="text-blue-400">{formatNumber(calculateTotal(requestItems, true))}</span>
+                                {requestBricks > 0 && <span className="text-orange-400">+{formatNumber(requestBricks)}</span>}
+                                <span className="text-neutral-600">|</span>
+                                <span className="text-green-400">{formatNumber(calculateTotal(requestItems, false))}</span>
+                                {requestBricks > 0 && <span className="text-orange-400">+{formatNumber(requestBricks)}</span>}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-400">Bricks:</span>
+                            <Input
+                                type="number"
+                                value={requestBricks || ''}
+                                onChange={(e) => setRequestBricks(Number(e.target.value) || 0)}
+                                placeholder="0"
+                                className="w-28 h-9"
+                                min="0"
+                            />
+                        </div>
+                        <div className="border border-neutral-100/10 rounded-lg p-3 min-h-[200px]">
+                            <div className="grid grid-cols-3 gap-3">
+                                {requestItems.map(item => (
+                                    <CalculatorItemSlot
+                                        key={`request-${item.id}`}
+                                        item={item}
+                                        onUpdateQuantity={(change) => updateQuantity(item.id, 'request', change)}
+                                        onRemove={() => removeItem(item.id, 'request')}
+                                    />
+                                ))}
+                                {Array.from({ length: Math.max(0, 6 - requestItems.length) }).map((_, i) => (
+                                    <EmptySlot key={`request-empty-${i}`} />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">Request</h2>
-                        <div className="text-sm text-neutral-400">
-                            Value: <span className="text-blue-400">{formatNumber(calculateTotal(requestItems, true))}</span>
-                            {requestBricks > 0 && <span className="text-orange-400"> + {formatNumber(requestBricks)} bricks</span>} |
-                            RAP: <span className="text-green-400">{formatNumber(calculateTotal(requestItems, false))}</span>
-                            {requestBricks > 0 && <span className="text-orange-400"> + {formatNumber(requestBricks)} bricks</span>}
+                {(offerItems.length > 0 || requestItems.length > 0 || offerBricks > 0 || requestBricks > 0) && (
+                    <div className="border border-neutral-100/10 rounded-lg p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="text-center space-y-3">
+                                <p className="text-sm text-neutral-400 font-medium">RAP Difference</p>
+                                <div className="flex items-center justify-center gap-2">
+                                    {getTradeStatus(rapDifference) === 'overpay' && <TrendingUp className="w-5 h-5 text-red-400" />}
+                                    {getTradeStatus(rapDifference) === 'underpay' && <TrendingDown className="w-5 h-5 text-green-400" />}
+                                    {getTradeStatus(rapDifference) === 'neutral' && <Equal className="w-5 h-5 text-yellow-400" />}
+                                    <span className={`text-2xl font-bold ${
+                                        getTradeStatus(rapDifference) === 'overpay' ? 'text-red-400' :
+                                        getTradeStatus(rapDifference) === 'underpay' ? 'text-green-400' :
+                                        'text-yellow-400'
+                                    }`}>
+                                        {rapDifference > 0 ? '+' : ''}{formatNumber(rapDifference)}
+                                    </span>
+                                </div>
+                                <Badge variant={
+                                    getTradeStatus(rapDifference) === 'overpay' ? 'destructive' :
+                                    getTradeStatus(rapDifference) === 'underpay' ? 'default' :
+                                    'secondary'
+                                }>
+                                    {getTradeStatus(rapDifference) === 'overpay' ? 'You Overpay' :
+                                     getTradeStatus(rapDifference) === 'underpay' ? 'You Win' :
+                                     'Fair Trade'}
+                                </Badge>
+                            </div>
+
+                            <div className="text-center space-y-3">
+                                <p className="text-sm text-neutral-400 font-medium">Value Difference</p>
+                                <div className="flex items-center justify-center gap-2">
+                                    {getTradeStatus(valueDifference) === 'overpay' && <TrendingUp className="w-5 h-5 text-red-400" />}
+                                    {getTradeStatus(valueDifference) === 'underpay' && <TrendingDown className="w-5 h-5 text-green-400" />}
+                                    {getTradeStatus(valueDifference) === 'neutral' && <Equal className="w-5 h-5 text-yellow-400" />}
+                                    <span className={`text-2xl font-bold ${
+                                        getTradeStatus(valueDifference) === 'overpay' ? 'text-red-400' :
+                                        getTradeStatus(valueDifference) === 'underpay' ? 'text-green-400' :
+                                        'text-yellow-400'
+                                    }`}>
+                                        {valueDifference > 0 ? '+' : ''}{formatNumber(valueDifference)}
+                                    </span>
+                                </div>
+                                <Badge variant={
+                                    getTradeStatus(valueDifference) === 'overpay' ? 'destructive' :
+                                    getTradeStatus(valueDifference) === 'underpay' ? 'default' :
+                                    'secondary'
+                                }>
+                                    {getTradeStatus(valueDifference) === 'overpay' ? 'You Overpay' :
+                                     getTradeStatus(valueDifference) === 'underpay' ? 'You Win' :
+                                     'Fair Trade'}
+                                </Badge>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-neutral-400">Bricks:</span>
-                        <Input
-                            type="number"
-                            value={requestBricks || ''}
-                            onChange={(e) => setRequestBricks(Number(e.target.value) || 0)}
-                            placeholder="0"
-                            className="w-24 h-8 text-sm"
-                            min="0"
-                        />
-                    </div>
-                    <div className="border border-neutral-500/20 bg-neutral-900/5 rounded-lg">
-                        <div className="grid grid-cols-3 gap-2 p-3 min-h-[200px]">
-                            {requestItems.map(item => (
-                                <CalculatorItemSlot
-                                    key={`request-${item.id}`}
-                                    item={item}
-                                    onUpdateQuantity={(change) => updateQuantity(item.id, 'request', change)}
-                                    onRemove={() => removeItem(item.id, 'request')}
-                                />
-                            ))}
-                            {Array.from({ length: Math.max(0, 6 - requestItems.length) }).map((_, i) => (
-                                <EmptySlot key={`request-empty-${i}`} />
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
 
-            { (offerItems.length === 0 && requestItems.length === 0 && offerBricks === 0 && requestBricks === 0) ? null : (
-                <div className="border border-neutral-100/10 bg-neutral-900/20 p-4 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="text-center">
-                            <p className="text-sm text-neutral-400 mb-2">RAP Difference</p>
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                                {getTradeStatus(rapDifference) === 'overpay' && <TrendingUp className="w-5 h-5 text-red-400" />}
-                                {getTradeStatus(rapDifference) === 'underpay' && <TrendingDown className="w-5 h-5 text-green-400" />}
-                                {getTradeStatus(rapDifference) === 'neutral' && <Equal className="w-5 h-5 text-yellow-400" />}
-                                <span className={`text-xl font-bold ${getTradeStatus(rapDifference) === 'overpay' ? 'text-red-400' :
-                                        getTradeStatus(rapDifference) === 'underpay' ? 'text-green-400' :
-                                            'text-yellow-400'
-                                    }`}>
-                                    {rapDifference > 0 ? '+' : ''}{formatNumber(rapDifference)}
-                                </span>
-                            </div>
-                            <Badge variant={
-                                getTradeStatus(rapDifference) === 'overpay' ? 'destructive' :
-                                    getTradeStatus(rapDifference) === 'underpay' ? 'default' :
-                                        'secondary'
-                            }>
-                                {getTradeStatus(rapDifference) === 'overpay' ? 'You Overpay' :
-                                    getTradeStatus(rapDifference) === 'underpay' ? 'You Win' :
-                                        'Fair Trade'}
-                            </Badge>
-                        </div>
-
-                        <div className="text-center">
-                            <p className="text-sm text-neutral-400 mb-2">Value Difference</p>
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                                {getTradeStatus(valueDifference) === 'overpay' && <TrendingUp className="w-5 h-5 text-red-400" />}
-                                {getTradeStatus(valueDifference) === 'underpay' && <TrendingDown className="w-5 h-5 text-green-400" />}
-                                {getTradeStatus(valueDifference) === 'neutral' && <Equal className="w-5 h-5 text-yellow-400" />}
-                                <span className={`text-xl font-bold ${getTradeStatus(valueDifference) === 'overpay' ? 'text-red-400' :
-                                        getTradeStatus(valueDifference) === 'underpay' ? 'text-green-400' :
-                                            'text-yellow-400'
-                                    }`}>
-                                    {valueDifference > 0 ? '+' : ''}{formatNumber(valueDifference)}
-                                </span>
-                            </div>
-                            <Badge variant={
-                                getTradeStatus(valueDifference) === 'overpay' ? 'destructive' :
-                                    getTradeStatus(valueDifference) === 'underpay' ? 'default' :
-                                        'secondary'
-                            }>
-                                {getTradeStatus(valueDifference) === 'overpay' ? 'You Overpay' :
-                                    getTradeStatus(valueDifference) === 'underpay' ? 'You Win' :
-                                        'Fair Trade'}
-                            </Badge>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="border border-neutral-100/10 p-4 rounded-lg">
-                <div className="flex gap-x-2 mb-4">
-                    <div className="flex-1">
-                        <Input
-                            placeholder="Search items..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                        />
-                    </div>
+            <div className="space-y-3">
+                <div className="flex gap-2">
+                    <Input
+                        placeholder="Search by name or shorthand..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        className="flex-1"
+                    />
                     <Button onClick={handleSearch} disabled={!searchQuery.trim()} variant="default">
                         Search
                     </Button>
                 </div>
 
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-2">
                     <Button
                         variant={selectedSide === 'offer' ? 'default' : 'outline'}
                         onClick={() => setSelectedSide('offer')}
@@ -338,22 +355,40 @@ export default function CalculatorPage() {
                     </Button>
                 </div>
 
-                {searchItems.isLoading && (
-                    <div className="flex justify-center p-4">
+                {(searchItems.isLoading || topValueItems.isLoading) && (
+                    <div className="flex justify-center p-8">
                         <Spinner width="24" height="24" className="fill-primary" />
                     </div>
                 )}
 
-                {searchItems.data && searchItems.data.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {searchItems.data.map(item => (
-                            <SearchResultItem
-                                key={item.id}
-                                item={item}
-                                onClick={() => addItemToSide(item, selectedSide)}
-                            />
-                        ))}
-                    </div>
+                {!searchItems.isLoading && !topValueItems.isLoading && (
+                    <>
+                        {searchItems.data && searchItems.data.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {searchItems.data.map(item => (
+                                    <SearchResultItem
+                                        key={item.id}
+                                        item={item}
+                                        onClick={() => addItemToSide(item, selectedSide)}
+                                    />
+                                ))}
+                            </div>
+                        ) : searchItems.data && searchItems.data.length === 0 ? (
+                            <div className="text-center py-8 text-neutral-400">
+                                No items found. Try a different search term.
+                            </div>
+                        ) : topValueItems.data && topValueItems.data.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {topValueItems.data.map(item => (
+                                    <SearchResultItem
+                                        key={item.id}
+                                        item={item}
+                                        onClick={() => addItemToSide(item, selectedSide)}
+                                    />
+                                ))}
+                            </div>
+                        ) : null}
+                    </>
                 )}
             </div>
         </div>
@@ -370,7 +405,7 @@ function CalculatorItemSlot({
     onRemove: () => void;
 }) {
     return (
-        <div className="relative group border border-neutral-100/10 bg-neutral-900/30 rounded-lg p-2 hover:bg-neutral-800/50 transition-colors">
+        <div className="relative group border rounded-lg p-2 hover:border-primary transition-all aspect-square">
             <div className="flex flex-col h-full">
                 <div className="relative flex-1">
                     <Image
@@ -378,39 +413,39 @@ function CalculatorItemSlot({
                         alt={item.name}
                         width={128}
                         height={128}
-                        className="w-full h-full object-cover rounded border"
+                        className="w-full h-full object-cover rounded"
                     />
                     {item.quantity > 1 && (
-                        <div className="absolute -top-1 -right-1 bg-white text-black text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                        <div className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-lg border-2 border-background">
                             {item.quantity}
                         </div>
                     )}
                 </div>
 
-                <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 rounded-lg">
-                    <div className="flex gap-1">
+                <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg">
+                    <div className="flex gap-2">
                         <Button
                             size="sm"
-                            variant="outline"
+                            variant="secondary"
                             onClick={() => onUpdateQuantity(-1)}
-                            className="h-6 w-6 p-0 text-xs"
+                            className="h-8 w-8 p-0"
                         >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-4 h-4" />
                         </Button>
                         <Button
                             size="sm"
-                            variant="outline"
+                            variant="secondary"
                             onClick={() => onUpdateQuantity(1)}
-                            className="h-6 w-6 p-0 text-xs"
+                            className="h-8 w-8 p-0"
                         >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-4 h-4" />
                         </Button>
                     </div>
                     <Button
                         size="sm"
                         variant="destructive"
                         onClick={onRemove}
-                        className="h-6 text-xs px-2"
+                        className="h-7 text-xs px-3"
                     >
                         Remove
                     </Button>
@@ -422,9 +457,8 @@ function CalculatorItemSlot({
 
 function EmptySlot() {
     return (
-        <div className="border-2 border-dashed border-neutral-600 rounded-lg aspect-square flex items-center justify-center bg-neutral-900/10">
-            <div className="text-neutral-500 text-xs text-center">
-            </div>
+        <div className="border-2 border-dashed border-neutral-600 rounded-lg aspect-square flex items-center justify-center hover:border-neutral-500 transition-all">
+            <Plus className="w-6 h-6 text-neutral-600" />
         </div>
     );
 }
@@ -440,39 +474,48 @@ function SearchResultItem({
 
     return (
         <div
-            className="border border-neutral-100/10 bg-neutral-900/20 rounded-lg p-2 hover:bg-neutral-800/50 cursor-pointer transition-colors"
+            className="border hover:border-primary transition-all rounded-lg shadow-sm cursor-pointer group"
             onClick={onClick}
         >
-            <div className="flex flex-col h-full">
-                <div className="flex-1">
-                    <Image
-                        src={item.thumbnailUrl || '/noomy_404.png'}
-                        alt={item.name}
-                        width={128}
-                        height={128}
-                        className="w-full h-full object-cover rounded border"
-                    />
-                </div>
-                <div className="mt-1 text-center">
-                    <p className="text-xs truncate font-medium">{item.name}</p>
+            <div className="space-y-3 p-4 flex flex-col">
+                <Image
+                    src={item.thumbnailUrl || '/noomy_404.png'}
+                    alt={item.name}
+                    width={200}
+                    height={200}
+                    className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                    data-loaded='false'
+                    onLoad={event => {
+                        event.currentTarget.setAttribute('data-loaded', 'true')
+                    }}
+                    unoptimized
+                />
+                <div className="space-y-1">
+                    <h2 className="text-sm font-bold truncate">{item.name}</h2>
                     {item.shorthand && (
                         <p className="text-xs text-neutral-400 truncate">{item.shorthand}</p>
                     )}
-                </div>
-                <div className="flex mx-auto gap-x-2 mt-1 text-center">
-                    {item.recentAverage && (
-                        <span className="text-xs text-green-400">
-                            {formatNumber(item.recentAverage)}
-                        </span>
-                    )}
-                    {item.recentAverage && item.stats?.value && (
-                        <span className="text-xs text-neutral-400 mx-1">|</span>
-                    )}
-                    {item.stats?.value && (
-                        <div className="text-xs text-blue-400">
-                            {formatNumber(item.stats.value)}
-                        </div>
-                    )}
+                    <p className="text-sm">
+                        {(item.value || item.stats?.value) ? (
+                            <>
+                                <i className="pi pi-brick me-2 text-[#4F95E7]"></i>
+                                <span className="text-[#4F95E7] me-2">{formatNumber(item.value || item.stats.value)}</span>
+                            </>
+                        ) : item.recentAverage ? (
+                            <>
+                                <i className="pi pi-brick me-2 text-[#4FE883]"></i>
+                                <span className="text-[#4FE883] me-2">{formatNumber(item.recentAverage)}</span>
+                            </>
+                        ) : (
+                            <span className="text-gray-400">No Data</span>
+                        )}
+                        {(item.value || item.stats?.value) && item.recentAverage && (
+                            <>
+                                <i className="pi pi-brick me-2 text-[#4FE883]"></i>
+                                <span className="text-[#4FE883]">{formatNumber(item.recentAverage)}</span>
+                            </>
+                        )}
+                    </p>
                 </div>
             </div>
         </div>

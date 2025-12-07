@@ -796,28 +796,44 @@ export const appRouter = router({
     })).mutation(async (opts) => {
         const sanitizedInput = sanitizeSearchInput(opts.input.input);
 
-        return await db.query.collectablesTable.findMany({
-            where: (collectables, { like, or }) => or(
-                like(collectables.shorthand, `%${sanitizedInput}%`),
-                like(collectables.name, `%${sanitizedInput}%`)
-            ),
-            limit: opts.input.limit ?? 10,
-            offset: opts.input.offset ?? 0,
-            columns: {
-                id: true,
-                name: true,
-                shorthand: true,
-                thumbnailUrl: true,
-                recentAverage: true
-            },
-            with: {
-                stats: {
-                    columns: {
-                        value: true,
-                    }
-                }
-            }
-        });
+        return await db
+            .select({
+                id: collectablesTable.id,
+                name: collectablesTable.name,
+                shorthand: collectablesTable.shorthand,
+                thumbnailUrl: collectablesTable.thumbnailUrl,
+                recentAverage: collectablesTable.recentAverage,
+                value: collectablesStatsTable.value
+            })
+            .from(collectablesTable)
+            .leftJoin(collectablesStatsTable, eq(collectablesTable.id, collectablesStatsTable.id))
+            .where(
+                or(
+                    like(collectablesTable.shorthand, `%${sanitizedInput}%`),
+                    like(collectablesTable.name, `%${sanitizedInput}%`)
+                )
+            )
+            .orderBy(desc(collectablesStatsTable.value))
+            .limit(opts.input.limit ?? 10)
+            .offset(opts.input.offset ?? 0);
+    }),
+    getTopValueItems: publicProcedure.input(z.object({
+        limit: z.number().min(1).max(50).default(25)
+    })).query(async (opts) => {
+        return await db
+            .select({
+                id: collectablesTable.id,
+                name: collectablesTable.name,
+                shorthand: collectablesTable.shorthand,
+                thumbnailUrl: collectablesTable.thumbnailUrl,
+                recentAverage: collectablesTable.recentAverage,
+                value: collectablesStatsTable.value
+            })
+            .from(collectablesTable)
+            .innerJoin(collectablesStatsTable, eq(collectablesTable.id, collectablesStatsTable.id))
+            .where(sql`${collectablesStatsTable.value} IS NOT NULL`)
+            .orderBy(desc(collectablesStatsTable.value))
+            .limit(opts.input.limit);
     })
 });
 

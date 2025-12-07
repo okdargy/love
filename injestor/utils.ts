@@ -1,7 +1,7 @@
 import { collectablesTable, tradeHistoryTable } from "@/lib/db/schema";
 import { Listing } from "./types";
 import { db } from "@/lib/db";
-import { eq, InferSelectModel } from "drizzle-orm";
+import { eq, InferSelectModel, inArray } from "drizzle-orm";
 
 const tags = await db.query.tagsTable.findMany();
 
@@ -112,13 +112,36 @@ export const processTrade = async (
         return null;
     }
 
-    let desc = `Side 1: **${leftSide.username}** (${leftSide.id})`;
-    let title = `${leftSide.username} ↔ ${rightSide.username}`;
+    // Build a lookup of itemId -> item name to list confirmed items from this cycle
+    const itemIds = Array.from(new Set(currentTrades.map(t => t.itemId)));
+    const itemLookup = itemIds.length > 0
+        ? (await db.query.collectablesTable.findMany({
+            where: inArray(collectablesTable.id, itemIds),
+            columns: { id: true, name: true }
+        })).reduce<Record<number, string>>((acc, item) => {
+            acc[item.id] = item.name;
+            return acc;
+        }, {})
+        : {};
+
+    const formatTradeLine = (trade: { itemId: number; serial: number }) => {
+        const name = itemLookup[trade.itemId] ?? `Item ${trade.itemId}`;
+        return `${name} (#${trade.serial})`;
+    };
+
+        let desc = `Side 1: **${leftSide.username}** (${leftSide.id})`;
+        let title = `${leftSide.username} <-> ${rightSide.username}`;
+
+    const leftConfirmed = leftSideItems.map(formatTradeLine);
+    const rightConfirmed = rightSideItems.map(formatTradeLine);
 
     if (leftSideItems.length > 0) {
         desc += `\n> Received ${leftSideItems.length} item${leftSideItems.length > 1 ? 's' : ''}`;
     } else {
         desc += `\n> Received nothing`;
+    }
+    if (leftConfirmed.length > 0) {
+        desc += `\n${leftConfirmed.map(item => `> ${item}`).join('\n')}`;
     }
 
     desc += `\n\nSide 2: **${rightSide.username}** (${rightSide.id})`;
@@ -128,9 +151,12 @@ export const processTrade = async (
     } else {
         desc += `\n> Received nothing, posssibly currency trade`;
     }
+    if (rightConfirmed.length > 0) {
+        desc += `\n${rightConfirmed.map(item => `> ${item}`).join('\n')}`;
+    }
 
     // Add condensed trade history at the bottom
-    desc += `\n\n**Recent Trade History (6h)**`;
+    desc += `\n\n**Possible Items (recent trades, 6h)**`;
     
     const leftHistory = history.filter(h => h.userId === leftSide.id);
     const rightHistory = history.filter(h => h.userId === rightSide.id);

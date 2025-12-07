@@ -139,6 +139,7 @@ async function insertNewItems(values: MergedItem[]) {
         description: i.description,
         thumbnailUrl: (i.thumbnailUrl || i.thumbnail) ?? "https://cdn.polytoria.com/placeholders/asset/pending.png",
         recentAverage: i.averagePrice ?? 0,
+        stock: i.owners ?? null,
         price: i.originalPrice ?? 0,
     }));
 
