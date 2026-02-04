@@ -2,7 +2,6 @@ import { collectablesTable, tradeHistoryTable } from "@/lib/db/schema";
 import { Listing } from "./types";
 import { db } from "@/lib/db";
 import { eq, InferSelectModel, inArray } from "drizzle-orm";
-import { eq, InferSelectModel } from "drizzle-orm";
 import { existsSync, readFileSync } from "fs";
 
 const tags = await db.query.tagsTable.findMany();
