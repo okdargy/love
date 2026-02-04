@@ -4,11 +4,11 @@ import { ldb } from "./db";
 import { db } from "@/lib/db";
 
 import { itemsTable, serialsTable } from "./db/schema";
-import { collectablesTable, listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
+import { collectablesTable, collectablesStatsTable, listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
 
 import { APIItem, Inventory, Item, ListingsAPIResponse, WebsiteItem } from "./types";
 import { getAPIItems, getListings, getOwners, getWebsiteItems } from "./api";
-import { helpfulPrint, processDeal, processTrade } from "./utils";
+import { helpfulPrint, processDeal, processTrade, sendTradeWebhooks } from "./utils";
 
 const INTERVALS = {
     NEW_ITEMS: 1000 * 60 * 5, // 5 minutes, checking for new items/deals
@@ -71,11 +71,13 @@ async function getShopData() {
                 }
             }
         } else { // if no items from website, we just add API items just always to get the latest items
-            items.forEach(item => {
-                item.originalPrice = item.price;
-                item.price = null;
-            });
-            items.push(...aresponse.assets);
+            const modifiedAssets = aresponse.assets.map(asset => ({
+                ...asset,
+                originalPrice: asset.price,
+                price: null
+            }));
+            
+            items.push(...modifiedAssets);
 
             for (let page = 2; page <= aresponse.pages; page++) {
                 await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_PAGE));
@@ -117,7 +119,7 @@ async function handleShopData(items: MergedItem[]) {
 
         if (existingItem) {
             if ((item.price && item.price !== existingItem.bestPrice) || (item.averagePrice && item.averagePrice !== existingItem.averagePrice)) {
-                if(item.price && item.price < existingItem.bestPrice) processDeal(existingItem, { price: item.price });
+                if(item.price && existingItem.bestPrice && item.price < existingItem.bestPrice) processDeal(existingItem, { price: item.price });
                 itemsToUpdate.push(item);
             }
         }
@@ -137,7 +139,16 @@ async function insertNewItems(values: MergedItem[]) {
         description: i.description,
         thumbnailUrl: (i.thumbnailUrl || i.thumbnail) ?? "https://cdn.polytoria.com/placeholders/asset/pending.png",
         recentAverage: i.averagePrice ?? 0,
+        stock: i.owners ?? null,
         price: i.originalPrice ?? 0,
+    }));
+
+    const collectableStatsValues: InferInsertModel<typeof collectablesStatsTable>[] = values.map(i => ({
+        id: i.id,
+        value: i.averagePrice ?? null,
+        demand: null,
+        trend: null,
+        funFact: null,
     }));
 
     await db.insert(collectablesTable).values(collectableValues).onConflictDoUpdate({
@@ -147,7 +158,17 @@ async function insertNewItems(values: MergedItem[]) {
             price: sql.raw(`excluded.${collectablesTable.price.name}`)
         }
     });
-    await ldb.insert(itemsTable).values(values).onConflictDoUpdate({
+
+    await db.insert(collectablesStatsTable).values(collectableStatsValues).onConflictDoNothing();
+
+    const itemsValues = values.map(i => ({
+        id: i.id,
+        bestPrice: i.price ?? null,
+        totalSellers: null,
+        averagePrice: i.averagePrice ?? null
+    }));
+
+    await ldb.insert(itemsTable).values(itemsValues).onConflictDoUpdate({
         target: itemsTable.id,
         set: {
             bestPrice: sql.raw(`excluded.${itemsTable.bestPrice.name}`),
@@ -227,7 +248,7 @@ async function handleOwnersData(itemId: number, owners: Inventory[]) {
     }
 
     helpfulPrint(`Inserting/updating ${serialsToUpdate.length} serials for item ${itemId}`, "INFO", true);
-    await insertSerialLogs(serialsToUpdate);
+    return await insertSerialLogs(serialsToUpdate);
 }
 
 async function insertSerialLogs(inventories: {
@@ -238,35 +259,11 @@ async function insertSerialLogs(inventories: {
     isFirst?: boolean,
     oldUserId?: number
 }[]) {
-    if (inventories.length === 0) return;
+    if (inventories.length === 0) return [];
 
     await db.insert(tradeHistoryTable).values(inventories);
 
     const nonFirstTimeOwners = inventories.filter(inv => !inv.isFirst && inv.oldUserId);
-    
-    for (const inv of nonFirstTimeOwners) {
-        const recentTrades = await db.query.tradeHistoryTable.findMany({
-            where: and(
-                gt(tradeHistoryTable.created_at, sql`datetime('now', '-6 hours')`),
-                or(
-                    eq(tradeHistoryTable.userId, inv.userId),
-                    eq(tradeHistoryTable.userId, inv.oldUserId)
-                )
-            ),
-            with: { item: true }
-        });
-
-        processTrade(
-            {
-                id: inv.userId,
-                username: inv.username
-            },
-            {
-                id: inv.oldUserId,
-            },
-            recentTrades
-        );
-    }
     
     await ldb.insert(serialsTable).values(inventories)
     .onConflictDoUpdate({
@@ -275,6 +272,14 @@ async function insertSerialLogs(inventories: {
             userId: sql.raw(`excluded.${serialsTable.userId.name}`),
         },
     });
+
+    return nonFirstTimeOwners.map(inv => ({
+        itemId: inv.itemId,
+        serial: inv.serial,
+        userId: inv.userId,
+        username: inv.username,
+        oldUserId: inv.oldUserId!
+    }));
 }
 
 async function handleListingData(itemId: number , response: ListingsAPIResponse) {
@@ -293,7 +298,7 @@ async function handleListingData(itemId: number , response: ListingsAPIResponse)
     const totalSellers = response.meta.total;
 
     if (price !== item.bestPrice || totalSellers !== item.totalSellers) {
-        if(price < item.bestPrice) processDeal(item, cheapestSeller);
+        if(item.bestPrice && price < item.bestPrice) processDeal(item, cheapestSeller);
 
         await db.insert(listingsHistoryTable).values({
             itemId: item.id,
@@ -320,6 +325,13 @@ class ItemCycleManager {
     private looping: boolean = true;
     private isRunning: boolean = false;
     private cycleTimeout?: NodeJS.Timeout;
+    private tradeAccumulator: {
+        itemId: number,
+        serial: number,
+        userId: number,
+        username: string,
+        oldUserId: number
+    }[] = [];
 
     start() {
         this.looping = true;
@@ -336,6 +348,8 @@ class ItemCycleManager {
 
     private async runCycle() {
         let startTime = Date.now();
+        this.tradeAccumulator = [];
+        
         const localItems = await ldb.query.itemsTable.findMany({
             orderBy: desc(itemsTable.id),
             columns: {
@@ -347,7 +361,10 @@ class ItemCycleManager {
         for (const item of localItems) {
             try {
                 const owners = await getAllItemOwners(item.id);
-                if(owners) await handleOwnersData(item.id, owners);
+                if(owners) {
+                    const trades = await handleOwnersData(item.id, owners);
+                    if(trades) this.tradeAccumulator.push(...trades);
+                }
 
                 const listings = await getListings(item.id);
                 if(listings) await handleListingData(item.id, listings);
@@ -360,6 +377,8 @@ class ItemCycleManager {
             await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_ITEM));
         }
 
+        await this.processAccumulatedTrades();
+
         helpfulPrint(`Cycle complete in \`${Date.now() - startTime}ms\` with **${itemsCompleted}/${localItems.length}** items processed`);
         if (this.looping) {
             this.cycleTimeout = setTimeout(() => this.runCycle(), INTERVALS.CYCLE);
@@ -367,9 +386,66 @@ class ItemCycleManager {
             this.isRunning = false;
         }
     }
-}
 
-const STARTUP = Date.now();
+    private async processAccumulatedTrades() {
+        if (this.tradeAccumulator.length === 0) return;
+
+        helpfulPrint(`Processing ${this.tradeAccumulator.length} accumulated trades`, "INFO", true);
+ 
+        // we need to pair these people and see which items they have traded between each other
+        const pairs = new Map<string, typeof this.tradeAccumulator>();
+
+        for (const trade of this.tradeAccumulator) {
+            const pairKey = [trade.userId, trade.oldUserId].sort((a, b) => a - b).join('-'); // normalization
+            if (pairs.has(pairKey)) {
+                pairs.get(pairKey)!.push(trade);
+            } else {
+                pairs.set(pairKey, [trade]);
+            }
+        }
+
+        // Collect all trade embeds
+        const tradeEmbeds: any[] = [];
+
+        for (const [_, trades] of pairs.entries()) {
+            try {
+                const leftSide = {
+                    id: trades[0].userId,
+                    username: trades[0].username
+                }
+
+                const rightSide = {
+                    id: trades[0].oldUserId,
+                    username: trades.find(t => t.userId === trades[0].oldUserId)?.username || 'Unknown'
+                }
+
+                const recentTrades = await db.query.tradeHistoryTable.findMany({
+                    where: and(
+                        gt(tradeHistoryTable.created_at, sql`datetime('now', '-6 hours')`),
+                        or(
+                            eq(tradeHistoryTable.userId, leftSide.id),
+                            eq(tradeHistoryTable.userId, rightSide.id)
+                        )
+                    ),
+                    with: { item: true }
+                });
+
+                const embed = await processTrade(leftSide, rightSide, recentTrades, trades);
+
+                if (embed) {
+                    tradeEmbeds.push(embed);
+                }
+            } catch (error) {
+                helpfulPrint(`Error processing trade between ${trades[0].userId} and ${trades[0].oldUserId}: ${error}`, "ERROR");
+            }
+        }
+
+        if (tradeEmbeds.length > 0) {
+            await sendTradeWebhooks(tradeEmbeds);
+            helpfulPrint(`Sent ${tradeEmbeds.length} trade webhooks in batches`, "INFO", true);
+        }
+    }
+}
 
 const cycleManager = new ItemCycleManager();
 cycleManager.start();

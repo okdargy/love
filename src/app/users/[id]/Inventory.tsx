@@ -4,6 +4,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import Image from 'next/image';
 import { Lock } from 'lucide-react';
 import Link from "next/link";
+import { USER_AGENT } from "@/lib/utils";
 
 async function grabItemizedInventory(id: number): Promise<{
     isPrivate: boolean;
@@ -17,7 +18,11 @@ async function grabItemizedInventory(id: number): Promise<{
 
     while (page <= totalPages) {
         try {
-            const response = await fetch(`https://api.polytoria.com/v1/users/${id}/inventory?limited=true&limit=${limit}&page=${page}`);
+            const response = await fetch(`https://api.polytoria.com/v1/users/${id}/inventory?limited=true&limit=${limit}&page=${page}`, {
+                headers: {
+                    'User-Agent': USER_AGENT
+                }
+            });
 
             if (response.ok) {
                 const data: InventoryResponse = await response.json();

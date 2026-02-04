@@ -6,6 +6,7 @@ import Recent from "./Recent";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRightLeft } from "lucide-react";
+import { USER_AGENT } from "@/lib/utils";
 
 const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
@@ -58,7 +59,11 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         return <Error message="Invalid ID, must be greater than 0" />
     }
 
-    const response = await fetch('https://api.polytoria.com/v1/users/' + id);
+    const response = await fetch('https://api.polytoria.com/v1/users/' + id, {
+        headers: {
+            "User-Agent": USER_AGENT
+        }
+    });
     let userData: UserData | null = null;
 
     if(response.ok) {

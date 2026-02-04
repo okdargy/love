@@ -71,6 +71,8 @@ export default function Home() {
       value: filters.sortBy,
       options: [
         { value: "date", label: "Date added" },
+        { value: "recent", label: "Recent Average" },
+        { value: "stock", label: "Stock" },
       ],
     },
     {
@@ -253,7 +255,7 @@ export default function Home() {
                       <div className="mt-auto">
                         <h2 className="text-md text-gray-100 font-bold truncate">{item.name}</h2>
                         <p className="text-sm overflow-hidden">
-                          {item.stats.value ? (
+                          {item.stats && item.stats.value ? (
                             <>
                               <i className="pi pi-brick me-2 text-[#4F95E7]"></i>
                               <span className="text-[#4F95E7]">{formatPrice(item.stats.value)}</span>

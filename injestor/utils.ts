@@ -1,6 +1,7 @@
 import { collectablesTable, tradeHistoryTable } from "@/lib/db/schema";
 import { Listing } from "./types";
 import { db } from "@/lib/db";
+import { eq, InferSelectModel, inArray } from "drizzle-orm";
 import { eq, InferSelectModel } from "drizzle-orm";
 import { existsSync, readFileSync } from "fs";
 
@@ -18,6 +19,7 @@ const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d
 export const processDeal = async (item: {
     id: number;
     bestPrice: number;
+    averagePrice?: number;
 }, listing: {
     price: number
 }, date?: Date) => {
@@ -40,7 +42,7 @@ export const processDeal = async (item: {
                 description: itemInfo.description + (itemInfo.tags.length > 0) ? `\n\n${itemInfo.tags.map(t => {
                     let i = tags.find(tag => tag.id === t.tagId)
                     return "`" + (i ? i.emoji + " " + i.name : "Unknown") + "`"
-                }).join("  ")}` : "",
+                }).join("\n")}` : "",
                 color: 15680580,
                 thumbnail: {
                     url: itemInfo.thumbnailUrl,
@@ -55,7 +57,12 @@ export const processDeal = async (item: {
                         "name": "Item",
                         "value": "[Visit here](https://polytoria.com/store/" + item.id + ")",
                         "inline": true
-                    }
+                    },
+                    ...(itemInfo.recentAverage ? [{
+                        name: "Recent Average",
+                        value: formatNumber(itemInfo.recentAverage!),
+                        inline: true
+                    }] : [])
                 ],
                 footer: {
                     "text": "polytoria.trade",
@@ -81,69 +88,138 @@ type TradeHistoryWithItem = InferSelectModel<typeof tradeHistoryTable> & {
   item: InferSelectModel<typeof collectablesTable>
 }
 
-export const processTrade = async (newOwner: {
-    id: number;
-    username: string;
-}, oldOwner: {
-    id: number;
-}, history: TradeHistoryWithItem[]) => {
-    let isBlank = true;
-    const newOwnerHistory = history.filter(h => h.userId === newOwner.id);
-    const oldOwnerHistory = history.filter(h => h.userId === oldOwner.id);
+export const processTrade = async (
+    leftSide: {
+        id: number;
+        username: string;
+    }, 
+    rightSide: {
+        id: number;
+        username: string;
+    }, 
+    history: TradeHistoryWithItem[],
+    currentTrades: {
+        itemId: number;
+        serial: number;
+        userId: number;
+        username: string;
+        oldUserId: number;
+    }[]
+) => {
+    const leftSideItems = currentTrades.filter(t => t.userId === leftSide.id);
+    const rightSideItems = currentTrades.filter(t => t.userId === rightSide.id);
 
-    if (newOwnerHistory.length === 0 && oldOwnerHistory.length === 0) {
-        console.log(`No trade history found for users ${newOwner.id} and ${oldOwner.id}, skipping trade webhook`);
-        return;
+    if (leftSideItems.length === 0 && rightSideItems.length === 0) {
+        console.log(`No trades found between ${leftSide.id} and ${rightSide.id}, skipping trade webhook`);
+        return null;
     }
 
-    let desc = `Side 1: **${newOwner.username}** (${newOwner.id})`;
-    let title = `${newOwner.username} (${newOwner.id}) transferred items with`;
+    // Build a lookup of itemId -> item name to list confirmed items from this cycle
+    const itemIds = Array.from(new Set(currentTrades.map(t => t.itemId)));
+    const itemLookup = itemIds.length > 0
+        ? (await db.query.collectablesTable.findMany({
+            where: inArray(collectablesTable.id, itemIds),
+            columns: { id: true, name: true }
+        })).reduce<Record<number, string>>((acc, item) => {
+            acc[item.id] = item.name;
+            return acc;
+        }, {})
+        : {};
 
-    if (newOwnerHistory.length > 0) {
-        isBlank = false;
-        for (const h of newOwnerHistory) {
-            desc += `\n> [${h.item.name}](https://polytoria.trade/store/${h.item.id}) - <t:${Math.floor(new Date(h.created_at + ' UTC').getTime() / 1000)}:R>`;
-        }
+    const formatTradeLine = (trade: { itemId: number; serial: number }) => {
+        const name = itemLookup[trade.itemId] ?? `Item ${trade.itemId}`;
+        return `${name} (#${trade.serial})`;
+    };
+
+        let desc = `Side 1: **${leftSide.username}** (${leftSide.id})`;
+        let title = `${leftSide.username} <-> ${rightSide.username}`;
+
+    const leftConfirmed = leftSideItems.map(formatTradeLine);
+    const rightConfirmed = rightSideItems.map(formatTradeLine);
+
+    if (leftSideItems.length > 0) {
+        desc += `\n> Received ${leftSideItems.length} item${leftSideItems.length > 1 ? 's' : ''}`;
     } else {
-        desc += `\n> No recent trades found`;
+        desc += `\n> Received nothing`;
+    }
+    if (leftConfirmed.length > 0) {
+        desc += `\n${leftConfirmed.map(item => `> ${item}`).join('\n')}`;
     }
 
-    if (oldOwnerHistory.length > 0) {
-        isBlank = false;
-        title += ` ${oldOwnerHistory[0].username} (${oldOwner.id})`;
-        desc += `\n\nSide 2: **${oldOwnerHistory[0].username}** (${oldOwner.id})`;
+    desc += `\n\nSide 2: **${rightSide.username}** (${rightSide.id})`;
 
-        for (const h of oldOwnerHistory) {
-            desc += `\n> [${h.item.name}](https://polytoria.trade/store/${h.item.id}) - <t:${Math.floor(new Date(h.created_at + ' UTC').getTime() / 1000)}:R>`;
-        }
+    if (rightSideItems.length > 0) {
+        desc += `\n> Received ${rightSideItems.length} item${rightSideItems.length > 1 ? 's' : ''}`;
     } else {
-        title += ` - (${oldOwner.id})`;
-        desc += `\n\nSide 2: **-** (${oldOwner.id})\n> No recent trades found`;
+        desc += `\n> Received nothing, posssibly currency trade`;
+    }
+    if (rightConfirmed.length > 0) {
+        desc += `\n${rightConfirmed.map(item => `> ${item}`).join('\n')}`;
     }
 
+    // Add condensed trade history at the bottom
+    desc += `\n\n**Possible Items (recent trades, 6h)**`;
+    
+    const leftHistory = history.filter(h => h.userId === leftSide.id);
+    const rightHistory = history.filter(h => h.userId === rightSide.id);
 
-    const payload = JSON.stringify({
-        username: "LOVE Trades",
-        avatar_url: "https://polytoria.trade/bot_icon.png",
-        embeds: [
-            {
-                title: title,
-                description: desc,
-                color: isBlank ? 0 : 15680580,
-                timestamp: new Date().toISOString(),
-            }
-        ]
-    });
+    if (leftHistory.length > 0) {
+        desc += `\n${leftSide.username}: `;
+        desc += leftHistory.map(h => `[${h.item.name}](https://polytoria.trade/store/${h.item.id})`).join(', ');
+    }
 
-    const res = await fetch(process.env.TRADES_WEBHOOK_URL!, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: payload
-    });
-    const json = await res.json();
-    console.log(res.status, json);
+    if (rightHistory.length > 0) {
+        desc += `\n${rightSide.username}: `;
+        desc += rightHistory.map(h => `[${h.item.name}](https://polytoria.trade/store/${h.item.id})`).join(', ');
+    }
+
+    if (leftHistory.length === 0 && rightHistory.length === 0) {
+        desc += `\n> No other recent trades found`;
+    }
+
+    return {
+        title: title,
+        description: desc,
+        color: 15680580,
+        timestamp: new Date().toISOString(),
+    };
+}
+
+export const sendTradeWebhooks = async (embeds: any[]) => {
+    if (embeds.length === 0) return;
+
+    // Discord allows max 10 embeds per message
+    const chunks = [];
+    for (let i = 0; i < embeds.length; i += 10) {
+        chunks.push(embeds.slice(i, i + 10));
+    }
+
+    for (const chunk of chunks) {
+        const payload = JSON.stringify({
+            username: "LOVE Trades",
+            avatar_url: "https://polytoria.trade/bot_icon.png",
+            embeds: chunk
+        });
+
+        try {
+            const res = await fetch(process.env.TRADES_WEBHOOK_URL!, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: payload
+            });
+            const json = await res.json();
+            console.log(res.status, json);
+        } catch (error) {
+            console.error(`Failed to send trade webhook:`, error);
+        }
+
+        // Small delay between chunks to avoid rate limiting
+        if (chunks.length > 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
 }
 
 type PRIORITY_TYPES = "INFO" | "WARNING" | "ERROR";

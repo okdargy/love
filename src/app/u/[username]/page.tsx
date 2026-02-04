@@ -1,5 +1,6 @@
 "use server"
 
+import { USER_AGENT } from '@/lib/utils';
 import { redirect, notFound } from 'next/navigation';
 
 export default async function Page(props: { params: Promise<{ username: string }> }) {
@@ -11,7 +12,11 @@ export default async function Page(props: { params: Promise<{ username: string }
     }
 
     try {
-        const response = await fetch(`https://api.polytoria.com/v1/users/find?username=${params.username}`);
+        const response = await fetch(`https://api.polytoria.com/v1/users/find?username=${params.username}`, {
+            headers: {
+                'User-Agent': USER_AGENT
+            }
+        });
         if (response.status === 200) {
             const data = await response.json();
             redirectPath = `/users/${data.id}`;

@@ -108,10 +108,15 @@ export default function Form({ data }: { data: ItemInfo }) {
         }
     ];
 
-    const initialFormData = options.reduce((acc, option) => {
-        acc[option.key] = option.value;
-        return acc;
-    }, {} as Record<string, any>);
+    const initialFormData = {
+        ...options.reduce((acc, option) => {
+            acc[option.key] = option.value;
+            return acc;
+        }, {} as Record<string, any>),
+        valueLow: data.item.stats.valueLow,
+        valueHigh: data.item.stats.valueHigh,
+        valueNote: data.item.stats.valueNote,
+    };
 
     const [formData, setFormData] = useState(initialFormData);
 
@@ -204,6 +209,13 @@ export default function Form({ data }: { data: ItemInfo }) {
                 changedData[key] = newData[key];
             }
         }
+        
+        // If either valueLow or valueHigh changed, include both in the update
+        if (changedData.valueLow || changedData.valueHigh) {
+            changedData.valueLow = newData.valueLow;
+            changedData.valueHigh = newData.valueHigh;
+        }
+        
         return changedData;
     };
 
@@ -217,6 +229,15 @@ export default function Form({ data }: { data: ItemInfo }) {
             return;
         }
         
+        const isNonEmpty = (v: any) => v !== null && v !== undefined && !(typeof v === 'string' && v.trim() === '');
+        const hasLow = isNonEmpty(formData.valueLow);
+        const hasHigh = isNonEmpty(formData.valueHigh);
+        
+        if (hasLow !== hasHigh) {
+            toast.error("Both low value and high value must be provided together, or both must be empty");
+            return;
+        }
+
         const changedData = filterChangedValues(data.item.stats, formData);
 
         if (Object.keys(changedData).length === 0) {
@@ -307,6 +328,51 @@ export default function Form({ data }: { data: ItemInfo }) {
                                 onChange={handleChange}
                                 className="border rounded p-2"
                             />
+                        )}
+                        
+                        {/* Value Range Inputs */}
+                        {option.key === 'value' && formData[option.key] && (
+                            <div className="mt-3 space-y-3 p-4 border border-neutral-100/10 rounded-lg">
+                                <div className="text-sm font-medium text-muted-foreground">Value Range (Optional)</div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label htmlFor="valueLow" className="text-sm mb-1 block">Low Value</label>
+                                        <Input
+                                            id="valueLow"
+                                            name="valueLow"
+                                            type="number"
+                                            value={formData.valueLow || ''}
+                                            onChange={handleChange}
+                                            placeholder="e.g., 4000"
+                                            className="border rounded p-2"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="valueHigh" className="text-sm mb-1 block">High Value</label>
+                                        <Input
+                                            id="valueHigh"
+                                            name="valueHigh"
+                                            type="number"
+                                            value={formData.valueHigh || ''}
+                                            onChange={handleChange}
+                                            placeholder="e.g., 6000"
+                                            className="border rounded p-2"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label htmlFor="valueNote" className="text-sm mb-1 block">Range Note</label>
+                                    <Textarea
+                                        id="valueNote"
+                                        name="valueNote"
+                                        value={formData.valueNote || ''}
+                                        onChange={handleTextareaChange}
+                                        placeholder="Add context about the value range..."
+                                        className="border rounded p-2"
+                                        rows={2}
+                                    />
+                                </div>
+                            </div>
                         )}
                         
                         {/* Value change alert card */}

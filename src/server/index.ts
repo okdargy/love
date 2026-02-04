@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { like, eq, count, or, desc, and, inArray, InferSelectModel } from "drizzle-orm";
+import { like, eq, count, or, desc, and, inArray, InferSelectModel, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 import type { User } from "lucia";
+import { USER_AGENT } from "@/lib/utils";
 
 const sanitizeSearchInput = (input: string | undefined) => {
     if(!input) return input;
@@ -39,6 +40,7 @@ setInterval(() => {
         }
     }
 }, 5 * 60 * 1000);
+
 
 const sendValueChangeAlert = ({
     item,
@@ -148,7 +150,9 @@ export const appRouter = router({
         : undefined;
 
         const sortOptions: { [key: string]: any } = {
-            date: collectablesTable.id
+            date: collectablesTable.id,
+            recent: collectablesTable.recentAverage,
+            stock: collectablesTable.stock,
         };
 
         let sortOrder = [desc(collectablesTable.id)];
@@ -168,19 +172,69 @@ export const appRouter = router({
         const [totalCount] = await db.select({ count: count() }).from(collectablesTable).where(searchCondition);
         const totalPages = Math.ceil(totalCount.count / limit);
 
-        const items = await db.query.collectablesTable.findMany({
-            limit,
-            offset,
-            where: searchCondition,
-            orderBy: sortOrder,
-            columns: opts.input.homepage ? {
-                id: true,
-                name: true,
-                shorthand: true,
-                thumbnailUrl: true,
-                recentAverage: true
-            } : undefined,
-            with: { tags: true, stats: true }
+        const rawItems = await db
+            .select({
+                id: collectablesTable.id,
+                name: collectablesTable.name,
+                shorthand: collectablesTable.shorthand,
+                thumbnailUrl: collectablesTable.thumbnailUrl,
+                recentAverage: collectablesTable.recentAverage,
+                ...(opts.input.homepage ? {} : {
+                    type: collectablesTable.type,
+                    description: collectablesTable.description,
+                    price: collectablesTable.price,
+                    stock: collectablesTable.stock,
+                    created_at: collectablesTable.created_at,
+                    updated_at: collectablesTable.updated_at,
+                }),
+                tags: sql<string>`COALESCE(
+                    (SELECT json_group_array(json_array(item_tags.itemId, item_tags.tagId))
+                    FROM item_tags
+                    WHERE item_tags.itemId = collectables.id),
+                    json_array()
+                )`.as('tags'),
+                stats: sql<string>`COALESCE(
+                    (SELECT json_array(
+                        collectables_stats.id,
+                        collectables_stats.value,
+                        collectables_stats.demand,
+                        collectables_stats.trend,
+                        collectables_stats.funFact,
+                        collectables_stats.created_at,
+                        collectables_stats.updated_at
+                    )
+                    FROM collectables_stats
+                    WHERE collectables_stats.id = collectables.id
+                    LIMIT 1),
+                    json_array()
+                )`.as('stats')
+            })
+            .from(collectablesTable)
+            .where(searchCondition)
+            .orderBy(...sortOrder)
+            .limit(limit)
+            .offset(offset);
+        
+        const items = rawItems.map(item => {
+            const parsedTags = JSON.parse(item.tags as string);
+            const parsedStats = JSON.parse(item.stats as string);
+            
+            return {
+                ...item,
+                tags: parsedTags.filter((tag: any) => tag[0] !== null && tag[1] !== null).map((tag: any) => ({
+                    itemId: tag[0],
+                    tagId: tag[1]
+                })),
+                stats: parsedStats.length > 0 ? {
+                    id: parsedStats[0],
+                    value: parsedStats[1],
+                    demand: parsedStats[2],
+                    trend: parsedStats[3],
+                    funFact: parsedStats[4],
+                    created_at: parsedStats[5],
+                    updated_at: parsedStats[6]
+                } : null
+            };
         });
 
         const searchItem = items.findIndex(item => item.shorthand && item.shorthand.toLowerCase() === sanitizedSearch.toLowerCase());
@@ -256,9 +310,12 @@ export const appRouter = router({
     editItemStats: publicProcedure.input(z.object({
         id: z.number().min(1),
         value: z.number().nullable().optional(),
-        demand: z.enum(["awful", "low", "normal", "great", "high", ""]).optional(),
+        demand: z.enum(["awful", "low", "normal", "high", "great", ""]).optional(),
         trend: z.enum(["stable", "unstable", "fluctuating", "rising", "lowering", ""]).optional(),
         funFact: z.string().optional(),
+        valueLow: z.number().nullable().optional(),
+        valueHigh: z.number().nullable().optional(),
+        valueNote: z.string().optional(),
         rare: z.boolean().optional(),
         freaky: z.boolean().optional(),
         projected: z.boolean().optional(),
@@ -266,7 +323,17 @@ export const appRouter = router({
         shorthand: z.string().optional(),
         alertOthers: z.boolean().optional(),
         alertReason: z.string().optional(),
-    })).mutation(async (opts) => {
+    }).refine(
+        (data) => {
+            const hasLow = data.valueLow !== undefined && data.valueLow !== null;
+            const hasHigh = data.valueHigh !== undefined && data.valueHigh !== null;
+            return hasLow === hasHigh;
+        },
+        {
+            message: "Both valueLow and valueHigh must be provided together, or both must be empty",
+            path: ["valueLow"],
+        }
+    )).mutation(async (opts) => {
         const { id, tags, shorthand, alertOthers, alertReason, ...stats } = opts.input;
         const { user } = await validateRequest();
 
@@ -450,21 +517,53 @@ export const appRouter = router({
     
         do {
             try {
-                const response = await fetch(`https://api.polytoria.com/v1/store/${id}/owners?limit=100&page=${page}`);
+                const response = await fetch(`https://api.polytoria.com/v1/store/${id}/owners?limit=100&page=${page}`, {
+                    headers: {
+                        "User-Agent": USER_AGENT
+                    }
+                });
+                
+                // Check if the response is not OK
                 if (!response.ok) {
+                    console.error(`API request failed with status ${response.status}: ${response.statusText}`);
+                    
+                    // If it's a 403/Forbidden or 404, break the loop instead of continuing
+                    if (response.status === 403 || response.status === 404) {
+                        console.warn(`Item ${id} owners data is not accessible (${response.status}). Returning empty results.`);
+                        break;
+                    }
+                    
                     throw new Error(`Error fetching data: ${response.statusText}`);
+                }
+
+                // Check content type to ensure we're getting JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error(`Expected JSON but received ${contentType}`);
+                    const text = await response.text();
+                    console.error(`Response body: ${text.substring(0, 200)}...`);
+                    break;
                 }
     
                 const data: OwnersResponse = await response.json();
     
+                // Validate the response structure
+                if (!data.inventories || !Array.isArray(data.inventories)) {
+                    console.error(`Invalid response structure:`, data);
+                    break;
+                }
+
                 if (data.inventories.length === 0) {
                     break;
                 }
     
                 allOwners.push(...data.inventories);
 
-                hasMore = page < data.pages;
+                hasMore = page < (data.pages || 1);
                 page++;
+
+                // Add a small delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 100));
             } catch (error) {
                 console.error(`Failed to fetch owners on page ${page}:`, error);
                 hasMore = false;
@@ -543,7 +642,8 @@ export const appRouter = router({
             const res = db.query.tradeHistoryTable.findMany({
                 where: and(eq(tradeHistoryTable.userId, opts.input), eq(tradeHistoryTable.isFirst, false)),
                 orderBy: [desc(tradeHistoryTable.id)],
-                limit: 5
+                limit: 5,
+                with: { item: true }
             });
 
             return res;
@@ -553,7 +653,11 @@ export const appRouter = router({
     }),
     getItemGraph: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         try {
-            const res = await fetch("https://polytoria.com/api/store/price-data/" + opts.input);
+            const res = await fetch("https://polytoria.com/api/store/price-data/" + opts.input, {
+                headers: {
+                    "User-Agent": USER_AGENT
+                }
+            });
             const json = await res.json();
 
             const listings = await db.query.listingsHistoryTable.findMany({
@@ -588,7 +692,11 @@ export const appRouter = router({
         }
 
         try {
-            const response = await fetch(`https://api.polytoria.com/v1/users/find?username=${encodeURIComponent(opts.input.username)}`);
+            const response = await fetch(`https://api.polytoria.com/v1/users/find?username=${encodeURIComponent(opts.input.username)}`, {
+                headers: {
+                    "User-Agent": USER_AGENT
+                }
+            });
             
             if (!response.ok) {
                 throw new Error("Failed to find user on Polytoria");
@@ -647,7 +755,11 @@ export const appRouter = router({
         }
 
         try {
-            const response = await fetch(`https://api.polytoria.com/v1/users/${codeData.polytoriaUserId}`);
+            const response = await fetch(`https://api.polytoria.com/v1/users/${codeData.polytoriaUserId}`, {
+                headers: {
+                    "User-Agent": USER_AGENT
+                }
+            });
             
             if (!response.ok) {
                 throw new Error("Failed to fetch user profile from Polytoria");
@@ -684,28 +796,44 @@ export const appRouter = router({
     })).mutation(async (opts) => {
         const sanitizedInput = sanitizeSearchInput(opts.input.input);
 
-        return await db.query.collectablesTable.findMany({
-            where: (collectables, { like, or }) => or(
-                like(collectables.shorthand, `%${sanitizedInput}%`),
-                like(collectables.name, `%${sanitizedInput}%`)
-            ),
-            limit: opts.input.limit ?? 10,
-            offset: opts.input.offset ?? 0,
-            columns: {
-                id: true,
-                name: true,
-                shorthand: true,
-                thumbnailUrl: true,
-                recentAverage: true
-            },
-            with: {
-                stats: {
-                    columns: {
-                        value: true,
-                    }
-                }
-            }
-        });
+        return await db
+            .select({
+                id: collectablesTable.id,
+                name: collectablesTable.name,
+                shorthand: collectablesTable.shorthand,
+                thumbnailUrl: collectablesTable.thumbnailUrl,
+                recentAverage: collectablesTable.recentAverage,
+                value: collectablesStatsTable.value
+            })
+            .from(collectablesTable)
+            .leftJoin(collectablesStatsTable, eq(collectablesTable.id, collectablesStatsTable.id))
+            .where(
+                or(
+                    like(collectablesTable.shorthand, `%${sanitizedInput}%`),
+                    like(collectablesTable.name, `%${sanitizedInput}%`)
+                )
+            )
+            .orderBy(desc(collectablesStatsTable.value))
+            .limit(opts.input.limit ?? 10)
+            .offset(opts.input.offset ?? 0);
+    }),
+    getTopValueItems: publicProcedure.input(z.object({
+        limit: z.number().min(1).max(50).default(25)
+    })).query(async (opts) => {
+        return await db
+            .select({
+                id: collectablesTable.id,
+                name: collectablesTable.name,
+                shorthand: collectablesTable.shorthand,
+                thumbnailUrl: collectablesTable.thumbnailUrl,
+                recentAverage: collectablesTable.recentAverage,
+                value: collectablesStatsTable.value
+            })
+            .from(collectablesTable)
+            .innerJoin(collectablesStatsTable, eq(collectablesTable.id, collectablesStatsTable.id))
+            .where(sql`${collectablesStatsTable.value} IS NOT NULL`)
+            .orderBy(desc(collectablesStatsTable.value))
+            .limit(opts.input.limit);
     })
 });
 
