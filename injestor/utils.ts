@@ -2,6 +2,7 @@ import { collectablesTable, tradeHistoryTable } from "@/lib/db/schema";
 import { Listing } from "./types";
 import { db } from "@/lib/db";
 import { eq, InferSelectModel } from "drizzle-orm";
+import { existsSync, readFileSync } from "fs";
 
 const tags = await db.query.tagsTable.findMany();
 
@@ -178,5 +179,55 @@ export const helpfulPrint = async (message: string, priority: PRIORITY_TYPES = "
         console.log(res.status, json);
     } catch {
         console.error(`Failed to send alert: ${message}`);
+    }
+}
+
+export const helpfulPrintWithDbAttachment = async (message: string, priority: PRIORITY_TYPES = "INFO") => {
+    console.log(`\x1b[0;92;49m[${priority}] \x1b[0m${message}`);
+
+    const webhookUrl = process.env.ALERTS_WEBHOOK_URL;
+    if (!webhookUrl) return;
+
+    const embed = {
+        username: "LOVE Alerts",
+        avatar_url: "https://polytoria.trade/bot_icon.png",
+        embeds: [
+            {
+                title: (priority === "ERROR" ? ":x:  " : priority === "WARNING" ? ":warning:  " : ":information_source:  ") + priority.charAt(0).toUpperCase() + priority.slice(1),
+                description: message,
+                color: priority === "ERROR" ? 14495300 : priority === "WARNING" ? 16763981 : 3901635,
+                timestamp: new Date().toISOString(),
+            }
+        ]
+    };
+
+    const form = new FormData();
+    form.append("payload_json", JSON.stringify(embed));
+
+    const dbUrl = process.env.TRADE_HISTORY_DB;
+    let dbPath: string | undefined;
+    if (dbUrl && dbUrl.startsWith("file:")) {
+        dbPath = dbUrl.replace(/^file:/, "");
+    }
+
+    if (dbPath && existsSync(dbPath)) {
+        try {
+            const buffer = readFileSync(dbPath);
+            const blob = new Blob([buffer], { type: "application/octet-stream" });
+            const filename = dbPath.split(/\\|\//).pop() || "trade-history.db";
+            form.append("files[0]", blob, filename);
+        } catch (e) {
+            console.error("Failed to read DB file for attachment:", e);
+        }
+    } else {
+        console.warn("TRADE_HISTORY_DB not set to a file: URL or path does not exist; sending alert without attachment.");
+    }
+
+    try {
+        const res = await fetch(webhookUrl, { method: "POST", body: form });
+        const json = await res.json();
+        console.log(res.status, json);
+    } catch (e) {
+        console.error("Failed to send alert with DB attachment:", e);
     }
 }
