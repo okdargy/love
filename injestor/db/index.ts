@@ -27,3 +27,24 @@ if (dbUrl && dbUrl.startsWith('file:')) {
 
 export const client = createClient({ url: dbUrl });
 export const ldb = drizzle(client, { schema });
+
+// Ensure required local tables exist when using a SQLite file
+if (dbUrl.startsWith('file:')) {
+	try {
+		await client.execute(`CREATE TABLE IF NOT EXISTS items (
+			id INTEGER PRIMARY KEY NOT NULL,
+			bestPrice INTEGER,
+			totalSellers INTEGER,
+			averagePrice INTEGER
+		)`);
+
+		await client.execute(`CREATE TABLE IF NOT EXISTS serials (
+			itemId INTEGER NOT NULL,
+			serial INTEGER NOT NULL,
+			userId INTEGER NOT NULL,
+			CONSTRAINT serials_itemid_serial_unique UNIQUE (itemId, serial)
+		)`);
+	} catch (e) {
+		console.error('Failed to ensure local schema (items, serials):', e);
+	}
+}
