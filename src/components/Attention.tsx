@@ -10,36 +10,34 @@ export default function Attention() {
     const pathname = usePathname();
     
     useEffect(() => {
-        const dismissed = localStorage.getItem('attentionDismissed');
-        setIsVisible(dismissed !== 'true' && pathname !== '/blog/ceasing-operations');
+        const dismissed = localStorage.getItem('attentionValueDismissed');
+        setIsVisible(dismissed !== 'true');
     }, [pathname]);
 
     const handleDismiss = () => {
         setIsVisible(false);
-        localStorage.setItem('attentionDismissed', 'true');
+        localStorage.setItem('attentionValueDismissed', 'true');
     };
 
     if (isVisible === null || !isVisible) return null;
 
     return (
-        <div className="attention-alert w-full h-8 flex items-center relative">
+        <div className="attention-alert bg-primary w-full h-8 flex items-center relative">
             <button
                 onClick={handleDismiss}
-                className="absolute right-2 z-20 opacity-50 hover:opacity-100 transition-opacity"
+                className="absolute right-4 z-20 opacity-50 hover:opacity-100 transition-opacity"
                 aria-label="Close announcement"
             >
                 <X className="h-4 w-4 text-primary-foreground" />
             </button>
-            <Link
-                href="/blog/ceasing-operations" 
-                className="text-primary-foreground group flex items-center gap-x-2 px-3 transition-all duration-300"
+            <div
+                className="text-primary-foreground group flex items-center gap-x-2 px-4 transition-all duration-300"
             >
                 <p className="text-sm">
                     <span className="font-bold mr-1">Please read!</span>
-                    We are ceasing operations as of March 11, 2025, read the blog post here
+                    Value changes are paused due to the influx, thank you for your patience.
                 </p>
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-            </Link>
+            </div>
         </div>
     )
 }

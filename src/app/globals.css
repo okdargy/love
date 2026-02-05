@@ -150,21 +150,3 @@ main {
   position: relative;
   overflow: visible;
 }
-
-.attention-alert::before {
-  content: '';
-  position: absolute;
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  height: 20px;
-  background: radial-gradient(
-    ellipse,
-    hsl(var(--primary) / 0.6) 0%,
-    hsl(var(--primary) / 0.3) 50%,
-    transparent 100%
-  );
-  filter: blur(8px);
-  z-index: -1;
-}
