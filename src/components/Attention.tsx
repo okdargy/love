@@ -35,7 +35,7 @@ export default function Attention() {
             >
                 <p className="text-sm">
                     <span className="font-bold mr-1">Please read!</span>
-                    Value changes are paused due to the influx, thank you for your patience.
+                    Automated services are down due to Polytoria's protection services by Cloudflare, apologies.
                 </p>
             </div>
         </div>
