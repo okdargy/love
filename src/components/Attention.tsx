@@ -35,7 +35,7 @@ export default function Attention() {
             >
                 <p className="text-sm">
                     <span className="font-bold mr-1">Please read!</span>
-                    Automated services are down due to Polytoria's protection services by Cloudflare, apologies.
+                    Automated services are down due to Cloudflare protection services being active on Polytoria, apologies.
                 </p>
             </div>
         </div>
