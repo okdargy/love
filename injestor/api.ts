@@ -6,7 +6,7 @@ import {
 } from "./types";
 import { helpfulPrint } from "./utils";
 
-const USER_AGENT = "TradeHistory/1.0 (https://polytoria.trade; hello@dargy.party)";
+const USER_AGENT = process.env.TRADE_USER_AGENT || "TradeHistory/1.0 (https://polytoria.trade; hello@dargy.party)";
 const API_BASE_URL = {
     POLYTORIA: "https://api.polytoria.com/v1",
     STORE: "https://polytoria.com/api/store"
