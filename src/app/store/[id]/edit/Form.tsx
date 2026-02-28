@@ -82,7 +82,7 @@ export default function Form({ data }: { data: ItemInfo }) {
             }
         },
         {
-            name: "Fun Fact",
+            name: "Note",
             key: "funFact",
             type: "long_string",
             value: data.item.stats.funFact,

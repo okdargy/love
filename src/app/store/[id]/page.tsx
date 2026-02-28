@@ -217,7 +217,7 @@ export default function Page() {
           {(itemInfo.data.item.stats.funFact && itemInfo.data.item.stats.funFact.trim() !== "") && (
             <div className="flex flex-col space-y-1">
               <div className='space-y-3'>
-                <h2 className="text-xl font-semibold my-auto">Fun Fact</h2>
+                <h2 className="text-xl font-semibold my-auto">Note</h2>
                 <div className="border border-neutral-100/10 p-4 rounded-lg shadow-md">
                   <p>
                     {itemInfo.data.item.stats.funFact}
