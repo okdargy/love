@@ -27,11 +27,12 @@ export default function CalculatorPage() {
     const [offerItems, setOfferItems] = useState<TradeItem[]>([]);
     const [requestItems, setRequestItems] = useState<TradeItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<CalculatorItem[] | null>(null);
     const [selectedSide, setSelectedSide] = useState<'offer' | 'request'>('offer');
     const [itemCache, setItemCache] = useState<Map<number, CalculatorItem>>(new Map());
     const [offerBricks, setOfferBricks] = useState<number>(0);
     const [requestBricks, setRequestBricks] = useState<number>(0);
-    const [searchResultsCache, setSearchResultsCache] = useState<Map<string, any[]>>(new Map());
+    const [searchResultsCache, setSearchResultsCache] = useState<Map<string, CalculatorItem[]>>(new Map());
 
     const searchItems = trpc.searchCalculatorItems.useMutation();
     const topValueItems = trpc.getTopValueItems.useQuery({ limit: 25 });
@@ -40,20 +41,22 @@ export default function CalculatorPage() {
         if (searchQuery.trim()) {
             const cacheKey = searchQuery.toLowerCase().trim();
             if (searchResultsCache.has(cacheKey)) {
-                searchItems.data = searchResultsCache.get(cacheKey);
+                setSearchResults(searchResultsCache.get(cacheKey) ?? []);
                 return;
             }
             const results = await searchItems.mutateAsync({
                 input: searchQuery,
                 limit: 25
             });
+            setSearchResults(results);
             setSearchResultsCache(prev => new Map(prev.set(cacheKey, results)));
         } else {
+            setSearchResults(null);
             searchItems.reset();
         }
     };
 
-    const addItemToSide = (item: any, side: 'offer' | 'request') => {
+    const addItemToSide = (item: CalculatorItem, side: 'offer' | 'request') => {
         const cachedItem: CalculatorItem = {
             id: item.id,
             name: item.name,
@@ -363,9 +366,9 @@ export default function CalculatorPage() {
 
                 {!searchItems.isLoading && !topValueItems.isLoading && (
                     <>
-                        {searchItems.data && searchItems.data.length > 0 ? (
+                        {searchResults && searchResults.length > 0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                {searchItems.data.map(item => (
+                                {searchResults.map(item => (
                                     <SearchResultItem
                                         key={item.id}
                                         item={item}
@@ -373,7 +376,7 @@ export default function CalculatorPage() {
                                     />
                                 ))}
                             </div>
-                        ) : searchItems.data && searchItems.data.length === 0 ? (
+                        ) : searchResults && searchResults.length === 0 ? (
                             <div className="text-center py-8 text-neutral-400">
                                 No items found. Try a different search term.
                             </div>
