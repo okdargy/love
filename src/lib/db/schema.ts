@@ -1,4 +1,4 @@
-import { bigint, boolean, index, integer, pgTable, text } from 'drizzle-orm/pg-core';
+import { bigint, boolean, index, integer, pgTable, serial, text } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 const nowEpochMs = sql`(extract(epoch from now()) * 1000)::bigint`;
@@ -51,7 +51,7 @@ export const collectablesTable = pgTable("collectables", {
 });
 
 export const tagsTable = pgTable("tags", {
-	id: integer("id").notNull().primaryKey().generatedByDefaultAsIdentity(),
+	id: serial("id").primaryKey().notNull(),
     name: text("name").notNull(),
 	emoji: text("emoji").notNull()
 });
@@ -95,7 +95,7 @@ export const tagsRelations = relations(itemTagsTable, ({ one }) => ({
 }));
 
 export const auditLogsTable = pgTable("audit_logs", {
-	id: integer("id").notNull().primaryKey().generatedByDefaultAsIdentity(),
+	id: serial("id").notNull().primaryKey(),
 	userId: text("userId").notNull().references(() => userTable.id),
 	action: text("action").notNull(),
 	where: text("where").notNull(),
@@ -111,7 +111,7 @@ export const auditLogsRelations = relations(auditLogsTable, ({ one }) => ({
 }));
 
 export const tradeHistoryTable = pgTable("trade_history", {
-	id: integer("id").notNull().primaryKey().generatedByDefaultAsIdentity(),
+	id: serial("id").notNull().primaryKey(),
 	itemId: integer("itemId").notNull().references(() => collectablesTable.id),
 	serial: bigint("serial", { mode: 'number' }).notNull(),
 	userId: bigint("userId", { mode: 'number' }).notNull(),
@@ -130,7 +130,7 @@ export const tradeHistoryRelations = relations(tradeHistoryTable, ({ one }) => (
 }));
 
 export const listingsHistoryTable = pgTable("listings_history", {
-	id: integer("id").notNull().primaryKey().generatedByDefaultAsIdentity(),
+	id: serial("id").notNull().primaryKey(),
 	itemId: integer("itemId").notNull().references(() => collectablesTable.id),
 	bestPrice: bigint("price", { mode: 'number' }).notNull(),
 	sellers: bigint("sellers", { mode: 'number' }).notNull(),
@@ -154,7 +154,7 @@ export const playersTable = pgTable("players", {
 });
 
 export const playerNetworthHistoryTable = pgTable("player_networth_history", {
-	id: integer("id").notNull().primaryKey().generatedByDefaultAsIdentity(),
+	id: serial("id").notNull().primaryKey(),
 	playerId: integer("playerId").notNull().references(() => playersTable.id),
 	rank: integer("rank").notNull(),
 	networth: bigint("networth", { mode: 'number' }).notNull(),

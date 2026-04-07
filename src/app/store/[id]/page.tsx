@@ -130,9 +130,9 @@ export default function Page() {
                 {
                   (itemInfo.data.item.tags.length > 0 && itemInfo.data.allTags) && (
                     <div className="flex flex-wrap gap-2">
-                      {itemInfo.data.item.tags.map(tag => itemInfo.data?.allTags.find(t => t.id === tag.tagId) && (
+                      {itemInfo.data.item.tags.map(tag => itemInfo.data?.allTags.find((t) => Number(t.id) === Number(tag.tagId)) && (
                         <Badge key={tag.tagId} variant={'outline'}>
-                          {itemInfo.data.allTags.find(t => t.id === tag.tagId)?.name || tag.tagId}
+                          {itemInfo.data.allTags.find((t) => Number(t.id) === Number(tag.tagId))?.name || tag.tagId}
                         </Badge>
                       ))}
                     </div>

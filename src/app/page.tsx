@@ -273,17 +273,17 @@ export default function Home() {
                     </div>
                     <div className="absolute right-0 p-2">
                       {item.tags.map((tag, index) => {
-                        const correspondingTag = safeResult.allTags.find(t => t.id === tag.tagId);
+                        const correspondingTag = safeResult.allTags.find((t) => Number(t.id) === Number(tag.tagId));
 
                         return (
                             <Tooltip key={index}> 
                               <TooltipTrigger>
                                 <div className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-100/10 text-white rounded-md px-2 py-1 ml-1.5">
-                                  {correspondingTag ? correspondingTag.emoji : tag.itemId}
+                                  {correspondingTag ? correspondingTag.emoji : tag.tagId}
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>{correspondingTag ? correspondingTag.name : tag.itemId}</p>
+                                <p>{correspondingTag ? correspondingTag.name : tag.tagId}</p>
                               </TooltipContent>
                             </Tooltip>
                         );
