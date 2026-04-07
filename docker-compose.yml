@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: love_postgres
+    environment:
+      POSTGRES_USER: love
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: love
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U love -d love"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  adminer:
+    image: adminer:latest
+    container_name: love_adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
