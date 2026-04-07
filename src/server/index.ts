@@ -268,13 +268,18 @@ export const appRouter = router({
             items.unshift(item);
         }
 
-        const allTags = await db.query.tagsTable.findMany({
+        const allTagsRaw = await db.query.tagsTable.findMany({
             columns: {
                 id: true,
                 name: true,
                 emoji: true
             }
         });
+
+        const allTags = allTagsRaw.map((tag) => ({
+            ...tag,
+            id: Number(tag.id),
+        }));
 
         return { items, totalPages, allTags };
     }),
@@ -308,13 +313,18 @@ export const appRouter = router({
                 throw new Error("Item not found");
             }
 
-            const allTags = await db.query.tagsTable.findMany({
+            const allTagsRaw = await db.query.tagsTable.findMany({
                 columns: {
                     id: true,
                     name: true,
                     emoji: true
                 }
             });
+
+            const allTags = allTagsRaw.map((tag) => ({
+                ...tag,
+                id: Number(tag.id),
+            }));
 
             const latestListing = await db.query.listingsHistoryTable.findFirst({
                 where: eq(listingsHistoryTable.itemId, opts.input),
