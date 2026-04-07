@@ -2,6 +2,7 @@ import {
     APIStoreResponse,
     ListingsAPIResponse,
     OwnerAPIResponse,
+    RankingsResponse,
     WebsiteStoreResponse,
 } from "./types";
 import { helpfulPrint } from "./utils";
@@ -88,6 +89,18 @@ export const getWebsiteItems = async (page: number = 1): Promise<WebsiteStoreRes
     const url = `${API_BASE_URL.STORE}/items?sort=createdAt&order=desc&showOffsale=true&collectiblesOnly=true&page=${page}`;
     return apiRequest<WebsiteStoreResponse>(url);
 };
+
+/**
+ * Gets a list of ranked items from the API
+ * 
+ * @param page - Page number (default: 1)
+ * @param limit - Results per page (default: 100, limit: 100,)
+ * @returns JSON response of ranked items from the API or null if request fails
+ */
+export const getRankings = async (page: number = 1, limit: number = 100): Promise<RankingsResponse | null> => {
+    const url = `${API_BASE_URL.POLYTORIA}/rankings?category=networth&page=${page}&limit=${limit}`;
+    return apiRequest<RankingsResponse>(url);
+}
 
 // For legacy kitty, that keeps coming back for getItems(), those who know.
 export const getItems = getWebsiteItems;

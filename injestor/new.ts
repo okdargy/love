@@ -4,10 +4,10 @@ import { ldb } from "./db";
 import { db } from "@/lib/db";
 
 import { itemsTable, serialsTable } from "./db/schema";
-import { collectablesTable, collectablesStatsTable, listingsHistoryTable, tradeHistoryTable } from "@/lib/db/schema";
+import { collectablesTable, collectablesStatsTable, listingsHistoryTable, tradeHistoryTable, playersTable, playerNetworthHistoryTable } from "@/lib/db/schema";
 
-import { APIItem, Inventory, Item, ListingsAPIResponse, WebsiteItem } from "./types";
-import { getAPIItems, getListings, getOwners, getWebsiteItems } from "./api";
+import { APIItem, Inventory, Item, ListingsAPIResponse, RankingEntry, WebsiteItem } from "./types";
+import { getAPIItems, getListings, getOwners, getRankings, getWebsiteItems } from "./api";
 import { helpfulPrint, processDeal, processTrade, sendTradeWebhooks } from "./utils";
 
 const INTERVALS = {
@@ -15,6 +15,7 @@ const INTERVALS = {
     NEXT_PAGE: 5 * 1000, // 5 seconds, after getting one page, wait X amount of time (increased from 5s)
     NEXT_ITEM: 30 * 1000, // 30 seconds, after getting one item, wait X amount of time (increased from 30s)
     CYCLE: 1000 * 60 * 60, // 60 minutes, to wait after the entire item cycle (listinsHistory, tradeHistory) is done, indepedent from new items
+    RANKINGS_UPDATE: 1000 * 60 * 12, // 12 hours, fetch newest networth rankings
 };
 
 type NullableOptional<T> = {
@@ -99,6 +100,30 @@ async function getShopData() {
     return items;
 }
 
+async function getRankingsData(pages: number = 5) {
+    const players: RankingEntry[] = [];
+    const response = await getRankings();
+
+    if (response && response.data.length > 0) {
+        players.push(...response.data);
+        
+        for (let page = 2; page <= pages; page++) {
+            await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_PAGE));
+
+            const pageResponse = await getRankings(page);
+            if (pageResponse && pageResponse.data.length > 0) {
+                players.push(...pageResponse.data);
+            }
+        }
+    }
+
+    const uniquePlayers = players.filter((player, index, self) =>
+        index === self.findIndex((p) => p.user.id === player.user.id)
+    );
+
+    return uniquePlayers;
+}
+
 async function handleShopData(items: MergedItem[]) {
     if (items.length == 0) return;
 
@@ -129,6 +154,33 @@ async function handleShopData(items: MergedItem[]) {
     await insertNewItems(itemsToUpdate);
 }
 
+async function handleRankingsData(players: RankingEntry[]) {
+    if (players.length === 0) return;
+
+    const playersValues = players.map(player => ({
+        id: player.user.id,
+        username: player.user.username,
+        thumbnailUrl: player.user.thumbnail.avatar,
+    }));
+
+    await db.insert(playersTable).values(playersValues).onConflictDoUpdate({
+        target: playersTable.id,
+        set: {
+            username: sql.raw(`excluded."${playersTable.username.name}"`),
+            thumbnailUrl: sql.raw(`excluded."${playersTable.thumbnailUrl.name}"`),
+        }
+    });
+
+    await db.insert(playerNetworthHistoryTable).values(
+        players.map(player => ({
+            playerId: player.user.id,
+            rank: player.rank,
+            networth: player.statistic,
+        }))
+    ).onConflictDoNothing();
+    
+}   
+
 async function insertNewItems(values: MergedItem[]) {
     if(values.length === 0) return;
 
@@ -154,8 +206,8 @@ async function insertNewItems(values: MergedItem[]) {
     await db.insert(collectablesTable).values(collectableValues).onConflictDoUpdate({
         target: collectablesTable.id,
         set: {
-            recentAverage: sql.raw(`excluded.${collectablesTable.recentAverage.name}`),
-            price: sql.raw(`excluded.${collectablesTable.price.name}`)
+            recentAverage: sql.raw(`excluded."${collectablesTable.recentAverage.name}"`),
+            price: sql.raw(`excluded."${collectablesTable.price.name}"`)
         }
     });
 
@@ -447,13 +499,18 @@ class ItemCycleManager {
     }
 }
 
-const cycleManager = new ItemCycleManager();
-cycleManager.start();
+// const cycleManager = new ItemCycleManager();
+// cycleManager.start();
 
-setInterval(async () => {
-    const shopData = await getShopData();
-    handleShopData(shopData);
-}, INTERVALS.NEW_ITEMS);
+// setInterval(async () => {
+//     const shopData = await getShopData();
+//     handleShopData(shopData);
+// }, INTERVALS.NEW_ITEMS);
+
+// setInterval(async () => {   
+    const rankingsData = await getRankingsData();
+    handleRankingsData(rankingsData);
+// }, INTERVALS.RANKINGS_UPDATE);
 
 const msToRelative = (ms: number) => {
     const seconds = Math.floor(ms / 1000);

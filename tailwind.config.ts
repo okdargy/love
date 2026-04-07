@@ -106,13 +106,18 @@ const config = {
 			'grid-movement': {
 				'0%': { backgroundPosition: '0 0' },
 				'100%': { backgroundPosition: '20px 20px' }
+			},
+			'spin': {
+				'0%': { transform: 'rotate(0deg)' },
+				'100%': { transform: 'rotate(360deg)' }
 			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
   			heartbeat: 'heartbeat 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-			'grid-movement': 'grid-movement 4s linear infinite'
+			'grid-movement': 'grid-movement 4s linear infinite',
+			'spin2': 'spin 1s linear infinite'
   		}
   	}
   },

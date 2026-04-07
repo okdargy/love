@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { like, eq, count, or, desc, and, inArray, InferSelectModel, sql } from "drizzle-orm";
+import { ilike, eq, count, or, desc, and, inArray, InferSelectModel, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable, playersTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 import type { User } from "lucia";
@@ -40,7 +40,6 @@ setInterval(() => {
         }
     }
 }, 5 * 60 * 1000);
-
 
 const sendValueChangeAlert = ({
     item,
@@ -102,6 +101,27 @@ const sendValueChangeAlert = ({
 }
 
 export const appRouter = router({
+    searchPlayers: publicProcedure.input(z.object({
+        input: z.string().min(1),
+        limit: z.number().min(1).max(15).optional(),
+    })).mutation(async (opts) => {
+        const sanitizedInput = sanitizeSearchInput(opts.input.input)?.trim();
+
+        if (!sanitizedInput) {
+            return [];
+        }
+
+        return await db
+            .select({
+                id: playersTable.id,
+                username: playersTable.username,
+                thumbnailUrl: playersTable.thumbnailUrl,
+            })
+            .from(playersTable)
+            .where(ilike(playersTable.username, `%${sanitizedInput}%`))
+            .orderBy(playersTable.username)
+            .limit(opts.input.limit ?? 8);
+    }),
     searchItems: publicProcedure.input(z.object({
         input: z.string(),
         limit: z.number().min(1).max(25).optional(),
@@ -110,9 +130,9 @@ export const appRouter = router({
         const sanitizedInput = sanitizeSearchInput(opts.input.input);
 
         return await db.query.collectablesTable.findMany({
-            where: (collectables, { like, or }) => or(
-                like(collectables.shorthand, `%${sanitizedInput}%`),
-                like(collectables.name, `%${sanitizedInput}%`)
+            where: (collectables, { or }) => or(
+                ilike(collectables.shorthand, `%${sanitizedInput}%`),
+                ilike(collectables.name, `%${sanitizedInput}%`)
             ),
             limit: opts.input.limit ?? 10,
             offset: opts.input.offset ?? 0,
@@ -144,8 +164,8 @@ export const appRouter = router({
         const sanitizedSearch = sanitizeSearchInput(opts.input.search) ?? "";
         let searchCondition = opts.input.search
         ? or(
-            like(collectablesTable.shorthand, `%${sanitizedSearch}%`),
-            like(collectablesTable.name, `%${sanitizedSearch}%`)
+            ilike(collectablesTable.shorthand, `%${sanitizedSearch}%`),
+            ilike(collectablesTable.name, `%${sanitizedSearch}%`)
         )
         : undefined;
 
@@ -188,26 +208,30 @@ export const appRouter = router({
                     updated_at: collectablesTable.updated_at,
                 }),
                 tags: sql<string>`COALESCE(
-                    (SELECT json_group_array(json_array(item_tags.itemId, item_tags.tagId))
-                    FROM item_tags
-                    WHERE item_tags.itemId = collectables.id),
-                    json_array()
-                )`.as('tags'),
+                    (
+                        SELECT json_agg(json_build_array(item_tags."itemId", item_tags."tagId"))
+                        FROM item_tags
+                        WHERE item_tags."itemId" = collectables."id"
+                    ),
+                    '[]'::json
+                )::text`.as('tags'),
                 stats: sql<string>`COALESCE(
-                    (SELECT json_array(
-                        collectables_stats.id,
-                        collectables_stats.value,
-                        collectables_stats.demand,
-                        collectables_stats.trend,
-                        collectables_stats.funFact,
-                        collectables_stats.created_at,
-                        collectables_stats.updated_at
-                    )
-                    FROM collectables_stats
-                    WHERE collectables_stats.id = collectables.id
-                    LIMIT 1),
-                    json_array()
-                )`.as('stats')
+                    (
+                        SELECT json_build_array(
+                            collectables_stats."id",
+                            collectables_stats."value",
+                            collectables_stats."demand",
+                            collectables_stats."trend",
+                            collectables_stats."funFact",
+                            collectables_stats."created_at",
+                            collectables_stats."updated_at"
+                        )
+                        FROM collectables_stats
+                        WHERE collectables_stats."id" = collectables."id"
+                        LIMIT 1
+                    ),
+                    '[]'::json
+                )::text`.as('stats')
             })
             .from(collectablesTable)
             .where(searchCondition)
@@ -457,7 +481,7 @@ export const appRouter = router({
     searchTags: publicProcedure.input(z.string().optional()).mutation(async (opts) => {
         return await db.query.tagsTable.findMany({
             limit: 5,
-            ...(opts.input ? { where: like(tagsTable.name, `%${opts.input}%`) } : {})
+            ...(opts.input ? { where: ilike(tagsTable.name, `%${opts.input}%`) } : {})
         });
     }),
     removeTag: publicProcedure.input(z.number().min(1)).mutation(async (opts) => {
@@ -809,8 +833,8 @@ export const appRouter = router({
             .leftJoin(collectablesStatsTable, eq(collectablesTable.id, collectablesStatsTable.id))
             .where(
                 or(
-                    like(collectablesTable.shorthand, `%${sanitizedInput}%`),
-                    like(collectablesTable.name, `%${sanitizedInput}%`)
+                    ilike(collectablesTable.shorthand, `%${sanitizedInput}%`),
+                    ilike(collectablesTable.name, `%${sanitizedInput}%`)
                 )
             )
             .orderBy(desc(collectablesStatsTable.value))

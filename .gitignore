@@ -54,3 +54,6 @@ save
 
 # local db for trade-history
 trade.db
+
+# temporary migration artifacts
+.tmp/
