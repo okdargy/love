@@ -1,4 +1,4 @@
-import { bigint, boolean, index, integer, pgTable, serial, text } from 'drizzle-orm/pg-core';
+import { bigint, boolean, index, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 const nowEpochMs = sql`(extract(epoch from now()) * 1000)::bigint`;
@@ -33,7 +33,7 @@ export const sessionTable = pgTable("session", {
 	userId: text("userId")
 		.notNull()
 		.references(() => userTable.id),
-	expiresAt: bigint("expiresAt", { mode: 'number' }).notNull(),
+	expiresAt: timestamp("expiresAt", { withTimezone: true, mode: 'date' }).notNull(),
 });
 
 export const collectablesTable = pgTable("collectables", {
