@@ -499,17 +499,17 @@ class ItemCycleManager {
     }
 }
 
-// const cycleManager = new ItemCycleManager();
-// cycleManager.start();
+const cycleManager = new ItemCycleManager();
+cycleManager.start();
 
-// setInterval(async () => {
-//     const shopData = await getShopData();
-//     handleShopData(shopData);
-// }, INTERVALS.NEW_ITEMS);
+setInterval(async () => {
+    const shopData = await getShopData();
+    handleShopData(shopData);
+}, INTERVALS.NEW_ITEMS);
 
 // setInterval(async () => {   
-    const rankingsData = await getRankingsData();
-    handleRankingsData(rankingsData);
+    // const rankingsData = await getRankingsData();
+    // handleRankingsData(rankingsData);
 // }, INTERVALS.RANKINGS_UPDATE);
 
 const msToRelative = (ms: number) => {
