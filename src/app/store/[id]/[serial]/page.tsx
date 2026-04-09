@@ -58,7 +58,7 @@ export default function Page() {
                                         <div>
                                             <p className="font-semibold">{entry.username}</p>
                                             <p className="text-sm text-neutral-500">
-                                                Indexed on {new Date(entry.created_at + " UTC").toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}
+                                                Indexed on {new Date(Number(entry.created_at)).toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}
                                             </p>
                                         </div>
                                         <div className='flex gap-x-4'>

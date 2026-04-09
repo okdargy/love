@@ -26,7 +26,7 @@ export default function Owners({ id }: { id: number }) {
                             <li key={entry.id} className="flex justify-between">
                                 <div>
                                     <p className="font-semibold">{entry.username}</p>
-                                    <p className="text-sm text-neutral-500">Indexed on {new Date(entry.created_at + " UTC").toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}</p>
+                                    <p className="text-sm text-neutral-500">Indexed on {new Date(Number(entry.created_at)).toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}</p>
                                 </div>
                                 <div className='flex gap-x-4'>
                                     <p className="text-sm text-neutral-500 my-auto">#{entry.serial}</p>
