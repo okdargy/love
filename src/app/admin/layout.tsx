@@ -24,6 +24,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         {
             label: "Tags",
             href: "/admin/tags"
+        },
+        {
+            label: "Users",
+            href: "/admin/users"
         }
     ]
 

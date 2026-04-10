@@ -112,15 +112,29 @@ const EditSheet = ({ id, name, emoji, onEdit }: { id: number, name: string, emoj
 }
 
 export default function AdminTags() {
+    const tagsPerPage = 5;
+
     const [name, setName] = useState("");
     const [emoji, setEmoji] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
-    const [tags, setTags] = useState<ReturnType<typeof trpc.searchTags.useMutation>['data']>([]);
+    const [data, setData] = useState<ReturnType<typeof trpc.searchTags.useMutation>["data"]>({
+        tags: [],
+        totalPages: 0,
+    });
+
+    const fetchTags = (page: number, query?: string) => {
+        getTags.mutate({
+            page,
+            total: tagsPerPage,
+            query,
+        });
+    };
 
     const getTags = trpc.searchTags.useMutation({
         onSuccess: (data) => {
-            setTags(data);
+            setData(data);
         },
         onError: (error) => {
             toast.error(error.message);
@@ -129,7 +143,7 @@ export default function AdminTags() {
 
     const addTag = trpc.addTag.useMutation({
         onSuccess: () => {
-            getTags.mutate();
+            fetchTags(currentPage, searchQuery || undefined);
             toast.success("Tag added!");
         },
         onError: (error) => {
@@ -139,7 +153,7 @@ export default function AdminTags() {
 
     const removeTag = trpc.removeTag.useMutation({
         onSuccess: () => {
-            getTags.mutate();
+            fetchTags(currentPage, searchQuery || undefined);
             toast.success("Tag removed!");
         },
         onError: (error) => {
@@ -149,7 +163,7 @@ export default function AdminTags() {
 
     const editTag = trpc.editTag.useMutation({
         onSuccess: () => {
-            getTags.mutate();
+            fetchTags(currentPage, searchQuery || undefined);
             toast.success("Tag edited!");
         },
         onError: (error) => {
@@ -158,12 +172,19 @@ export default function AdminTags() {
     });
 
     useEffect(() => {
-        getTags.mutate();
+        fetchTags(1);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const searchTags = async (query: string) => {
-        getTags.mutate(query);
+        setCurrentPage(1);
+        fetchTags(1, query || undefined);
     }
+
+    const updatePage = (page: number) => {
+        setCurrentPage(page);
+        fetchTags(page, searchQuery || undefined);
+    };
 
     const handleAddTag = async () => {
         if (name.length < 3) {
@@ -203,7 +224,6 @@ export default function AdminTags() {
 
     const handleRemoveTag = async (id: number) => {
         await removeTag.mutate(id);
-        getTags.mutate();
     };
 
     return (
@@ -251,8 +271,8 @@ export default function AdminTags() {
                 </Dialog>
             </div>
             <div className="space-y-2">
-                {tags ? (
-                    tags.map(tag => (
+                {data ? (
+                    data.tags.map(tag => (
                         <div key={tag.id} className="flex justify-between items-center p-4 border border-neutral-100/10 rounded-lg shadow-md">
                             <div className="flex divide-x divide-neural-100/10">
                                 <p className="pr-3">{tag.emoji}</p>
@@ -267,6 +287,11 @@ export default function AdminTags() {
                     <p>No tags found</p>
                 )}
             </div>
+            <div className='flex justify-between items-center'>
+                <Button variant='secondary' onClick={() => updatePage(currentPage - 1)} disabled={currentPage === 1}>Previous</Button>
+                <p className='text-neutral-400'>{currentPage} of {data?.totalPages || 1}</p>
+                <Button variant='secondary' onClick={() => updatePage(currentPage + 1)} disabled={currentPage === (data?.totalPages || 1)}>Next</Button>
+            </div>
         </div>
     )
-} 
+}

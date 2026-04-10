@@ -25,7 +25,7 @@ import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Hero from "@/components/Hero";
 
 const ITEMS_PER_PAGE = 25;
@@ -233,8 +233,7 @@ export default function Home() {
       ) : error ? (
         <Error message={error.message} />
       ) : (
-        <TooltipProvider>
-          <div className="space-y-3">
+        <div className="space-y-3">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {safeResult.items.map((item, index) => (
                 <Link key={index} href={`/store/${item.id}`} passHref={true}>
@@ -323,7 +322,6 @@ export default function Home() {
               </PaginationContent>
             </Pagination>
           </div>
-        </TooltipProvider>
       )}
     </div>
   );

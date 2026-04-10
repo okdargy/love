@@ -6,14 +6,22 @@ import Recent from "./Recent";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRightLeft } from "lucide-react";
-import { USER_AGENT } from "@/lib/utils";
+import { parseDateInput, USER_AGENT } from "@/lib/utils";
 
 const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseDateInput(dateString);
+    if (!date) {
+        return 'Unknown activity';
+    }
+
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 0) {
+        return 'Unknown activity';
+    }
     
     switch (true) {
         case diffInSeconds < 60:

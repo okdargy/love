@@ -94,14 +94,14 @@ export default function PlayerSearch({ className }: PlayerSearchProps) {
                     placeholder="Search players..."
                     className="h-9 pl-9"
                 />
-                {searchPlayers.isPending && (
+                {searchPlayers.isLoading && (
                     <Spinner width="12" height="12" className="fill-primary absolute right-3 top-1/2 -translate-y-1/2" />
                 )}
             </div>
 
             {showDropdown && (
                 <div className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
-                    {!searchPlayers.isPending && results.length === 0 && (
+                    {!searchPlayers.isLoading && results.length === 0 && (
                         <p className="px-3 py-2 text-sm text-muted-foreground">No players found.</p>
                     )}
 

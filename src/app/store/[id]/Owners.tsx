@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import {
     Tooltip,
     TooltipContent,
-    TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { ArrowLeft, ArrowRight, ArrowRightLeft, Eye, User } from 'lucide-react';
@@ -166,35 +165,33 @@ export default function Owners({ id, setHoardRate, setOwnersAmount }: { id: numb
 
     const renderGridView = () => (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(3rem,1fr))] gap-2 max-w-full overflow-x-auto pb-5">
-            <TooltipProvider>
-                {allSerials.map(({ serial, username, userId }, index) => {
-                    const userColor = userColors[userId];
+            {allSerials.map(({ serial, username, userId }, index) => {
+                const userColor = userColors[userId];
 
-                    return (
-                        <Tooltip key={`${serial}-${userId}-${index}`}>
-                            <TooltipTrigger asChild>
-                                <Link href={`/store/${id}/${serial}`}>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 w-12 text-xs font-mono transition-colors"
-                                        style={userColor ? {
-                                            borderColor: userColor,
-                                            borderWidth: '2px'
-                                        } : {}}
-                                    >
-                                        {serial}
-                                    </Button>
-                                </Link>
-                            </TooltipTrigger>
-                            <TooltipContent className="text-center">
-                                <div className="font-semibold">{username}</div>
-                                <div className="text-gray-300">Serial #{serial}</div>
-                            </TooltipContent>
-                        </Tooltip>
-                    );
-                })}
-            </TooltipProvider>
+                return (
+                    <Tooltip key={`${serial}-${userId}-${index}`}>
+                        <TooltipTrigger asChild>
+                            <Link href={`/store/${id}/${serial}`}>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-12 text-xs font-mono transition-colors"
+                                    style={userColor ? {
+                                        borderColor: userColor,
+                                        borderWidth: '2px'
+                                    } : {}}
+                                >
+                                    {serial}
+                                </Button>
+                            </Link>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-center">
+                            <div className="font-semibold">{username}</div>
+                            <div className="text-gray-300">Serial #{serial}</div>
+                        </TooltipContent>
+                    </Tooltip>
+                );
+            })}
         </div>
     )
 

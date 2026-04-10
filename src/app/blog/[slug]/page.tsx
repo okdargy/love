@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Metadata, ResolvingMetadata } from 'next';
+import { formatDateWithFallback } from '@/lib/utils';
 
 type Props = {
     params: { slug: string }
@@ -20,35 +21,33 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                             <div className="flex items-center gap-3 border border-neutral-500 px-4 py-2 rounded-full">
                                 <div className="flex justify-center items-center relative">
                                     {frontmatter.author.map((author: { name: string; picture: string; }, index: number) => (
-                                        <TooltipProvider key={author.name}>
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <div
-                                                        className={frontmatter.author.length > 1 ? (
-                                                            index === 0 ? '' : '-ml-1'
-                                                        ) : 'gap-x-2'}
-                                                        style={{ zIndex: frontmatter.author.length - index }}
-                                                    >
-                                                        <img
-                                                            src={`/authors/${author.picture}`}
-                                                            alt={author.name}
-                                                            className="w-6 h-6 rounded-full"
-                                                        />
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent side='bottom'>
-                                                    <p>{author.name}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                        <Tooltip key={author.name}>
+                                            <TooltipTrigger>
+                                                <div
+                                                    className={frontmatter.author.length > 1 ? (
+                                                        index === 0 ? '' : '-ml-1'
+                                                    ) : 'gap-x-2'}
+                                                    style={{ zIndex: frontmatter.author.length - index }}
+                                                >
+                                                    <img
+                                                        src={`/authors/${author.picture}`}
+                                                        alt={author.name}
+                                                        className="w-6 h-6 rounded-full"
+                                                    />
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent side='bottom'>
+                                                <p>{author.name}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
                                     ))}
                                 </div>
                                 <div className="text-sm text-neutral-400 ml-2">
-                                    {new Date(frontmatter.publishedAt).toLocaleDateString('en-US', {
+                                    {formatDateWithFallback(frontmatter.publishedAt, {
                                         year: 'numeric',
                                         month: 'long',
                                         day: 'numeric'
-                                    })}
+                                    }, 'Unknown date', 'en-US')}
                                 </div>
                             </div>
                     </div>

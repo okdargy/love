@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import Error from '@/components/Error';
 import { ArrowLeft, ArrowRight, ArrowRightLeft, History, User } from 'lucide-react';
 import Link from 'next/link';
+import { formatDateWithFallback } from '@/lib/utils';
 
 export default function Recent() {
     const [page, setPage] = useState(1);
@@ -72,7 +73,7 @@ export default function Recent() {
                                 <li key={entry.id} className="flex justify-between">
                                     <div>
                                         <p className="font-semibold">{entry.username}</p>
-                                        <p className="text-sm text-neutral-500">Indexed on {new Date(Number(entry.created_at)).toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}</p>
+                                        <p className="text-sm text-neutral-500">Indexed on {formatDateWithFallback(entry.created_at, { timeStyle: "long", dateStyle: "short" })}</p>
                                     </div>
                                     <div className='flex gap-x-4'>
                                         <Link href={`/store/${entry.itemId}`} className='my-auto'>

@@ -11,7 +11,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation"
 import { LogOut, Wrench } from 'lucide-react';
 import { LoveIcon } from "@/components/icons";
-import PlayerSearch from "./PlayerSearch";
 
 async function logout(): Promise<void> {
     "use server";
@@ -46,9 +45,6 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                         <LoveIcon className="h-6 w-6 fill-primary" />
                     </Link>
                     <span className="text-xs bg-primary/30 px-2.5 py-0.5 uppercase rounded-md font-semibold shine-effect">Beta</span>
-                    <div className="order-3 w-full sm:order-2 sm:mx-auto sm:w-auto sm:flex-1 sm:max-w-sm">
-                        <PlayerSearch />
-                    </div>
                 </div>
 
                 <div className="order-2 ml-auto flex items-center gap-3 sm:order-3">

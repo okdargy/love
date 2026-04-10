@@ -16,6 +16,7 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet"
 import { Label } from '@/components/ui/label';
+import { formatDateWithFallback } from '@/lib/utils';
 
 const SheetItem = ({ label, value, code }: { label: string; value: string, code?: boolean }) => (
     <div className='space-y-0.5'>
@@ -78,7 +79,7 @@ export default function AdminLogs() {
                                     <div className='my-auto'>
                                         <p className='font-semibold text-md'>{log.user.display_name} ({log.user.username})</p>
                                         <p className='text-neutral-400 text-sm'>
-                                            {new Date(log.timestamp + 'Z').toLocaleString(undefined, {
+                                            {formatDateWithFallback(`${log.timestamp}Z`, {
                                                 timeZoneName: 'short'
                                             })}
                                         </p>
@@ -97,7 +98,7 @@ export default function AdminLogs() {
                                                     <SheetItem label='Action' value={log.action} />
                                                     <SheetItem label='Table' value={log.where} />
                                                     <SheetItem label='Timestamp' value={
-                                                        new Date(log.timestamp + 'Z').toLocaleString(undefined, {
+                                                        formatDateWithFallback(`${log.timestamp}Z`, {
                                                             timeZoneName: 'short'
                                                         })
                                                     } />

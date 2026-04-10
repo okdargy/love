@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Spinner } from '@/components/icons';
 import Error from '@/components/Error';
 import { History, User } from 'lucide-react';
+import { formatDateWithFallback } from '@/lib/utils';
 
 export default function Recent({ id }: { id: number }) {
     const res = trpc.getUsersLatestHistory.useQuery(id);
@@ -25,7 +26,7 @@ export default function Recent({ id }: { id: number }) {
                                     <li key={entry.id} className="flex justify-between">
                                         <div>
                                             <p className="font-semibold">{entry.item.name}</p>
-                                            <p className="text-sm text-neutral-500">Indexed on {new Date(Number(entry.created_at)).toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}</p>
+                                            <p className="text-sm text-neutral-500">Indexed on {formatDateWithFallback(entry.created_at, { timeStyle: "long", dateStyle: "short" })}</p>
                                         </div>
                                         <div className='flex gap-x-4'>
                                             <Link href={`/store/${entry.itemId}`} className='my-auto'>

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ilike, eq, count, or, desc, and, inArray, InferSelectModel, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable, playersTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable, playersTable, userTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 import type { User } from "lucia";
@@ -463,6 +463,99 @@ export const appRouter = router({
 
         return { logs, totalPages };
     }),
+    getAdminUsers: publicProcedure.input(z.object({
+        page: z.number().min(1),
+        total: z.number().min(1).max(25),
+        query: z.string().optional(),
+    })).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user || user.role !== "admin") {
+            throw new Error("You do not have permission to view users");
+        }
+
+        const offset = (opts.input.page - 1) * opts.input.total;
+        const limit = opts.input.total;
+        const query = opts.input.query?.trim();
+        const whereClause = query
+            ? or(
+                ilike(userTable.username, `%${query}%`),
+                ilike(userTable.display_name, `%${query}%`)
+            )
+            : undefined;
+
+        const [totalCount] = await db.select({ count: count() }).from(userTable).where(whereClause);
+        const totalPages = Math.ceil(totalCount.count / limit);
+
+        const users = await db.query.userTable.findMany({
+            limit,
+            offset,
+            columns: {
+                id: true,
+                username: true,
+                display_name: true,
+                discordId: true,
+                avatar: true,
+                role: true,
+                created_at: true,
+                updated_at: true,
+            },
+            ...(whereClause ? { where: whereClause } : {}),
+            orderBy: [desc(userTable.created_at)],
+        });
+
+        return { users, totalPages };
+    }),
+    updateUserRole: publicProcedure.input(z.object({
+        userId: z.string().min(1),
+        role: z.enum(["user", "developer", "admin", "editor"]),
+    })).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user || user.role !== "admin") {
+            throw new Error("You do not have permission to update user roles");
+        }
+
+        if (opts.input.userId === user.id) {
+            throw new Error("You cannot update your own role");
+        }
+
+        const targetUser = await db.query.userTable.findFirst({
+            where: eq(userTable.id, opts.input.userId),
+            columns: {
+                id: true,
+                role: true,
+            },
+        });
+
+        if (!targetUser) {
+            throw new Error("User not found");
+        }
+
+        if (targetUser.role === opts.input.role) {
+            return { success: true };
+        }
+
+        await db.transaction(async (tx) => {
+            await tx.update(userTable).set({
+                role: opts.input.role,
+                updated_at: Date.now(),
+            }).where(eq(userTable.id, opts.input.userId));
+
+            await tx.insert(auditLogsTable).values({
+                userId: user.id,
+                action: "edit",
+                where: "user",
+                payload: JSON.stringify({
+                    id: opts.input.userId,
+                    role: opts.input.role,
+                    previousRole: targetUser.role,
+                }),
+            });
+        });
+
+        return { success: true };
+    }),
     addTag: publicProcedure.input(z.object({
         name: z.string().min(3),
         emoji: z.string().min(1).regex(/[\p{Emoji_Presentation}|\p{Extended_Pictographic}]/u),
@@ -488,11 +581,27 @@ export const appRouter = router({
             success: true
         }
     }),
-    searchTags: publicProcedure.input(z.string().optional()).mutation(async (opts) => {
-        return await db.query.tagsTable.findMany({
-            limit: 5,
-            ...(opts.input ? { where: ilike(tagsTable.name, `%${opts.input}%`) } : {})
+    searchTags: publicProcedure.input(z.object({
+        query: z.string().optional(),
+        page: z.number().min(1),
+        total: z.number().min(1).max(25),
+    })).mutation(async (opts) => {
+        const offset = (opts.input.page - 1) * opts.input.total;
+        const limit = opts.input.total;
+        const query = opts.input.query?.trim();
+        const whereClause = query ? ilike(tagsTable.name, `%${query}%`) : undefined;
+
+        const [totalCount] = await db.select({ count: count() }).from(tagsTable).where(whereClause);
+        const totalPages = Math.ceil(totalCount.count / limit);
+
+        const tags = await db.query.tagsTable.findMany({
+            limit,
+            offset,
+            ...(whereClause ? { where: whereClause } : {}),
+            orderBy: [desc(tagsTable.id)],
         });
+
+        return { tags, totalPages };
     }),
     removeTag: publicProcedure.input(z.number().min(1)).mutation(async (opts) => {
         const { user } = await validateRequest();

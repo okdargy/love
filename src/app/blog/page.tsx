@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllPosts } from "@/lib/blog.server";
+import { formatDateWithFallback } from "@/lib/utils";
 
 export default async function Blog() {
     const posts = await getAllPosts();
@@ -33,11 +34,11 @@ export default async function Blog() {
                                         ))}
                                     </div>
                                     <div className="text-sm text-neutral-400">
-                                        {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                                        {formatDateWithFallback(post.publishedAt, {
                                             year: 'numeric',
                                             month: 'long',
                                             day: 'numeric'
-                                        })}
+                                        }, 'Unknown date', 'en-US')}
                                     </div>
                                 </div>
                             </div>

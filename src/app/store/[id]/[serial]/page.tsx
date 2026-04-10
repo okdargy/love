@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowDownUp, User } from 'lucide-react';
 import Image from 'next/image';
+import { formatDateWithFallback } from '@/lib/utils';
 
 export default function Page() {
     const pathname = useParams<{ id: string, serial: string }>()
@@ -58,7 +59,7 @@ export default function Page() {
                                         <div>
                                             <p className="font-semibold">{entry.username}</p>
                                             <p className="text-sm text-neutral-500">
-                                                Indexed on {new Date(Number(entry.created_at)).toLocaleString(undefined, { timeStyle: "long", dateStyle: "short" })}
+                                                Indexed on {formatDateWithFallback(entry.created_at, { timeStyle: "long", dateStyle: "short" })}
                                             </p>
                                         </div>
                                         <div className='flex gap-x-4'>
