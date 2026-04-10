@@ -473,7 +473,7 @@ class ItemCycleManager {
 
                 const recentTrades = await db.query.tradeHistoryTable.findMany({
                     where: and(
-                        gt(tradeHistoryTable.created_at, sql`datetime('now', '-6 hours')`),
+                        gt(tradeHistoryTable.created_at, sql`now() - interval '6 hours'`),
                         or(
                             eq(tradeHistoryTable.userId, leftSide.id),
                             eq(tradeHistoryTable.userId, rightSide.id)
