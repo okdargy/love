@@ -18,7 +18,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             <div className="space-y-5 my-2">
                 <div className="space-y-2">
                     <div className="flex items-center justify-center">
-                            <div className="flex items-center gap-3 border border-neutral-500 px-4 py-2 rounded-full">
+                            <div className="flex items-center gap-3 border border-border px-4 py-2 rounded-full bg-card/60">
                                 <div className="flex justify-center items-center relative">
                                     {frontmatter.author.map((author: { name: string; picture: string; }, index: number) => (
                                         <Tooltip key={author.name}>
@@ -42,7 +42,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                                         </Tooltip>
                                     ))}
                                 </div>
-                                <div className="text-sm text-neutral-400 ml-2">
+                                <div className="text-sm text-muted-foreground ml-2">
                                     {formatDateWithFallback(frontmatter.publishedAt, {
                                         year: 'numeric',
                                         month: 'long',
@@ -52,8 +52,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                             </div>
                     </div>
                     <div className="space-y-1">
-                        <h1 className="text-4xl text-center font-bold text-neutral-100">{frontmatter.title}</h1>
-                        <p className="text-sm text-center max-w-lg mx-auto text-neutral-300">{frontmatter.summary}</p>
+                        <h1 className="text-4xl text-center font-bold text-foreground">{frontmatter.title}</h1>
+                        <p className="text-sm text-center max-w-lg mx-auto text-muted-foreground">{frontmatter.summary}</p>
                     </div>
                 </div>
                 <div className="space-y-4">

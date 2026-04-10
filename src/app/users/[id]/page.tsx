@@ -93,9 +93,9 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
                     <div className="my-auto">
                         <h1 className="font-semibold text-2xl">{userData.username}</h1>
                         <div className="flex space-x-2">
-                            <h2 className="text-neutral-400">Value: {formatNumber(userData.netWorth)}</h2>
-                            <div className="border-l border-neutral-700 mx-1 h-3 my-auto"></div>
-                            <h2 className="text-neutral-400">{formatRelativeTime(userData.lastSeenAt)}</h2>
+                            <h2 className="text-muted-foreground">Value: {formatNumber(userData.netWorth)}</h2>
+                            <div className="border-l border-border mx-1 h-3 my-auto"></div>
+                            <h2 className="text-muted-foreground">{formatRelativeTime(userData.lastSeenAt)}</h2>
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
                 <div className="flex justify-between mb-3">
                     <h2 className="text-2xl font-bold my-auto">Recent History</h2>
                     <Link href={`/recent`} className="my-auto">
-                        <p className="text-sm text-neutral-500">
+                        <p className="text-sm text-muted-foreground">
                             View All
                         </p>
                     </Link>

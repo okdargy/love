@@ -266,7 +266,7 @@ export default function Form({ data }: { data: ItemInfo }) {
                         <label htmlFor={option.key} className="mb-2 font-semibold flex justify-between">
                             <span>{option.name}</span>
                             {option.adminOnly && (
-                                <span className="text-right text-sm my-auto text-neutral-400 flex gap-x-1.5">
+                                <span className="text-right text-sm my-auto text-muted-foreground flex gap-x-1.5">
                                     Admin Only
                                     <Lock className="h-4 w-4 my-auto" />
                                 </span>
@@ -332,7 +332,7 @@ export default function Form({ data }: { data: ItemInfo }) {
                         
                         {/* Value Range Inputs */}
                         {option.key === 'value' && formData[option.key] && (
-                            <div className="mt-3 space-y-3 p-4 border border-neutral-100/10 rounded-lg">
+                            <div className="mt-3 space-y-3 p-4 border border-border rounded-lg">
                                 <div className="text-sm font-medium text-muted-foreground">Value Range (Optional)</div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
@@ -415,7 +415,7 @@ export default function Form({ data }: { data: ItemInfo }) {
                 <Button type="submit" variant="default">
                     {loading ? (
                         <>
-                            <Spinner width="12" height="12" className="mr-2.5 fill-white" />
+                            <Spinner width="12" height="12" className="mr-2.5 fill-primary-foreground" />
                             Submitting...
                         </>
                     ) : (

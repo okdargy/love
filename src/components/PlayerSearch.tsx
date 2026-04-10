@@ -71,7 +71,7 @@ export default function PlayerSearch({ className }: PlayerSearchProps) {
     }, [isOpen, query]);
 
     return (
-        <div ref={wrapperRef} className={cn("relative w-full", className)}>
+        <div ref={wrapperRef} className={cn("relative z-[90] w-full", className)}>
             <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -100,7 +100,7 @@ export default function PlayerSearch({ className }: PlayerSearchProps) {
             </div>
 
             {showDropdown && (
-                <div className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
+                <div className="absolute z-[100] mt-1 max-h-72 w-full overflow-y-auto rounded-b-md border bg-popover p-1 shadow-xl">
                     {!searchPlayers.isLoading && results.length === 0 && (
                         <p className="px-3 py-2 text-sm text-muted-foreground">No players found.</p>
                     )}

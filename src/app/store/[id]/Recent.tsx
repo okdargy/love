@@ -11,7 +11,7 @@ export default function Owners({ id }: { id: number }) {
     const history = trpc.getRecentItemHistory.useQuery(id);
 
     return (
-        <div className="border border-neutral-100/10 p-4 rounded-lg shadow-md">
+        <div className="border border-border p-4 rounded-lg shadow-md">
             {history.isLoading ? (
                 <div className="flex justify-center items-center h-64">
                     <Spinner width="24" height="24" className="fill-primary" />
@@ -22,15 +22,15 @@ export default function Owners({ id }: { id: number }) {
                 <div className='space-y-3'>
                     <ul className="space-y-4">
                         {history.data?.length == 0 ? (
-                            <p className="text-neutral-500">No recent history</p>
+                            <p className="text-muted-foreground">No recent history</p>
                         ) : history.data?.map(entry => (
                             <li key={entry.id} className="flex justify-between">
                                 <div>
                                     <p className="font-semibold">{entry.username}</p>
-                                    <p className="text-sm text-neutral-500">Indexed on {formatDateWithFallback(entry.created_at, { timeStyle: "long", dateStyle: "short" })}</p>
+                                    <p className="text-sm text-muted-foreground">Indexed on {formatDateWithFallback(entry.created_at, { timeStyle: "long", dateStyle: "short" })}</p>
                                 </div>
                                 <div className='flex gap-x-4'>
-                                    <p className="text-sm text-neutral-500 my-auto">#{entry.serial}</p>
+                                    <p className="text-sm text-muted-foreground my-auto">#{entry.serial}</p>
                                     <Link href={`/users/${entry.userId}`} className='my-auto'>
                                         <Button className="gap-x-2" variant={'outline'}>
                                             <User />

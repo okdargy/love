@@ -273,7 +273,7 @@ export default function AdminTags() {
             <div className="space-y-2">
                 {data ? (
                     data.tags.map(tag => (
-                        <div key={tag.id} className="flex justify-between items-center p-4 border border-neutral-100/10 rounded-lg shadow-md">
+                        <div key={tag.id} className="flex justify-between items-center p-4 border border-border rounded-lg shadow-md">
                             <div className="flex divide-x divide-neural-100/10">
                                 <p className="pr-3">{tag.emoji}</p>
                                 <p className="pl-3">{tag.name}</p>

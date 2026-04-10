@@ -313,7 +313,15 @@ async function insertSerialLogs(inventories: {
 }[]) {
     if (inventories.length === 0) return [];
 
-    await db.insert(tradeHistoryTable).values(inventories);
+    const tradeHistoryValues = inventories.map((inv) => ({
+        itemId: inv.itemId,
+        serial: inv.serial,
+        userId: inv.userId,
+        username: inv.username,
+        isFirst: inv.isFirst ?? false,
+    }));
+
+    await db.insert(tradeHistoryTable).values(tradeHistoryValues);
 
     const nonFirstTimeOwners = inventories.filter(inv => !inv.isFirst && inv.oldUserId);
     
@@ -471,12 +479,19 @@ class ItemCycleManager {
                     username: trades.find(t => t.userId === trades[0].oldUserId)?.username || 'Unknown'
                 }
 
+                const sixHoursAgoMs = Date.now() - (6 * 60 * 60 * 1000);
                 const recentTrades = await db.query.tradeHistoryTable.findMany({
                     where: and(
-                        gt(tradeHistoryTable.created_at, sql`now() - interval '6 hours'`),
+                        gt(tradeHistoryTable.created_at, sixHoursAgoMs),
                         or(
-                            eq(tradeHistoryTable.userId, leftSide.id),
-                            eq(tradeHistoryTable.userId, rightSide.id)
+                            and(
+                                eq(tradeHistoryTable.userId, leftSide.id),
+                                eq(tradeHistoryTable.username, leftSide.username)
+                            ),
+                            and(
+                                eq(tradeHistoryTable.userId, rightSide.id),
+                                eq(tradeHistoryTable.username, rightSide.username)
+                            )
                         )
                     ),
                     with: { item: true }
@@ -507,10 +522,10 @@ setInterval(async () => {
     handleShopData(shopData);
 }, INTERVALS.NEW_ITEMS);
 
-// setInterval(async () => {   
-    // const rankingsData = await getRankingsData();
-    // handleRankingsData(rankingsData);
-// }, INTERVALS.RANKINGS_UPDATE);
+setInterval(async () => {   
+    const rankingsData = await getRankingsData();
+    handleRankingsData(rankingsData);
+}, INTERVALS.RANKINGS_UPDATE);
 
 const msToRelative = (ms: number) => {
     const seconds = Math.floor(ms / 1000);

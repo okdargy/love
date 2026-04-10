@@ -9,6 +9,8 @@ import { SessionProvider } from "@/components/SessionContext";
 import { validateRequest } from "@/lib/auth";
 import Footer from "@/components/Footer";
 import { execSync } from 'child_process';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import ThemeToggle from "@/components/ThemeToggle";
 // import Attention from "@/components/Attention";
 
 const poppins = Poppins({
@@ -31,7 +33,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#ff5951",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" }
+  ],
 };
 
 function formatRelativeTime(date: Date): string {
@@ -78,17 +83,25 @@ export default async function RootLayout({
   const { sha, lastUpdate } = await getFooterInfo();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={poppins.className}>
         <Provider>
             <SessionProvider value={session}>
-                <div id="container">
+                <SidebarProvider>
                   <Navbar session={session} />
-                  <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
-                    {children}
-                  </main>
-                  <Footer sha={sha} lastUpdate={lastUpdate} />
-                </div>
+                  <SidebarInset>
+                    <header className="sticky top-0 z-40 flex h-14 items-center border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden">
+                      <SidebarTrigger aria-label="Open sidebar" />
+                      <div className="ml-auto">
+                        <ThemeToggle />
+                      </div>
+                    </header>
+                    <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
+                      {children}
+                    </main>
+                    <Footer sha={sha} lastUpdate={lastUpdate} />
+                  </SidebarInset>
+                </SidebarProvider>
               <Toaster richColors />
             </SessionProvider>
         </Provider>

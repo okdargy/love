@@ -1,16 +1,31 @@
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import Link from "next/link"
 import { lucia, validateRequest } from "@/lib/auth"
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation"
-import { LogOut, Wrench } from 'lucide-react';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarSeparator,
+} from "@/components/ui/sidebar"
+import { CalculatorIcon, ClockIcon, HomeIcon, LogInIcon, LogOut, NewspaperIcon, Wrench } from 'lucide-react';
 import { LoveIcon } from "@/components/icons";
+import PlayerSearch from "./PlayerSearch";
+import ThemeToggle from "./ThemeToggle";
+
+const NAV_LINKS = [
+    { href: "/", label: "Home", icon: HomeIcon },
+    { href: "/calculator", label: "Calculator", icon: CalculatorIcon },
+    { href: "/blog", label: "Blog", icon: NewspaperIcon },
+    { href: "/recent", label: "Recent", icon: ClockIcon },
+];
 
 async function logout(): Promise<void> {
     "use server";
@@ -27,59 +42,99 @@ async function logout(): Promise<void> {
     redirect("/");
 }
 
-interface ActionResult {
-    error: string | null;
-}
-
 export default function Navbar(props: { session: Awaited<ReturnType<typeof validateRequest>> }) {
     const { user } = props.session;
 
     return (
-        <header className="flex h-14 items-center gap-4 border-b bg-background">
-            <nav className="flex w-full max-w-screen-lg mx-auto flex-wrap items-center gap-2 p-4 sm:p-6">
-                <div className="flex items-center gap-3">
+        <Sidebar collapsible="icon" variant="sidebar">
+            <SidebarHeader className="gap-4">
+                <div className="flex items-center gap-3 px-2 pt-1">
                     <Link
                         href="/"
                         className="p-2 hover:bg-primary/20 transition-all rounded-lg"
                     >
                         <LoveIcon className="h-6 w-6 fill-primary" />
                     </Link>
-                    <span className="text-xs bg-primary/30 px-2.5 py-0.5 uppercase rounded-md font-semibold shine-effect">Beta</span>
+                    <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 uppercase rounded-md font-semibold tracking-wide">Beta</span>
                 </div>
 
-                <div className="order-2 ml-auto flex items-center gap-3 sm:order-3">
+                <div className="px-2">
+                    <PlayerSearch />
+                </div>
+            </SidebarHeader>
+
+            <SidebarSeparator />
+
+            <SidebarContent className="px-2">
+                <SidebarGroup>
+                    <SidebarMenu>
+                        {NAV_LINKS.map((link) => (
+                            <SidebarMenuItem key={link.href}>
+                                <SidebarMenuButton asChild>
+                                    <Link href={link.href} className="flex items-center gap-3">
+                                        <link.icon className="h-4 w-4" />
+                                        <span>{link.label}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
+                </SidebarGroup>
+            </SidebarContent>
+
+            <SidebarFooter>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <div className="flex items-center justify-between rounded-md border px-2 py-1.5">
+                            <span className="text-sm text-muted-foreground">Theme</span>
+                            <ThemeToggle />
+                        </div>
+                    </SidebarMenuItem>
+
                     {user ? (
-                        <Popover>
-                            <PopoverTrigger>
+                        <>
+                            <SidebarMenuItem>
+                                <div className="flex items-center gap-2 rounded-md border p-2">
                                 <Image src={
                                     "https://cdn.discordapp.com/avatars/" + user.discordId + "/" + user.avatar + ".png"
                                 } alt={user.username} width={32} height={32} className="rounded-full" />
-                                <span className="sr-only">Toggle user menu</span>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-64 my-auto p-2 space-y-1" align="center">
-                                {user.role === "admin" && (
-                                    <Link href="/admin">
-                                        <Button variant="ghost" className="w-full flex items-center justify-between">
-                                            <Wrench className="h-5 w-5 mr-2" />
+                                <div className="min-w-0 text-sm leading-tight">
+                                    <p className="truncate font-medium">{user.username}</p>
+                                    <p className="text-muted-foreground">Signed in</p>
+                                </div>
+                                </div>
+                            </SidebarMenuItem>
+
+                            {user.role === "admin" && (
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild>
+                                        <Link href="/admin">
+                                            <Wrench className="h-4 w-4" />
                                             Admin Panel
-                                        </Button>
-                                    </Link>
-                                )}
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            )}
+
+                            <SidebarMenuItem>
                                 <form action={logout} id="logoutForm" className="w-full">
-                                    <Button variant="ghost" type="submit" className="w-full flex items-center justify-between">
-                                        <LogOut className="h-5 w-5 mr-2" />
+                                    <Button variant="ghost" type="submit" className="w-full justify-start">
+                                        <LogOut className="h-4 w-4 mr-2" />
                                         Logout
                                     </Button>
                                 </form>
-                            </PopoverContent>
-                        </Popover>
+                            </SidebarMenuItem>
+                        </>
                     ) : (
-                        <Link href="/login/discord" prefetch={false}>
-                            <Button variant="ghost" className="">Login</Button>
-                        </Link>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton className="flex items-center gap-3">
+                                <LogInIcon className="h-4 w-4" />
+                                <Link href="/login/discord" prefetch={false}>Login</Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                     )}
-                </div>
-            </nav>
-        </header>
+                </SidebarMenu>
+            </SidebarFooter>
+        </Sidebar>
     )
 }

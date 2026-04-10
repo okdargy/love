@@ -17,10 +17,10 @@ export default function Hero() {
     if (isVisible === null || !isVisible) return null;
 
     return (
-        <div className="flex flex-col justify-center p-4 bg-primary min-h-[9rem] rounded-md relative overflow-hidden">
+        <div className="flex flex-col justify-center p-4 bg-primary/90 text-primary-foreground min-h-[9rem] rounded-md relative overflow-hidden">
             <button
                 onClick={handleDismiss}
-                className="absolute top-2 right-2 z-20 opacity-50 hover:opacity-100 transition-opacity"
+                className="absolute top-2 right-2 z-20 opacity-70 hover:opacity-100 transition-opacity"
                 aria-label="Close welcome message"
             >
                 <svg 
@@ -41,16 +41,16 @@ export default function Hero() {
             <div 
                 className="absolute inset-0 opacity-50"
                 style={{
-                    backgroundImage: `radial-gradient(circle at center, rgba(255, 255, 255, 0.5) 0, rgba(255, 255, 255, 0.5) 1px, transparent 1px)`,
+                    backgroundImage: `radial-gradient(circle at center, hsl(var(--primary-foreground) / 0.35) 0, hsl(var(--primary-foreground) / 0.35) 1px, transparent 1px)`,
                     backgroundSize: '10px 10px',
-                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)',
-                    maskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)'
+                    WebkitMaskImage: 'linear-gradient(to right, transparent, #000 20%, #000 80%, transparent)',
+                    maskImage: 'linear-gradient(to right, transparent, #000 20%, #000 80%, transparent)'
                 }}
             />
             <div className="z-10 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="text-center sm:text-left">
-                    <h1 className="text-xl sm:text-2xl font-bold text-white">Welcome to LOVE!</h1>
-                    <p className="text-sm text-white/75 max-w-96">
+                    <h1 className="text-xl sm:text-2xl font-bold">Welcome to LOVE!</h1>
+                    <p className="text-sm text-primary-foreground/80 max-w-96">
                         Here you&apos;ll find the most reliable information for trading collectables on Polytoria
                     </p>
                 </div>

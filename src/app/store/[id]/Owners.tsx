@@ -126,7 +126,7 @@ export default function Owners({ id, setHoardRate, setOwnersAmount }: { id: numb
                     <li key={owner.id} className="flex justify-between">
                         <div>
                             <p className="font-semibold">{owner.username}</p>
-                            <p className="text-sm text-neutral-500">Owns {owner.serials.length} {owner.serials.length === 1 ? 'copy' : 'copies'}</p>
+                            <p className="text-sm text-muted-foreground">Owns {owner.serials.length} {owner.serials.length === 1 ? 'copy' : 'copies'}</p>
                         </div>
                         <div className='space-x-2'>
                             <Link href={`/users/${owner.id}`} className='my-auto'>
@@ -151,7 +151,7 @@ export default function Owners({ id, setHoardRate, setOwnersAmount }: { id: numb
                 >
                     Previous
                 </Button>
-                <span className="text-neutral-600 text-sm absolute left-1/2 transform -translate-x-1/2">{page}/{Math.ceil(owners.data!.length / LIMIT_PER_PAGE)}</span>
+                <span className="text-muted-foreground text-sm absolute left-1/2 transform -translate-x-1/2">{page}/{Math.ceil(owners.data!.length / LIMIT_PER_PAGE)}</span>
                 <Button
                     onClick={handleNextPage}
                     disabled={owners.data!.length <= page * LIMIT_PER_PAGE}
@@ -167,7 +167,6 @@ export default function Owners({ id, setHoardRate, setOwnersAmount }: { id: numb
         <div className="grid grid-cols-[repeat(auto-fit,minmax(3rem,1fr))] gap-2 max-w-full overflow-x-auto pb-5">
             {allSerials.map(({ serial, username, userId }, index) => {
                 const userColor = userColors[userId];
-
                 return (
                     <Tooltip key={`${serial}-${userId}-${index}`}>
                         <TooltipTrigger asChild>
@@ -187,7 +186,7 @@ export default function Owners({ id, setHoardRate, setOwnersAmount }: { id: numb
                         </TooltipTrigger>
                         <TooltipContent className="text-center">
                             <div className="font-semibold">{username}</div>
-                            <div className="text-gray-300">Serial #{serial}</div>
+                            <div className="text-muted-foreground">Serial #{serial}</div>
                         </TooltipContent>
                     </Tooltip>
                 );
@@ -196,7 +195,7 @@ export default function Owners({ id, setHoardRate, setOwnersAmount }: { id: numb
     )
 
     return (
-        <div className="border border-neutral-100/10 p-4 rounded-lg shadow-md">
+        <div className="border border-border p-4 rounded-lg shadow-md">
             {owners.isLoading ? (
                 <div className="flex justify-center items-center h-64">
                     <Spinner width="24" height="24" className="fill-primary" />

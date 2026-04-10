@@ -195,7 +195,7 @@ export default function Page() {
                                                 >
                                                     {initConnection.isLoading ? (
                                                         <>
-                                                            <Spinner width="12" height="12" className="mr-2 fill-white" />
+                                                            <Spinner width="12" height="12" className="mr-2 fill-primary-foreground" />
                                                             Searching...
                                                         </>
                                                     ) : (
@@ -257,8 +257,8 @@ export default function Page() {
 
                                     {step === "verified" && (
                                         <div className="flex flex-col items-center gap-4 py-8">
-                                            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
-                                                <span className="text-white text-2xl">
+                                            <div className="w-16 h-16 bg-green-500/90 rounded-full flex items-center justify-center text-white shadow-sm">
+                                                <span className="text-2xl">
                                                     <Check />
                                                 </span>
                                             </div>

@@ -26,9 +26,9 @@ export default function Content({ id }: { id: number }) {
             ) : itemInfo.data ? (
                 <div className="grid space-y-3.5 divide-y">
                     <div className="space-y-1">
-                        <h3 className="text-neutral-500 mb-1 capitalize">{itemInfo.data.item.type}</h3>
+                        <h3 className="text-muted-foreground mb-1 capitalize">{itemInfo.data.item.type}</h3>
                         <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.item.name}</h1>
-                        <p className="text-sm text-neutral-400">{itemInfo.data.item.description}</p>
+                        <p className="text-sm text-muted-foreground">{itemInfo.data.item.description}</p>
                     </div>
                     <div className="py-3">
                         <Form data={itemInfo.data} />

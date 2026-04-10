@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { trpc } from '@/app/_trpc/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,8 @@ import { Minus, Plus, TrendingUp, TrendingDown, Equal, Trophy, Calculator as Cal
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/icons';
+
+const CALCULATOR_ADD_QUEUE_KEY = 'love:calculator:add-queue';
 
 interface CalculatorItem {
     id: number;
@@ -187,6 +189,77 @@ export default function CalculatorPage() {
 
     const formatNumber = (num: number) => new Intl.NumberFormat().format(Math.round(num));
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        try {
+            const rawQueue = window.localStorage.getItem(CALCULATOR_ADD_QUEUE_KEY);
+            if (!rawQueue) return;
+
+            const parsedQueue = JSON.parse(rawQueue);
+            if (!Array.isArray(parsedQueue) || parsedQueue.length === 0) {
+                window.localStorage.removeItem(CALCULATOR_ADD_QUEUE_KEY);
+                return;
+            }
+
+            const queuedItems = parsedQueue.filter((queuedItem) => queuedItem && typeof queuedItem.id === 'number');
+
+            if (queuedItems.length === 0) {
+                window.localStorage.removeItem(CALCULATOR_ADD_QUEUE_KEY);
+                return;
+            }
+
+            queuedItems.forEach((queuedItem) => {
+                const side: 'offer' | 'request' = queuedItem.side === 'request' ? 'request' : 'offer';
+                const cachedItem: CalculatorItem = {
+                    id: queuedItem.id,
+                    name: queuedItem.name ?? 'Unknown Item',
+                    shorthand: queuedItem.shorthand ?? null,
+                    thumbnailUrl: queuedItem.thumbnailUrl ?? null,
+                    recentAverage: queuedItem.recentAverage ?? null,
+                    value: queuedItem.value ?? null,
+                    stats: null,
+                };
+
+                setItemCache((prev) => new Map(prev.set(cachedItem.id, cachedItem)));
+
+                if (side === 'offer') {
+                    setOfferItems((prev) => {
+                        const existingIndex = prev.findIndex((i) => i.id === cachedItem.id);
+                        if (existingIndex >= 0) {
+                            const next = [...prev];
+                            next[existingIndex] = {
+                                ...next[existingIndex],
+                                quantity: next[existingIndex].quantity + 1,
+                            };
+                            return next;
+                        }
+
+                        return [...prev, { ...cachedItem, quantity: 1 }];
+                    });
+                } else {
+                    setRequestItems((prev) => {
+                        const existingIndex = prev.findIndex((i) => i.id === cachedItem.id);
+                        if (existingIndex >= 0) {
+                            const next = [...prev];
+                            next[existingIndex] = {
+                                ...next[existingIndex],
+                                quantity: next[existingIndex].quantity + 1,
+                            };
+                            return next;
+                        }
+
+                        return [...prev, { ...cachedItem, quantity: 1 }];
+                    });
+                }
+            });
+
+            window.localStorage.removeItem(CALCULATOR_ADD_QUEUE_KEY);
+        } catch {
+            window.localStorage.removeItem(CALCULATOR_ADD_QUEUE_KEY);
+        }
+    }, []);
+
     return (
         <div className="space-y-4">
             <div className="space-y-3">
@@ -194,16 +267,16 @@ export default function CalculatorPage() {
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold">Offer</h3>
-                            <div className="text-xs text-neutral-400 space-x-2">
+                            <div className="text-xs text-muted-foreground space-x-2">
                                 <span className="text-blue-400">{formatNumber(calculateTotal(offerItems, true))}</span>
                                 {offerBricks > 0 && <span className="text-orange-400">+{formatNumber(offerBricks)}</span>}
-                                <span className="text-neutral-600">|</span>
+                                <span className="text-muted-foreground/60">|</span>
                                 <span className="text-green-400">{formatNumber(calculateTotal(offerItems, false))}</span>
                                 {offerBricks > 0 && <span className="text-orange-400">+{formatNumber(offerBricks)}</span>}
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400">Bricks:</span>
+                            <span className="text-sm text-muted-foreground">Bricks:</span>
                             <Input
                                 type="number"
                                 value={offerBricks || ''}
@@ -213,7 +286,7 @@ export default function CalculatorPage() {
                                 min="0"
                             />
                         </div>
-                        <div className="border border-neutral-100/10 rounded-lg p-3 min-h-[200px]">
+                        <div className="border border-border rounded-lg p-3 min-h-[200px]">
                             <div className="grid grid-cols-3 gap-3">
                                 {offerItems.map(item => (
                                     <CalculatorItemSlot
@@ -233,16 +306,16 @@ export default function CalculatorPage() {
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold">Request</h3>
-                            <div className="text-xs text-neutral-400 space-x-2">
+                            <div className="text-xs text-muted-foreground space-x-2">
                                 <span className="text-blue-400">{formatNumber(calculateTotal(requestItems, true))}</span>
                                 {requestBricks > 0 && <span className="text-orange-400">+{formatNumber(requestBricks)}</span>}
-                                <span className="text-neutral-600">|</span>
+                                <span className="text-muted-foreground/60">|</span>
                                 <span className="text-green-400">{formatNumber(calculateTotal(requestItems, false))}</span>
                                 {requestBricks > 0 && <span className="text-orange-400">+{formatNumber(requestBricks)}</span>}
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400">Bricks:</span>
+                            <span className="text-sm text-muted-foreground">Bricks:</span>
                             <Input
                                 type="number"
                                 value={requestBricks || ''}
@@ -252,7 +325,7 @@ export default function CalculatorPage() {
                                 min="0"
                             />
                         </div>
-                        <div className="border border-neutral-100/10 rounded-lg p-3 min-h-[200px]">
+                        <div className="border border-border rounded-lg p-3 min-h-[200px]">
                             <div className="grid grid-cols-3 gap-3">
                                 {requestItems.map(item => (
                                     <CalculatorItemSlot
@@ -271,10 +344,10 @@ export default function CalculatorPage() {
                 </div>
 
                 {(offerItems.length > 0 || requestItems.length > 0 || offerBricks > 0 || requestBricks > 0) && (
-                    <div className="border border-neutral-100/10 rounded-lg p-6">
+                    <div className="border border-border rounded-lg p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="text-center space-y-3">
-                                <p className="text-sm text-neutral-400 font-medium">RAP Difference</p>
+                                <p className="text-sm text-muted-foreground font-medium">RAP Difference</p>
                                 <div className="flex items-center justify-center gap-2">
                                     {getTradeStatus(rapDifference) === 'overpay' && <TrendingUp className="w-5 h-5 text-red-400" />}
                                     {getTradeStatus(rapDifference) === 'underpay' && <TrendingDown className="w-5 h-5 text-green-400" />}
@@ -299,7 +372,7 @@ export default function CalculatorPage() {
                             </div>
 
                             <div className="text-center space-y-3">
-                                <p className="text-sm text-neutral-400 font-medium">Value Difference</p>
+                                <p className="text-sm text-muted-foreground font-medium">Value Difference</p>
                                 <div className="flex items-center justify-center gap-2">
                                     {getTradeStatus(valueDifference) === 'overpay' && <TrendingUp className="w-5 h-5 text-red-400" />}
                                     {getTradeStatus(valueDifference) === 'underpay' && <TrendingDown className="w-5 h-5 text-green-400" />}
@@ -377,7 +450,7 @@ export default function CalculatorPage() {
                                 ))}
                             </div>
                         ) : searchResults && searchResults.length === 0 ? (
-                            <div className="text-center py-8 text-neutral-400">
+                            <div className="text-center py-8 text-muted-foreground">
                                 No items found. Try a different search term.
                             </div>
                         ) : topValueItems.data && topValueItems.data.length > 0 ? (
@@ -425,7 +498,7 @@ function CalculatorItemSlot({
                     )}
                 </div>
 
-                <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg">
+                <div className="absolute inset-0 bg-background/85 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg backdrop-blur-sm">
                     <div className="flex gap-2">
                         <Button
                             size="sm"
@@ -460,8 +533,8 @@ function CalculatorItemSlot({
 
 function EmptySlot() {
     return (
-        <div className="border-2 border-dashed border-neutral-600 rounded-lg aspect-square flex items-center justify-center hover:border-neutral-500 transition-all">
-            <Plus className="w-6 h-6 text-neutral-600" />
+        <div className="border-2 border-dashed border-muted-foreground/40 rounded-lg aspect-square flex items-center justify-center hover:border-primary/60 transition-all">
+            <Plus className="w-6 h-6 text-muted-foreground" />
         </div>
     );
 }
@@ -486,7 +559,7 @@ function SearchResultItem({
                     alt={item.name}
                     width={200}
                     height={200}
-                    className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                    className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-muted/50"
                     data-loaded='false'
                     onLoad={event => {
                         event.currentTarget.setAttribute('data-loaded', 'true')
@@ -496,7 +569,7 @@ function SearchResultItem({
                 <div className="space-y-1">
                     <h2 className="text-sm font-bold truncate">{item.name}</h2>
                     {item.shorthand && (
-                        <p className="text-xs text-neutral-400 truncate">{item.shorthand}</p>
+                        <p className="text-xs text-muted-foreground truncate">{item.shorthand}</p>
                     )}
                     <p className="text-sm">
                         {(item.value || item.stats?.value) ? (
@@ -510,7 +583,7 @@ function SearchResultItem({
                                 <span className="text-[#4FE883] me-2">{formatNumber(item.recentAverage)}</span>
                             </>
                         ) : (
-                            <span className="text-gray-400">No Data</span>
+                            <span className="text-muted-foreground">No Data</span>
                         )}
                         {(item.value || item.stats?.value) && item.recentAverage && (
                             <>

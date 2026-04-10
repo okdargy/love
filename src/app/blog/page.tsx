@@ -10,7 +10,7 @@ export default async function Blog() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {posts.map((post) => (
                     <Link href={`/blog/${post.slug}`} key={post.slug}>
-                        <article className="border rounded-lg overflow-hidden hover:border-neutral-700 transition-colors">
+                        <article className="border border-border rounded-lg overflow-hidden hover:border-primary/60 transition-colors">
                             <div className="aspect-video relative">
                                 <img 
                                     src={`/thumbnails/${post.thumbnail}`}
@@ -20,7 +20,7 @@ export default async function Blog() {
                             </div>
                             <div className="p-4 space-y-3">
                                 <h2 className="text-xl font-semibold line-clamp-2">{post.title}</h2>
-                                <p className="text-sm text-neutral-400 line-clamp-3">{post.summary}</p>
+                                <p className="text-sm text-muted-foreground line-clamp-3">{post.summary}</p>
                                 <div className="flex items-center justify-between pt-2">
                                     <div className="flex -space-x-2">
                                         {post.author.map((author) => (
@@ -28,12 +28,12 @@ export default async function Blog() {
                                                 key={author.name}
                                                 src={`/authors/${author.picture}`}
                                                 alt={author.name}
-                                                className="w-8 h-8 rounded-full border-2 border-neutral-900"
+                                                className="w-8 h-8 rounded-full border-2 border-background"
                                                 title={author.name}
                                             />
                                         ))}
                                     </div>
-                                    <div className="text-sm text-neutral-400">
+                                    <div className="text-sm text-muted-foreground">
                                         {formatDateWithFallback(post.publishedAt, {
                                             year: 'numeric',
                                             month: 'long',

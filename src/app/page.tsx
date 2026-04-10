@@ -244,7 +244,7 @@ export default function Home() {
                         alt={item.name}
                         width={200}
                         height={200}
-                        className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                        className="rounded-lg data-[loaded=false]:animate-pulse data-[loaded=false]:bg-muted/50"
                         data-loaded='false'
                         onLoad={event => {
                           event.currentTarget.setAttribute('data-loaded', 'true')
@@ -252,7 +252,7 @@ export default function Home() {
                         unoptimized
                       />
                       <div className="mt-auto">
-                        <h2 className="text-md text-gray-100 font-bold truncate">{item.name}</h2>
+                        <h2 className="text-md text-foreground font-bold truncate">{item.name}</h2>
                         <p className="text-sm overflow-hidden">
                           {item.stats && item.stats.value ? (
                             <>
@@ -265,7 +265,7 @@ export default function Home() {
                               <span className="text-[#4FE883]">{formatPrice(item.recentAverage)}</span>
                             </>
                           ) : (
-                            <span className="text-gray-400">No Data</span>
+                            <span className="text-muted-foreground">No Data</span>
                           )}
                         </p>
                       </div>
@@ -277,7 +277,7 @@ export default function Home() {
                         return (
                             <Tooltip key={index}> 
                               <TooltipTrigger>
-                                <div className="text-xs bg-neutral-800 bg-opacity-75 border border-neutral-100/10 text-white rounded-md px-2 py-1 ml-1.5">
+                                <div className="text-xs bg-background/90 border border-border text-foreground rounded-md px-2 py-1 ml-1.5 shadow-sm">
                                   {correspondingTag ? correspondingTag.emoji : tag.tagId}
                                 </div>
                               </TooltipTrigger>

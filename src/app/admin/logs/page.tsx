@@ -74,11 +74,11 @@ export default function AdminLogs() {
                 <div className='space-y-2'>
                     <div className='space-y-1'>
                         {data?.logs.map(log => (
-                            <div key={log.id} className='flex justify-between gap-x-4 w-full border border-neutral-100/10 p-3 rounded-md'>
+                            <div key={log.id} className='flex justify-between gap-x-4 w-full border border-border p-3 rounded-md'>
                                 <div className='flex gap-x-4'>
                                     <div className='my-auto'>
                                         <p className='font-semibold text-md'>{log.user.display_name} ({log.user.username})</p>
-                                        <p className='text-neutral-400 text-sm'>
+                                        <p className='text-muted-foreground text-sm'>
                                             {formatDateWithFallback(`${log.timestamp}Z`, {
                                                 timeZoneName: 'short'
                                             })}
@@ -114,7 +114,7 @@ export default function AdminLogs() {
                     </div>
                     <div className='flex justify-between items-center'>
                         <Button variant='secondary' onClick={() => updatePage(currentPage - 1)} disabled={currentPage === 1}>Previous</Button>
-                        <p className='text-neutral-400'>{currentPage} of {data.totalPages}</p>
+                        <p className='text-muted-foreground'>{currentPage} of {data.totalPages}</p>
                         <Button variant='secondary' onClick={() => updatePage(currentPage + 1)} disabled={currentPage === data.totalPages}>Next</Button>
                     </div>
                 </div>

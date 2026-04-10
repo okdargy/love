@@ -73,9 +73,9 @@ export default async function Inventory({ id }: { id: number }) {
     return (
         <div className="">
             {isPrivate ? <div className="flex flex-col items-center justify-center space-y-2">
-                <Lock className="h-6 w-6 text-neutral-500" />
-                <p className="text-neutral-500 text-center">This user has a private inventory</p>
-            </div> : inventory.length === 0 ? <p className="text-neutral-500 text-center">This user has no items</p> :
+                <Lock className="h-6 w-6 text-muted-foreground" />
+                <p className="text-muted-foreground text-center">This user has a private inventory</p>
+            </div> : inventory.length === 0 ? <p className="text-muted-foreground text-center">This user has no items</p> :
                 <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
                     {inventory.map((item, index) => (
                         <div key={index} className="flex items-center space-x-4 px-3 py-2.5 justify-between">
@@ -86,7 +86,7 @@ export default async function Inventory({ id }: { id: number }) {
                                 </Link>
                                 <HoverCard>
                                     <HoverCardTrigger asChild>
-                                        <p className="text-sm text-right text-neutral-500 cursor-pointer">Owns {item.amount} {item.amount === 1 ? 'copy' : 'copies'}</p>
+                                        <p className="text-sm text-right text-muted-foreground cursor-pointer">Owns {item.amount} {item.amount === 1 ? 'copy' : 'copies'}</p>
                                     </HoverCardTrigger>
                                     <HoverCardContent className="text-left">
                                         <p>{'#' + item.serials.sort((a, b) => a - b).join(', #')}</p>

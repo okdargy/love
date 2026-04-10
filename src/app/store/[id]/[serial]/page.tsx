@@ -31,7 +31,7 @@ export default function Page() {
             <div className="flex justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold">Serial History</h1>
-                    <p className="text-neutral-500">History of serial #{serial}{history.data ? ` for ${history.data.itemInfo?.name}` : ''}</p>
+                    <p className="text-muted-foreground">History of serial #{serial}{history.data ? ` for ${history.data.itemInfo?.name}` : ''}</p>
                 </div>
                 <div className="flex gap-x-3">
                     <Link href={`/store/${id}`} className='my-auto'>
@@ -41,7 +41,7 @@ export default function Page() {
                     </Link>
                 </div>
             </div>
-            <div className="border border-neutral-100/10 p-4 rounded-lg shadow-md">
+            <div className="border border-border p-4 rounded-lg shadow-md">
                 {history.isLoading ? (
                     <div className="flex justify-center items-center h-64">
                         <Spinner width="24" height="24" className="fill-primary" />
@@ -52,13 +52,13 @@ export default function Page() {
                     <div className='space-y-3'>
                         <ul className="space-y-4">
                             {history.data.history.length === 0 ? (
-                                <p className="text-neutral-500">No recent history</p>
+                                <p className="text-muted-foreground">No recent history</p>
                             ) : history.data.history.map((entry, index) => (
                                 <div key={entry.id}>
                                     <li className="flex justify-between">
                                         <div>
                                             <p className="font-semibold">{entry.username}</p>
-                                            <p className="text-sm text-neutral-500">
+                                            <p className="text-sm text-muted-foreground">
                                                 Indexed on {formatDateWithFallback(entry.created_at, { timeStyle: "long", dateStyle: "short" })}
                                             </p>
                                         </div>
@@ -76,7 +76,7 @@ export default function Page() {
                         </ul>
                     </div>
                 ) : (
-                    <p className="text-neutral-500">No data found</p>
+                    <p className="text-muted-foreground">No data found</p>
                 )}
             </div>
         </div>

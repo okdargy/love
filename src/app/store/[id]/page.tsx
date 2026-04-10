@@ -1,7 +1,7 @@
 "use client"
 
 import { trpc } from '@/app/_trpc/client';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Coins, BarChart, Pencil, ExternalLink, TrendingUp, TrendingDown, Blocks, Tag, Plus, Info, Calculator } from 'lucide-react';
 import {
   Breadcrumb,
@@ -52,10 +52,13 @@ function calculateNewAveragePrice(currentAverage: number, purchasePrice: number)
   }
 }
 
+const CALCULATOR_ADD_QUEUE_KEY = 'love:calculator:add-queue';
+
 export default function Page() {
   const [hoardRate, setHoardRate] = useState(-1);
   const [ownersAmount, setOwnersAmount] = useState(-1);
   const { user } = useSession();
+  const router = useRouter();
   const pathname = useParams<{ id: string }>()
 
   const id = parseInt(pathname.id);
@@ -86,6 +89,33 @@ export default function Page() {
     return <Error message="Invalid ID, must be greater than 0" />
   }
 
+  const handleAddToCalculator = () => {
+    if (!itemInfo.data) return;
+
+    const calculatorItem = {
+      id: itemInfo.data.item.id,
+      name: itemInfo.data.item.name,
+      shorthand: itemInfo.data.item.shorthand,
+      thumbnailUrl: itemInfo.data.item.thumbnailUrl,
+      recentAverage: itemInfo.data.item.recentAverage,
+      value: itemInfo.data.item.stats.value,
+      side: 'offer' as const,
+    };
+
+    try {
+      const rawQueue = window.localStorage.getItem(CALCULATOR_ADD_QUEUE_KEY);
+      const parsedQueue = rawQueue ? JSON.parse(rawQueue) : [];
+      const queue = Array.isArray(parsedQueue) ? parsedQueue : [];
+
+      queue.push(calculatorItem);
+      window.localStorage.setItem(CALCULATOR_ADD_QUEUE_KEY, JSON.stringify(queue));
+    } catch {
+      window.localStorage.setItem(CALCULATOR_ADD_QUEUE_KEY, JSON.stringify([calculatorItem]));
+    }
+
+    router.push('/calculator');
+  };
+
   return (
     <main>
       {itemInfo.isLoading ? (
@@ -114,7 +144,7 @@ export default function Page() {
                   alt={itemInfo.data.item.name}
                   width={800}
                   height={800}
-                  className="relative w-full h-auto object-cover rounded-lg border data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/10"
+                  className="relative w-full h-auto object-cover rounded-lg border data-[loaded=false]:animate-pulse data-[loaded=false]:bg-muted/50"
                   data-loaded='false'
                   onLoad={event => {
                     event.currentTarget.setAttribute('data-loaded', 'true')
@@ -123,9 +153,9 @@ export default function Page() {
               </div>
               <div className="flex-grow min-w-0 space-y-3">
                 <div className="space-y-1">
-                  <h3 className="text-neutral-500 mb-1 capitalize">{itemInfo.data.item.type}</h3>
+                  <h3 className="text-muted-foreground mb-1 capitalize">{itemInfo.data.item.type}</h3>
                   <h1 className="text-2xl md:text-3xl font-bold mt-4 md:mt-0">{itemInfo.data.item.name}</h1>
-                  <p className="text-sm text-neutral-400">{itemInfo.data.item.description}</p>
+                  <p className="text-sm text-muted-foreground">{itemInfo.data.item.description}</p>
                 </div>
                 {
                   (itemInfo.data.item.tags.length > 0 && itemInfo.data.allTags) && (
@@ -154,7 +184,7 @@ export default function Page() {
                     )}
                   </div>
                   <div>
-                    <Button variant={'secondary'} className='w-full gap-x-2' disabled>
+                    <Button variant={'secondary'} className='w-full gap-x-2' onClick={handleAddToCalculator}>
                       <Plus className='w-4 h-4' />
                       Add to Calculator
                     </Button>
@@ -190,13 +220,13 @@ export default function Page() {
               </div>
               <div className='space-y-3'>
                 <div className='flex justify-between'>
-                  <h2 className="text-xl font-semibold my-auto">Owners{ownersAmount > 0 ? <span className="text-neutral-500 text-sm my-auto ml-1"> ({ownersAmount})</span> : ""}</h2>
+                  <h2 className="text-xl font-semibold my-auto">Owners{ownersAmount > 0 ? <span className="text-muted-foreground text-sm my-auto ml-1"> ({ownersAmount})</span> : ""}</h2>
                   <HoverCard>
                     <HoverCardTrigger>
-                      <span className="my-auto text-sm text-neutral-500">{hoardRate == -1 ? "Loading..." : `${hoardRate.toFixed(2)}% Hoard Rate`}</span>
+                      <span className="my-auto text-sm text-muted-foreground">{hoardRate == -1 ? "Loading..." : `${hoardRate.toFixed(2)}% Hoard Rate`}</span>
                     </HoverCardTrigger>
                     <HoverCardContent>
-                      <p className="text-neutral-400 text-sm">
+                      <p className="text-muted-foreground text-sm">
                         The hoard rate is a measure of how many copies of <span className="font-semibold">{itemInfo.data.item.name}</span> are owned by people with more than 1 copy.
                         <br></br><br></br>
                         We calculate this using the formula:
@@ -218,7 +248,7 @@ export default function Page() {
             <div className="flex flex-col space-y-1">
               <div className='space-y-3'>
                 <h2 className="text-xl font-semibold my-auto">Note</h2>
-                <div className="border border-neutral-100/10 p-4 rounded-lg shadow-md">
+                <div className="border border-border p-4 rounded-lg shadow-md">
                   <p>
                     {itemInfo.data.item.stats.funFact}
                   </p>
@@ -228,7 +258,7 @@ export default function Page() {
           )}
           <div className='space-y-3'>
             <h2 className="text-xl font-semibold my-auto">Graphs</h2>
-            <div className="border border-neutral-100/10 p-4 rounded-lg shadow-md">
+            <div className="border border-border p-4 rounded-lg shadow-md">
               {itemGraph.data?.listings && <Graph data={itemGraph.data} />}
             </div>
           </div>
@@ -236,7 +266,7 @@ export default function Page() {
             <div className="flex justify-between">
               <h2 className="text-xl font-semibold my-auto">Recent Transactions</h2>
               <Link href={`/recent`} className="my-auto">
-                <p className="text-sm text-neutral-500">
+                <p className="text-sm text-muted-foreground">
                   View All
                 </p>
               </Link>
@@ -273,11 +303,11 @@ function InfoCard({ title, value, icon, valueLow, valueHigh, valueNote }: {
   }
 
   const cardContent = (
-    <div className="relative bg-neutral-900 border border-neutral-100/10 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+    <div className="relative bg-card border border-border p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       <div className="relative flex items-center justify-between">
         <div>
-          <h3 className="text-neutral-400 text-sm uppercase tracking-wide">{title}</h3>
-          <p className="text-xl font-semibold text-white mt-2">
+          <h3 className="text-muted-foreground text-sm uppercase tracking-wide">{title}</h3>
+          <p className="text-xl font-semibold text-foreground mt-2">
             {displayValue !== null && displayValue !== "" ? (
               <>
                 {symbol && <span className="mr-1">{symbol}</span>}
@@ -286,7 +316,7 @@ function InfoCard({ title, value, icon, valueLow, valueHigh, valueNote }: {
             ) : "N/A"}
           </p>
         </div>
-        <div className="ml-2 text-white" style={{ fontSize: '2rem' }}>
+        <div className="ml-2 text-foreground" style={{ fontSize: '2rem' }}>
           {icon}
         </div>
       </div>
@@ -302,14 +332,14 @@ function InfoCard({ title, value, icon, valueLow, valueHigh, valueNote }: {
         <HoverCardContent className="w-80">
           <div className="space-y-2">
             <h4 className="font-semibold">Value Range</h4>
-            <div className="text-sm text-neutral-400">
+            <div className="text-sm text-muted-foreground">
               <p>Range: {valueLow ? new Intl.NumberFormat().format(valueLow) : 'N/A'} - {valueHigh ? new Intl.NumberFormat().format(valueHigh) : 'N/A'}</p>
               {symbol === '+' && <p className="mt-1">Current value is <span className="text-green-400 font-semibold">below</span> the estimated range (good deal)</p>}
               {symbol === '-' && <p className="mt-1">Current value is <span className="text-red-400 font-semibold">above</span> the estimated range (overpriced)</p>}
               {symbol === '~' && <p className="mt-1">Current value is <span className="text-blue-400 font-semibold">within</span> the estimated range</p>}
               {valueNote && (
                 <>
-                  <hr className="my-2 border-neutral-700" />
+                  <hr className="my-2 border-border" />
                   <p className="italic">{valueNote}</p>
                 </>
               )}
@@ -333,15 +363,15 @@ function ProjectedAverageCard({ currentAverage, lowestPrice }: {
   const percentageChange = ((difference / currentAverage) * 100);
 
   return (
-    <div className="relative bg-neutral-900/50 border border-neutral-100/10 px-4 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
+    <div className="relative bg-card/70 border border-border px-4 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
       <div className="relative flex gap-x-3 items-center justify-between">
-        <div className="flex items-center gap-x-3 text-neutral-400">
+        <div className="flex items-center gap-x-3 text-muted-foreground">
           <Calculator className="w-4 h-4" />
           <h3 className="text-sm font-medium tracking-wide">Avg. After Purchase</h3>
         </div>
         <div className="flex items-center">
           <div className="text-right">
-            <p className="text-lg font-semibold text-white">
+            <p className="text-lg font-semibold text-foreground">
               {new Intl.NumberFormat().format(Math.round(projectedAverage))}
             </p>
             <div className={`flex text-xs gap-x-2 ${isIncreasing ? 'text-green-400' : 'text-red-400'}`}>
@@ -368,9 +398,9 @@ function SmallInfoCard({ title, value }: {
   }
 
   return (
-    <div className={`relative bg-neutral-900/50 border border-neutral-100/10 px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden`}>
+    <div className={`relative bg-card/70 border border-border px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden`}>
       <div className="relative flex gap-x-2 items-center justify-between">
-        <h3 className={`text-neutral-400 text-sm tracking-wide`}>{title}</h3>
+        <h3 className={`text-muted-foreground text-sm tracking-wide`}>{title}</h3>
         <p className={`text-lg font-semibold`}>
           {value !== null && value !== "" ? value : "N/A"}
         </p>
