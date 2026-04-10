@@ -51,7 +51,7 @@ export const collectablesTable = pgTable("collectables", {
 });
 
 export const tagsTable = pgTable("tags", {
-	id: integer("id").generatedByDefaultAsIdentity().primaryKey().notNull(),
+	id: integer("id").generatedByDefaultAsIdentity({ name: "tags_id_seq1" }).primaryKey().notNull(),
     name: text("name").notNull(),
 	emoji: text("emoji").notNull()
 });
@@ -95,7 +95,7 @@ export const tagsRelations = relations(itemTagsTable, ({ one }) => ({
 }));
 
 export const auditLogsTable = pgTable("audit_logs", {
-	id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+	id: integer("id").generatedByDefaultAsIdentity({ name: "audit_logs_id_seq1" }).notNull().primaryKey(),
 	userId: text("userId").notNull().references(() => userTable.id),
 	action: text("action").notNull(),
 	where: text("where").notNull(),
@@ -111,7 +111,7 @@ export const auditLogsRelations = relations(auditLogsTable, ({ one }) => ({
 }));
 
 export const tradeHistoryTable = pgTable("trade_history", {
-	id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+	id: integer("id").generatedByDefaultAsIdentity({ name: "trade_history_id_seq1" }).notNull().primaryKey(),
 	itemId: integer("itemId").notNull().references(() => collectablesTable.id),
 	serial: bigint("serial", { mode: 'number' }).notNull(),
 	userId: bigint("userId", { mode: 'number' }).notNull(),
@@ -130,7 +130,7 @@ export const tradeHistoryRelations = relations(tradeHistoryTable, ({ one }) => (
 }));
 
 export const listingsHistoryTable = pgTable("listings_history", {
-	id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+	id: integer("id").generatedByDefaultAsIdentity({ name: "listings_history_id_seq1" }).notNull().primaryKey(),
 	itemId: integer("itemId").notNull().references(() => collectablesTable.id),
 	bestPrice: bigint("price", { mode: 'number' }).notNull(),
 	sellers: bigint("sellers", { mode: 'number' }).notNull(),
@@ -154,7 +154,7 @@ export const playersTable = pgTable("players", {
 });
 
 export const playerNetworthHistoryTable = pgTable("player_networth_history", {
-	id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+	id: integer("id").generatedByDefaultAsIdentity({ name: "player_networth_history_id_seq1" }).notNull().primaryKey(),
 	playerId: integer("playerId").notNull().references(() => playersTable.id),
 	rank: integer("rank").notNull(),
 	networth: bigint("networth", { mode: 'number' }).notNull(),
