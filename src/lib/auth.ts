@@ -41,7 +41,7 @@ export interface DatabaseUserAttributes {
     id: string;
 	username: string;
 	display_name: string;
-	discordId: number;
+	discordId: string;
 	polytoriaId?: number;
 	avatar: string;
 	role: "user" | "developer" | "admin" | "editor";

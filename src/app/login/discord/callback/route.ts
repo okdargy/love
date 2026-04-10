@@ -53,32 +53,32 @@ export async function GET(request: Request): Promise<Response> {
 				...sessionCookie.attributes
 			});
 
-			await db.update(userTable)
-				.set({
-					accessToken: tokens.accessToken,
-					refreshToken: tokens.refreshToken,
-					accessTokenExpiresAt: tokens.accessTokenExpiresAt.getTime(),
-					username: discordUser.username,
-					display_name: discordUser.global_name ?? discordUser.username,
-					avatar: discordUser.avatar ?? "",
-					updated_at: new Date().getTime()
-				})
-				.where(eq(userTable.id, existingUser.id));
+			   await db.update(userTable)
+				   .set({
+					   accessToken: tokens.accessToken,
+					   refreshToken: tokens.refreshToken,
+					   accessTokenExpiresAt: tokens.accessTokenExpiresAt.getTime(),
+					   username: discordUser.username,
+					   display_name: discordUser.global_name ?? discordUser.username,
+					   avatar: discordUser.avatar ?? "",
+					   updated_at: new Date().getTime()
+				   })
+				   .where(eq(userTable.id, existingUser.id));
 		} else {
 			const userId = generateId(15);
 
-			await db.insert(userTable).values({
-				id: userId,
-				username: discordUser.username,
-				discordId: discordUser.id,
-				display_name: discordUser.global_name ?? discordUser.username,
-				accessToken: tokens.accessToken,
-				refreshToken: tokens.refreshToken,
-				accessTokenExpiresAt: tokens.accessTokenExpiresAt.getTime(),
-				avatar: discordUser.avatar ?? "",
-				created_at: new Date().getTime(),
-				updated_at: new Date().getTime(),
-			});
+			   await db.insert(userTable).values({
+				   id: userId,
+				   username: discordUser.username,
+				   discordId: discordUser.id,
+				   display_name: discordUser.global_name ?? discordUser.username,
+				   accessToken: tokens.accessToken,
+				   refreshToken: tokens.refreshToken,
+				   accessTokenExpiresAt: tokens.accessTokenExpiresAt.getTime(),
+				   avatar: discordUser.avatar ?? "",
+				   created_at: new Date().getTime(),
+				   updated_at: new Date().getTime(),
+			   });
 
 			const session = await lucia.createSession(userId, {});
 			const sessionCookie = lucia.createSessionCookie(session.id);
