@@ -39,6 +39,7 @@ const pickedPlaceholder = randomPlaceholders[Math.floor(Math.random() * randomPl
 
 export default function Form({ data }: { data: ItemInfo }) {
     const router = useRouter();
+    const stats = Array.isArray(data.item.stats) ? data.item.stats[0] : data.item.stats;
 
     const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
     const [loading, setLoading] = useState(false);
@@ -53,13 +54,13 @@ export default function Form({ data }: { data: ItemInfo }) {
             name: "Value",
             key: "value",
             type: "number",
-            value: data.item.stats.value,
+            value: stats?.value,
         },
         {
             name: "Demand",
             key: "demand",
             type: "enum",
-            value: data.item.stats.demand,
+            value: stats?.demand,
             options: {
                 awful: "Awful",
                 low: "Low",
@@ -72,7 +73,7 @@ export default function Form({ data }: { data: ItemInfo }) {
             name: "Trend",
             key: "trend",
             type: "enum",
-            value: data.item.stats.trend,
+            value: stats?.trend,
             options: {
                 stable: "Stable",
                 unstable: "Unstable",
@@ -85,7 +86,7 @@ export default function Form({ data }: { data: ItemInfo }) {
             name: "Note",
             key: "funFact",
             type: "long_string",
-            value: data.item.stats.funFact,
+            value: stats?.funFact,
         },
         {
             name: "Tags",
@@ -113,9 +114,9 @@ export default function Form({ data }: { data: ItemInfo }) {
             acc[option.key] = option.value;
             return acc;
         }, {} as Record<string, any>),
-        valueLow: data.item.stats.valueLow,
-        valueHigh: data.item.stats.valueHigh,
-        valueNote: data.item.stats.valueNote,
+        valueLow: stats?.valueLow,
+        valueHigh: stats?.valueHigh,
+        valueNote: stats?.valueNote,
     };
 
     const [formData, setFormData] = useState(initialFormData);
@@ -125,9 +126,9 @@ export default function Form({ data }: { data: ItemInfo }) {
         const parsedValue = type === 'number' ? parseFloat(value) : value;
         
         // Check if value field is being changed
-        if (name === 'value' && parsedValue !== data.item.stats.value) {
+        if (name === 'value' && parsedValue !== stats?.value) {
             setValueChanged(true);
-        } else if (name === 'value' && parsedValue === data.item.stats.value) {
+        } else if (name === 'value' && parsedValue === stats?.value) {
             setValueChanged(false);
             setAlertOthers(false);
             setAlertReason("");
@@ -238,7 +239,7 @@ export default function Form({ data }: { data: ItemInfo }) {
             return;
         }
 
-        const changedData = filterChangedValues(data.item.stats, formData);
+        const changedData = filterChangedValues(stats ?? {}, formData);
 
         if (Object.keys(changedData).length === 0) {
             toast.info("No changes to submit");

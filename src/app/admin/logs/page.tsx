@@ -73,11 +73,14 @@ export default function AdminLogs() {
             ) : data && data.logs.length > 0 ? (
                 <div className='space-y-2'>
                     <div className='space-y-1'>
-                        {data?.logs.map(log => (
+                        {data?.logs.map(log => {
+                            const user = Array.isArray(log.user) ? log.user[0] : log.user;
+
+                            return (
                             <div key={log.id} className='flex justify-between gap-x-4 w-full border border-border p-3 rounded-md'>
                                 <div className='flex gap-x-4'>
                                     <div className='my-auto'>
-                                        <p className='font-semibold text-md'>{log.user.display_name} ({log.user.username})</p>
+                                        <p className='font-semibold text-md'>{user?.display_name ?? 'Unknown'} ({user?.username ?? 'unknown'})</p>
                                         <p className='text-muted-foreground text-sm'>
                                             {formatDateWithFallback(`${log.timestamp}Z`, {
                                                 timeZoneName: 'short'
@@ -102,7 +105,7 @@ export default function AdminLogs() {
                                                             timeZoneName: 'short'
                                                         })
                                                     } />
-                                                    <SheetItem label='User ID' value={log.user.id} />
+                                                    <SheetItem label='User ID' value={String(user?.id ?? 'Unknown')} />
                                                     <SheetItem label='Payload' value={log.payload} code={true} />
                                                 </div>
                                             </SheetDescription>
@@ -110,7 +113,8 @@ export default function AdminLogs() {
                                     </SheetContent>
                                 </Sheet>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                     <div className='flex justify-between items-center'>
                         <Button variant='secondary' onClick={() => updatePage(currentPage - 1)} disabled={currentPage === 1}>Previous</Button>

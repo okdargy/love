@@ -75,6 +75,10 @@ export default function Page() {
     }
   });
 
+  const itemStats = itemInfo.data
+    ? (Array.isArray(itemInfo.data.item.stats) ? itemInfo.data.item.stats[0] : itemInfo.data.item.stats)
+    : null;
+
   useEffect(() => {
     if (itemInfo.data) {
       document.title = itemInfo.data.item.name + " - LOVE";
@@ -98,7 +102,7 @@ export default function Page() {
       shorthand: itemInfo.data.item.shorthand,
       thumbnailUrl: itemInfo.data.item.thumbnailUrl,
       recentAverage: itemInfo.data.item.recentAverage,
-      value: itemInfo.data.item.stats.value,
+      value: itemStats?.value,
       side: 'offer' as const,
     };
 
@@ -196,14 +200,14 @@ export default function Page() {
               <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-2 gap-x-3 gap-y-3 mt-4 md:mt-0'>
                 <InfoCard 
                   title="Value" 
-                  value={itemInfo.data.item.stats.value} 
+                  value={itemStats?.value ?? null} 
                   icon={<Coins />}
-                  valueLow={itemInfo.data.item.stats.valueLow}
-                  valueHigh={itemInfo.data.item.stats.valueHigh}
-                  valueNote={itemInfo.data.item.stats.valueNote}
+                  valueLow={itemStats?.valueLow}
+                  valueHigh={itemStats?.valueHigh}
+                  valueNote={itemStats?.valueNote}
                 />
-                <InfoCard title="Demand" value={itemInfo.data.item.stats.demand} icon={<BarChart />} />
-                <InfoCard title="Trend" value={itemInfo.data.item.stats.trend} icon={<TrendingUp />} />
+                <InfoCard title="Demand" value={itemStats?.demand ?? null} icon={<BarChart />} />
+                <InfoCard title="Trend" value={itemStats?.trend ?? null} icon={<TrendingUp />} />
                 <InfoCard title="Shorthand" value={itemInfo.data.item.shorthand} icon={<Tag />} />
               </div>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-3 mt-4 md:mt-0'>
@@ -244,13 +248,13 @@ export default function Page() {
               </div>
             </div>
           </div>
-          {(itemInfo.data.item.stats.funFact && itemInfo.data.item.stats.funFact.trim() !== "") && (
+          {(itemStats?.funFact && itemStats.funFact.trim() !== "") && (
             <div className="flex flex-col space-y-1">
               <div className='space-y-3'>
                 <h2 className="text-xl font-semibold my-auto">Note</h2>
                 <div className="border border-border p-4 rounded-lg shadow-md">
                   <p>
-                    {itemInfo.data.item.stats.funFact}
+                    {itemStats.funFact}
                   </p>
                 </div>
               </div>

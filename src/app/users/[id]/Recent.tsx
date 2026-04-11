@@ -22,10 +22,13 @@ export default function Recent({ id }: { id: number }) {
                     </div> :
                         <div className='space-y-3'>
                             <ul className="space-y-4">
-                                {res.data?.map(entry => (
+                                {res.data?.map(entry => {
+                                    const item = Array.isArray(entry.item) ? entry.item[0] : entry.item;
+
+                                    return (
                                     <li key={entry.id} className="flex justify-between">
                                         <div>
-                                            <p className="font-semibold">{entry.item.name}</p>
+                                            <p className="font-semibold">{item?.name ?? 'Unknown Item'}</p>
                                             <p className="text-sm text-muted-foreground">Indexed on {formatDateWithFallback(entry.created_at, { timeStyle: "long", dateStyle: "short" })}</p>
                                         </div>
                                         <div className='flex gap-x-4'>
@@ -39,7 +42,8 @@ export default function Recent({ id }: { id: number }) {
                                             </Link>
                                         </div>
                                     </li>
-                                ))}
+                                    );
+                                })}
                             </ul>
                         </div>
             }

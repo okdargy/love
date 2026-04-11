@@ -133,7 +133,7 @@ export default function Page() {
                                             <DialogDescription>
                                                 Before linking, ensure you have your Discord account connected to your Polytoria account in <a href="https://polytoria.com/my/settings" target="_blank" rel="noreferrer" className="underline">Settings</a>.
                                                 <br /><br />
-                                                <b>Sure you did everything right?</b> Make sure to double-check your <a href="https://polytoria.com/my/settings/privacy" target="_blank" rel="noreferrer" className="underline">Privacy Settings</a> and ensure that "See your linked Discord on your profile" is set to "Everyone".
+                                                <b>Sure you did everything right?</b> Make sure to double-check your <a href="https://polytoria.com/my/settings/privacy" target="_blank" rel="noreferrer" className="underline">Privacy Settings</a> and ensure that &quot;See your linked Discord on your profile&quot; is set to &quot;Everyone&quot;.
                                             </DialogDescription>
                                         </DialogHeader>
 
