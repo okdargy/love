@@ -948,6 +948,7 @@ export const appRouter = router({
 
             const extendedPolytoriaData = {
                 id: polytoriaUser.id,
+                userId: user.id,
                 username: polytoriaUser.username,
                 discordId: linkedData?.discord?.id ?? null,
                 discordUsername: linkedData?.discord?.username ?? null,
@@ -961,9 +962,8 @@ export const appRouter = router({
                         .onConflictDoUpdate({
                             target: polytoriaUserTable.id,
                             set: {
+                                userId: user.id,
                                 username: extendedPolytoriaData.username,
-                                discordId: extendedPolytoriaData.discordId,
-                                discordUsername: extendedPolytoriaData.discordUsername,
                             },
                         });
                 } catch (insertError) {
@@ -978,11 +978,13 @@ export const appRouter = router({
                         .insert(polytoriaUserTable)
                         .values({
                             id: polytoriaUser.id,
+                            userId: user.id,
                             username: polytoriaUser.username,
                         })
                         .onConflictDoUpdate({
                             target: polytoriaUserTable.id,
                             set: {
+                                userId: user.id,
                                 username: polytoriaUser.username,
                             },
                         });

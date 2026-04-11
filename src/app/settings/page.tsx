@@ -89,7 +89,12 @@ export default function Page() {
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
-                            {isLinked && linkedAccount ? (
+                            {connectionStatus.isFetching ? (
+                                <Button variant="outline" size="sm" disabled>
+                                    <Spinner width="12" height="12" className="mr-2 fill-primary-foreground" />
+                                    Checking...
+                                </Button>
+                            ) : isLinked && linkedAccount ? (
                                 <>
                                     <a href={`https://polytoria.com/users/${linkedAccount.id}`} target="_blank" rel="noreferrer">
                                         <Button variant="outline" size="sm">
@@ -103,7 +108,7 @@ export default function Page() {
                                         onClick={() => unlinkConnection.mutate()}
                                         disabled={isBusy}
                                     >
-                                        {unlinkConnection.isLoading ? (
+                                        {unlinkConnection.isPending ? (
                                             <>
                                                 <Spinner width="12" height="12" className="mr-2 fill-primary-foreground" />
                                                 Unlinking...
@@ -161,7 +166,7 @@ export default function Page() {
                                                 disabled={!username.trim() || isBusy}
                                                 size="sm"
                                             >
-                                                {initConnection.isLoading ? (
+                                                {initConnection.isPending ? (
                                                     <>
                                                         <Spinner width="12" height="12" className="mr-2 fill-primary-foreground" />
                                                         Linking...
