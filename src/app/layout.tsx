@@ -96,7 +96,7 @@ export default async function RootLayout({
                         <ThemeToggle />
                       </div>
                     </header>
-                    <main className="w-full max-w-screen-lg mx-auto py-3 px-6">
+                    <main className="w-full max-w-screen-lg mx-auto py-4 px-6">
                       {children}
                     </main>
                     <Footer sha={sha} lastUpdate={lastUpdate} />

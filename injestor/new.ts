@@ -8,7 +8,7 @@ import { collectablesTable, collectablesStatsTable, listingsHistoryTable, tradeH
 
 import { APIItem, Inventory, Item, ListingsAPIResponse, RankingEntry, WebsiteItem } from "./types";
 import { getAPIItems, getListings, getOwners, getRankings, getWebsiteItems } from "./api";
-import { helpfulPrint, processDeal, processTrade, sendTradeWebhooks } from "./utils";
+import { helpfulPrint, processDeal, processTrade, sendTradeWebhooks, type TradeHistoryWithItem } from "./utils";
 
 const INTERVALS = {
     NEW_ITEMS: 1000 * 60 * 5, // 5 minutes, checking for new items/deals
@@ -480,7 +480,7 @@ class ItemCycleManager {
                 }
 
                 const sixHoursAgoMs = Date.now() - (6 * 60 * 60 * 1000);
-                const recentTrades = await db.query.tradeHistoryTable.findMany({
+                const recentTradesRaw = await db.query.tradeHistoryTable.findMany({
                     where: and(
                         gt(tradeHistoryTable.created_at, sixHoursAgoMs),
                         or(
@@ -496,6 +496,17 @@ class ItemCycleManager {
                     ),
                     with: { item: true }
                 });
+
+                const recentTrades: TradeHistoryWithItem[] = recentTradesRaw
+                    .map((trade) => {
+                        const item = Array.isArray(trade.item) ? trade.item[0] : trade.item;
+                        if (!item) return null;
+                        return {
+                            ...trade,
+                            item,
+                        };
+                    })
+                    .filter((trade): trade is TradeHistoryWithItem => trade !== null);
 
                 const embed = await processTrade(leftSide, rightSide, recentTrades, trades);
 

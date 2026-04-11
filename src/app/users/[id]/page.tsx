@@ -5,8 +5,12 @@ import Inventory from "./Inventory";
 import Recent from "./Recent";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowRightLeft } from "lucide-react";
 import { parseDateInput, USER_AGENT } from "@/lib/utils";
+import { db } from "@/lib/db";
+import { userTable } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
@@ -85,6 +89,29 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         return <div>Loading...</div>;
     }
 
+    const [linkedResponse, linkedSiteUser] = await Promise.all([
+        fetch(`https://api.polytoria.com/v1/users/${id}/linked`, {
+            headers: {
+                "User-Agent": USER_AGENT,
+            },
+            next: { revalidate: 300 },
+        }),
+        db.query.userTable.findFirst({
+            where: eq(userTable.polytoriaId, id),
+            columns: {
+                id: true,
+            },
+        }),
+    ]);
+
+    const linkedData = linkedResponse.ok ? await linkedResponse.json() : null;
+
+    const discordDisplay = linkedData?.discord?.username
+        ? linkedData.discord.discriminator && linkedData.discord.discriminator !== "0"
+            ? `${linkedData.discord.username}#${linkedData.discord.discriminator}`
+            : `@${linkedData.discord.username}`
+        : null;
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between flex-col md:flex-row gap-y-3">
@@ -92,6 +119,10 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
                     <Image src={userData.thumbnail.icon} alt={userData.username} width={512} height={512} className="h-20 w-20 rounded-full border-2 border-primary p-2" />
                     <div className="my-auto">
                         <h1 className="font-semibold text-2xl">{userData.username}</h1>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                            {linkedSiteUser ? <Badge variant="secondary">Linked on polytoria.trade</Badge> : null}
+                            {discordDisplay ? <Badge variant="outline">Discord: {discordDisplay}</Badge> : null}
+                        </div>
                         <div className="flex space-x-2">
                             <h2 className="text-muted-foreground">Value: {formatNumber(userData.netWorth)}</h2>
                             <div className="border-l border-border mx-1 h-3 my-auto"></div>

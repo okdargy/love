@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { SidebarMenu, SidebarMenuButton } from "./ui/sidebar";
 
 export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
@@ -16,15 +17,11 @@ export default function ThemeToggle() {
   const isDark = mounted && resolvedTheme === "dark";
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      type="button"
-      aria-label="Toggle theme"
+     <SidebarMenuButton
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="h-8 w-8"
     >
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </Button>
+      Toggle Theme
+    </SidebarMenuButton>
   );
 }

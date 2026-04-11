@@ -1,5 +1,6 @@
 import { bigint, boolean, index, integer, pgSequence, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
+import { discord } from '../auth';
 
 const nowEpochMs = sql`(extract(epoch from now()) * 1000)::bigint`;
 
@@ -27,12 +28,15 @@ export const userTable = pgTable("user", {
 
 export const polytoriaUserTable = pgTable("polytoria_user", {
 	id: integer("id").notNull().primaryKey(),
+	userId: text("userId").notNull().references(() => userTable.id),
 	username: text("username").notNull(),
-	thumbnailUrl: text("thumbnailUrl").notNull(),
 });
 
 export const polytoriaUserRelations = relations(polytoriaUserTable, ({ one }) => ({
-	user: one(userTable)
+	user: one(userTable, {
+		fields: [polytoriaUserTable.userId],
+		references: [userTable.id],
+	}),
 }));
 
 export const sessionTable = pgTable("session", {

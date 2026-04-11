@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ilike, eq, count, or, desc, and, inArray, InferSelectModel, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable, playersTable, userTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable, playersTable, polytoriaUserTable, userTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 import type { User } from "lucia";
@@ -18,28 +18,7 @@ const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d
 const RISING_EMOJI = "<:rising:1226349827843948586>"
 const DECREASING_EMOJI = "<:decreasing:1226349823985193030>"
 
-const userConnectionCodes = new Map<string, {
-    code: string;
-    polytoriaUserId: number;
-    polytoriaUsername: string;
-    expiresAt: number;
-    userId: string;
-}>();
-
 const connectionRateLimit = new Map<string, number>();
-
-const generateConnectionCode = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
-setInterval(() => {
-    const now = Date.now();
-    for (const [userId, data] of userConnectionCodes.entries()) {
-        if (now > data.expiresAt) {
-            userConnectionCodes.delete(userId);
-        }
-    }
-}, 5 * 60 * 1000);
 
 const sendValueChangeAlert = ({
     item,
@@ -384,7 +363,7 @@ export const appRouter = router({
         if (alertOthers && alertReason) {
             sendValueChangeAlert({
                 item,
-                stats: item.stats,
+                stats: item.stats as any,
                 author: user,
                 newValue: stats.value ?? null,
                 reason: alertReason,
@@ -818,6 +797,79 @@ export const appRouter = router({
             console.error(e);
         }
     }),
+    getUserConnectionStatus: publicProcedure.query(async () => {
+        const { user } = await validateRequest();
+
+        if (!user) {
+            throw new Error("You must be logged in to view connection status");
+        }
+
+        const currentUser = await db.query.userTable.findFirst({
+            where: eq(userTable.id, user.id),
+            columns: {
+                polytoriaId: true,
+            },
+        });
+
+        if (!currentUser?.polytoriaId) {
+            return {
+                linked: false,
+                account: null,
+            };
+        }
+
+        const account = await db.query.polytoriaUserTable.findFirst({
+            where: eq(polytoriaUserTable.id, currentUser.polytoriaId),
+            columns: {
+                id: true,
+                username: true,
+                thumbnailUrl: true,
+            },
+        });
+
+        return {
+            linked: true,
+            account: account ?? {
+                id: currentUser.polytoriaId,
+                username: `User ${currentUser.polytoriaId}`,
+                thumbnailUrl: null,
+            },
+        };
+    }),
+    unlinkUserConnection: publicProcedure.mutation(async () => {
+        const { user } = await validateRequest();
+
+        if (!user) {
+            throw new Error("You must be logged in to unlink a Polytoria account");
+        }
+
+        const currentUser = await db.query.userTable.findFirst({
+            where: eq(userTable.id, user.id),
+            columns: {
+                polytoriaId: true,
+            },
+        });
+
+        if (!currentUser?.polytoriaId) {
+            throw new Error("No linked Polytoria account found");
+        }
+
+        await db.transaction(async (tx) => {
+            await tx.update(userTable).set({
+                polytoriaId: null,
+                updated_at: Date.now(),
+            }).where(eq(userTable.id, user.id));
+
+            await tx.delete(polytoriaUserTable).where(eq(
+                polytoriaUserTable.id, currentUser.polytoriaId
+            ));
+        });
+
+        return {
+            success: true,
+            message: "Polytoria account unlinked",
+        };
+    }),
     initializeUserConnection: publicProcedure.input(z.object({
         username: z.string().min(1).max(50),
     })).mutation(async (opts) => {
@@ -831,7 +883,18 @@ export const appRouter = router({
         const lastRequest = connectionRateLimit.get(user.id);
         if (lastRequest && now - lastRequest < 30000) {
             const remainingTime = Math.ceil((30000 - (now - lastRequest)) / 1000);
-            throw new Error(`Please wait ${remainingTime} seconds before requesting another code`);
+            throw new Error(`Please wait ${remainingTime} seconds before trying again`);
+        }
+
+        const currentUser = await db.query.userTable.findFirst({
+            where: eq(userTable.id, user.id),
+            columns: {
+                polytoriaId: true,
+            },
+        });
+
+        if (currentUser?.polytoriaId) {
+            throw new Error("You already linked a Polytoria account. Unlink it before linking another one.");
         }
 
         try {
@@ -851,86 +914,103 @@ export const appRouter = router({
                 throw new Error("User not found on Polytoria");
             }
 
-            userConnectionCodes.delete(user.id);
+            const existingLinkedUser = await db.query.userTable.findFirst({
+                where: eq(userTable.polytoriaId, polytoriaUser.id),
+                columns: {
+                    id: true,
+                },
+            });
 
-            const rawCode = generateConnectionCode();
-            const code = "pt-" + rawCode;
-            const expiresAt = now + (5 * 60 * 1000); // 5 minutes from now
+            if (existingLinkedUser && existingLinkedUser.id !== user.id) {
+                throw new Error("This Polytoria account is already linked to another user");
+            }
 
-            userConnectionCodes.set(user.id, {
-                code,
-                polytoriaUserId: polytoriaUser.id,
-                polytoriaUsername: polytoriaUser.username,
-                expiresAt,
-                userId: user.id
+            const linkedResponse = await fetch(`https://api.polytoria.com/v1/users/${polytoriaUser.id}/linked`, {
+                headers: {
+                    "User-Agent": USER_AGENT
+                }
+            });
+
+            if (!linkedResponse.ok) {
+                throw new Error("Failed to fetch linked accounts from Polytoria");
+            }
+
+            const linkedData = await linkedResponse.json();
+            const linkedDiscordId = linkedData?.discord?.id;
+
+            if (!linkedDiscordId) {
+                throw new Error("This Polytoria account does not have a Discord account linked");
+            }
+
+            if (linkedDiscordId !== user.discordId) {
+                throw new Error("The linked Discord account on Polytoria does not match your Discord login");
+            }
+
+            const extendedPolytoriaData = {
+                id: polytoriaUser.id,
+                username: polytoriaUser.username,
+                discordId: linkedData?.discord?.id ?? null,
+                discordUsername: linkedData?.discord?.username ?? null,
+            };
+
+            await db.transaction(async (tx) => {
+                try {
+                    await tx
+                        .insert(polytoriaUserTable)
+                        .values(extendedPolytoriaData)
+                        .onConflictDoUpdate({
+                            target: polytoriaUserTable.id,
+                            set: {
+                                username: extendedPolytoriaData.username,
+                                discordId: extendedPolytoriaData.discordId,
+                                discordUsername: extendedPolytoriaData.discordUsername,
+                            },
+                        });
+                } catch (insertError) {
+                    const message = insertError instanceof Error ? insertError.message : "";
+                    const likelyMissingColumns = message.includes("does not exist") && message.includes("polytoria_user");
+
+                    if (!likelyMissingColumns) {
+                        throw insertError;
+                    }
+
+                    await tx
+                        .insert(polytoriaUserTable)
+                        .values({
+                            id: polytoriaUser.id,
+                            username: polytoriaUser.username,
+                        })
+                        .onConflictDoUpdate({
+                            target: polytoriaUserTable.id,
+                            set: {
+                                username: polytoriaUser.username,
+                            },
+                        });
+                }
+
+                await tx
+                    .update(userTable)
+                    .set({
+                        polytoriaId: polytoriaUser.id,
+                        updated_at: now,
+                    })
+                    .where(eq(userTable.id, user.id));
             });
 
             connectionRateLimit.set(user.id, now);
 
             return {
-                code,
                 polytoriaUsername: polytoriaUser.username,
                 polytoriaUserId: polytoriaUser.id,
-                expiresAt,
-                message: `Add the code "${code}" to your Polytoria bio and then verify your account.`
+                message: `Successfully linked! You are now linked to ${polytoriaUser.username}.`
             };
         } catch (error) {
             console.error("Error initializing user connection:", error);
-            throw new Error("Failed to initialize connection. Please check the username and try again.");
+            throw new Error(error instanceof Error ? error.message : "Failed to link account. Please try again.");
         }
     }),
     verifyUser: publicProcedure.mutation(async () => {
-        const { user } = await validateRequest();
-
-        if (!user) {
-            throw new Error("You must be logged in to verify a Polytoria account");
-        }
-
-        const codeData = userConnectionCodes.get(user.id);
-        
-        if (!codeData) {
-            throw new Error("No connection code found. Please initialize a connection first.");
-        }
-
-        if (Date.now() > codeData.expiresAt) {
-            userConnectionCodes.delete(user.id);
-            throw new Error("Connection code has expired. Please request a new one.");
-        }
-
-        try {
-            const response = await fetch(`https://api.polytoria.com/v1/users/${codeData.polytoriaUserId}`, {
-                headers: {
-                    "User-Agent": USER_AGENT
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error("Failed to fetch user profile from Polytoria");
-            }
-
-            const polytoriaProfile = await response.json();
-            
-            const bio = polytoriaProfile.description || "";
-            
-            if (!bio.includes(codeData.code)) {
-                throw new Error(`Code "${codeData.code}" not found in your Polytoria bio. Please add it to your bio and try again.`);
-            }
-
-            userConnectionCodes.delete(user.id);
-
-            // TODO: Store the verified connection in the database
-            console.log(`User ${user.id} successfully verified Polytoria account ${polytoriaProfile.username} (ID: ${polytoriaProfile.id})`);
-
-            return {
-                success: true,
-                polytoriaUsername: polytoriaProfile.username,
-                polytoriaUserId: polytoriaProfile.id,
-                message: "Successfully verified your Polytoria account!"
-            };
-        } catch (error) {
-            console.error("Error verifying user connection:", error);
-            throw new Error(error instanceof Error ? error.message : "Failed to verify connection. Please try again.");
-        }
+        throw new Error("This verification flow has been replaced. Please use Link Account in settings.");
     }),
     searchCalculatorItems: publicProcedure.input(z.object({
         input: z.string(),

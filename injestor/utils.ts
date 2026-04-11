@@ -83,7 +83,7 @@ export const processDeal = async (item: {
     console.log(res.status, json);
 }
 
-type TradeHistoryWithItem = InferSelectModel<typeof tradeHistoryTable> & {
+export type TradeHistoryWithItem = InferSelectModel<typeof tradeHistoryTable> & {
   item: InferSelectModel<typeof collectablesTable>
 }
 
