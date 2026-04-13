@@ -10,8 +10,13 @@ export default async function Blog() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {posts.map((post) => (
                     <Link href={`/blog/${post.slug}`} key={post.slug}>
-                        <article className="border border-border rounded-lg overflow-hidden hover:border-primary/60 transition-colors">
+                        <article className={`border border-border rounded-lg overflow-hidden hover:border-primary/60 transition-colors ${post.hidden ? 'opacity-50 hover:opacity-100 transition-opacity' : ''}`}>
                             <div className="aspect-video relative">
+                                                            {post.hidden && (
+                                <div className="absolute top-2 right-2 bg-card/25 text-foreground text-xs px-2 py-0.5 rounded-full">
+                                    Hidden
+                                </div>
+                            )}
                                 <img 
                                     src={`/thumbnails/${post.thumbnail}`}
                                     alt={post.title}

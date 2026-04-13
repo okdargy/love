@@ -47,6 +47,14 @@ export const sessionTable = pgTable("session", {
 	expiresAt: timestamp("expiresAt", { withTimezone: true, mode: 'date' }).notNull(),
 });
 
+export const siteSettingsTable = pgTable("site_settings", {
+	id: integer("id").notNull().primaryKey().default(1),
+	announcementEnabled: boolean("announcementEnabled").notNull().default(false),
+	announcementMessage: text("announcementMessage").notNull().default(""),
+	created_at: bigint("created_at", { mode: "number" }).notNull().default(nowEpochMs),
+	updated_at: bigint("updated_at", { mode: "number" }).notNull().default(nowEpochMs),
+});
+
 export const collectablesTable = pgTable("collectables", {
 	id: integer("id").notNull().primaryKey(),
 	type: text("type").notNull(),

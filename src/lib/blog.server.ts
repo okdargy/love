@@ -11,7 +11,8 @@ interface PostMetadata {
         picture: string
     }[]
     thumbnail: string
-    slug: string
+    slug: string,
+    hidden: boolean
 }
 
 export const getAllPosts = async (): Promise<PostMetadata[]> => {

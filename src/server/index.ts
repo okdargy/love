@@ -7,6 +7,7 @@ import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 import type { User } from "lucia";
 import { USER_AGENT } from "@/lib/utils";
+import { getAnnouncementSettings, setAnnouncementSettings } from "@/lib/announcement";
 
 const sanitizeSearchInput = (input: string | undefined) => {
     if(!input) return input;
@@ -534,6 +535,39 @@ export const appRouter = router({
         });
 
         return { success: true };
+    }),
+    getAdminAnnouncementSettings: publicProcedure.mutation(async () => {
+        const { user } = await validateRequest();
+
+        if (!user || user.role !== "admin") {
+            throw new Error("You do not have permission to view announcement settings");
+        }
+
+        return await getAnnouncementSettings();
+    }),
+    updateAdminAnnouncementSettings: publicProcedure.input(z.object({
+        enabled: z.boolean(),
+        message: z.string().max(500),
+    })).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user || user.role !== "admin") {
+            throw new Error("You do not have permission to update announcement settings");
+        }
+
+        const settings = await setAnnouncementSettings({
+            enabled: opts.input.enabled,
+            message: opts.input.message,
+        });
+
+        await db.insert(auditLogsTable).values({
+            userId: user.id,
+            action: "edit",
+            where: "site_settings",
+            payload: JSON.stringify(settings),
+        });
+
+        return settings;
     }),
     addTag: publicProcedure.input(z.object({
         name: z.string().min(3),
