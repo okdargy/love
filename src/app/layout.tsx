@@ -12,6 +12,7 @@ import { execSync } from 'child_process';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import ThemeToggle from "@/components/ThemeToggle";
 import { getAnnouncementSettings } from "@/lib/announcement";
+import { InfoIcon, MessageCircle } from "lucide-react";
 // import Attention from "@/components/Attention";
 
 const poppins = Poppins({
@@ -91,12 +92,6 @@ export default async function RootLayout({
             <SessionProvider value={session}>
                 <SidebarProvider>
                   <Navbar session={session} />
-                  {announcement.enabled && announcement.message.length > 0 && (
-                    <div className="bg-primary text-primary-foreground px-4 py-2 text-sm text-center">
-                      <span className="font-semibold mr-2">Message:</span>
-                      {announcement.message}
-                    </div>
-                  )}
                   <SidebarInset>
                     <header className="sticky top-0 z-40 flex h-14 items-center border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden">
                       <SidebarTrigger aria-label="Open sidebar" />
@@ -104,6 +99,14 @@ export default async function RootLayout({
                         <ThemeToggle />
                       </div>
                     </header>
+                    {announcement.enabled && announcement.message.length > 0 && (
+                      <div className="w-full border-b bg-primary/10 text-primary">
+                        <div className="mx-auto w-full max-w-screen-lg px-6 py-2 text-sm">
+                          <InfoIcon className="inline mr-2" size={16} />
+                          {announcement.message}
+                        </div>
+                      </div>
+                    )}
                     <main className="w-full max-w-screen-lg mx-auto py-4 px-6">
                       {children}
                     </main>

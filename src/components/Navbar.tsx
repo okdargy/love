@@ -18,7 +18,6 @@ import {
 import { CalculatorIcon, ClockIcon, Cog, HomeIcon, LogInIcon, LogOut, NewspaperIcon, Wrench } from 'lucide-react';
 import { LoveIcon } from "@/components/icons";
 import PlayerSearch from "./PlayerSearch";
-import ThemeToggle from "./ThemeToggle";
 
 const NAV_LINKS = [
     { href: "/", label: "Home", icon: HomeIcon },
@@ -84,10 +83,6 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
 
             <SidebarFooter>
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <ThemeToggle />
-                    </SidebarMenuItem>
-
                     {user ? (
                         <>
                             {user.role === "admin" && (
