@@ -30,6 +30,65 @@ import Hero from "@/components/Hero";
 
 const ITEMS_PER_PAGE = 25;
 const DEFAULT_PAGE = 1;
+const DEFAULT_FILTERS = {
+  sortBy: "date",
+  order: "desc",
+  types: [] as string[],
+};
+
+const SORT_BY_VALUES = new Set(["date", "recent", "stock"]);
+const ORDER_VALUES = new Set(["asc", "desc"]);
+const TYPE_VALUES = new Set(["hat", "face", "tool"]);
+
+const parsePageParam = (page: string | null) => {
+  const parsedPage = Number(page);
+
+  return Number.isInteger(parsedPage) && parsedPage >= 1 ? parsedPage : DEFAULT_PAGE;
+};
+
+const parseFiltersFromParams = (params: { get: (name: string) => string | null }) => {
+  const sortByParam = params.get("sortBy");
+  const orderParam = params.get("order");
+  const typesParam = params.get("types");
+
+  const sortBy = sortByParam && SORT_BY_VALUES.has(sortByParam)
+    ? sortByParam
+    : DEFAULT_FILTERS.sortBy;
+
+  const order = orderParam && ORDER_VALUES.has(orderParam)
+    ? orderParam
+    : DEFAULT_FILTERS.order;
+
+  const types = typesParam
+    ? typesParam
+      .split(",")
+      .map((type) => type.trim().toLowerCase())
+      .filter((type) => TYPE_VALUES.has(type))
+    : [];
+
+  return { sortBy, order, types };
+};
+
+const buildQueryParams = (
+  page: number,
+  search: string,
+  filters: { sortBy: string; order: string; types: string[] },
+) => {
+  const queryParams = new URLSearchParams({ page: page.toString() });
+
+  if (search) {
+    queryParams.append("search", search);
+  }
+
+  queryParams.append("sortBy", filters.sortBy);
+  queryParams.append("order", filters.order);
+
+  if (filters.types.length > 0) {
+    queryParams.append("types", filters.types.join(","));
+  }
+
+  return queryParams;
+};
 
 export default function Home() {
   const router = useRouter();
@@ -41,14 +100,10 @@ export default function Home() {
     allTags: [],
   });
   const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"query", any, any>> | null>(null);
-  const [filters, setFilters] = useState({
-    sortBy: "date",
-    order: "desc",
-    types: []
-  });
+  const [filters, setFilters] = useState(() => parseFiltersFromParams(searchParams));
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
-  const [currentPage, setCurrentPage] = useState(+(searchParams.get("page") ?? DEFAULT_PAGE));
+  const [currentPage, setCurrentPage] = useState(parsePageParam(searchParams.get("page")));
 
   const getItems = trpc.getItemsByPage.useMutation({
     onError(error) {
@@ -103,6 +158,7 @@ export default function Home() {
       page: currentPage < 1 ? DEFAULT_PAGE : currentPage,
       total: ITEMS_PER_PAGE,
       search: searchParams.get("search") ?? "",
+      filters,
       homepage: true
     });
   }, []);
@@ -114,18 +170,15 @@ export default function Home() {
   const handleSearch = () => {
     setCurrentPage(DEFAULT_PAGE);
     setLoading(true);
-    const queryParams = new URLSearchParams({ page: DEFAULT_PAGE.toString() });
-
-    if (searchTerm) {
-      queryParams.append("search", searchTerm);
-    }
+    const queryParams = buildQueryParams(DEFAULT_PAGE, searchTerm, filters);
 
     router.push(`/?${queryParams.toString()}`);
     getItems.mutate({
       page: DEFAULT_PAGE,
       total: ITEMS_PER_PAGE,
       search: searchTerm,
-      filters
+      filters,
+      homepage: true
     });
   };
 
@@ -141,11 +194,7 @@ export default function Home() {
     setCurrentPage(newPage);
     setLoading(true);
 
-    const queryParams = new URLSearchParams({ page: newPage.toString() });
-
-    if (searchTerm) {
-      queryParams.append("search", searchTerm);
-    }
+    const queryParams = buildQueryParams(newPage, searchTerm, filters);
 
     router.push(`/?${queryParams.toString()}`);
 
@@ -153,6 +202,7 @@ export default function Home() {
       page: newPage,
       total: ITEMS_PER_PAGE,
       search: searchTerm,
+      filters,
       homepage: true
     });
   };

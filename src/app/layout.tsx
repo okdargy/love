@@ -95,7 +95,7 @@ export default async function RootLayout({
                   <SidebarInset>
                     <header className="sticky top-0 z-40 flex h-14 items-center border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden">
                       <SidebarTrigger aria-label="Open sidebar" />
-                      <div className="ml-auto">
+                      <div className="ml-auto md:hidden">
                         <ThemeToggle />
                       </div>
                     </header>
