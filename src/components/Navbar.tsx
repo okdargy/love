@@ -82,7 +82,7 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                 </SidebarGroup>
             </SidebarContent>
 
-            <SidebarFooter>
+            <SidebarFooter className="mb-2">
                 <ThemeToggle className="hidden md:flex" />
                 <SidebarMenu>
                     {user ? (
@@ -130,10 +130,12 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                         </>
                     ) : (
                         <SidebarMenuItem>
-                            <SidebarMenuButton className="flex items-center gap-3 mt-1">
-                                <LogInIcon className="h-4 w-4" />
-                                <Link href="/login/discord" prefetch={false}>Login</Link>
-                            </SidebarMenuButton>
+                            <Link href="/login/discord" prefetch={false}>
+                                <SidebarMenuButton className="flex items-center gap-3 mt-1">
+                                    <LogInIcon className="h-4 w-4" />
+                                    Login
+                                </SidebarMenuButton>
+                            </Link>
                         </SidebarMenuItem>
                     )}
                 </SidebarMenu>

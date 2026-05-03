@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ilike, eq, count, or, desc, and, inArray, InferSelectModel, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable, playersTable, polytoriaUserTable, userTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable, playersTable, polytoriaUserTable, userInventoryPreferencesTable, userTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 import type { User } from "lucia";
@@ -481,10 +481,69 @@ export const appRouter = router({
                 updated_at: true,
             },
             ...(whereClause ? { where: whereClause } : {}),
-            orderBy: [desc(userTable.created_at)],
+            orderBy: [
+                sql`CASE ${userTable.role}
+                    WHEN 'admin' THEN 0
+                    WHEN 'developer' THEN 1
+                    WHEN 'editor' THEN 2
+                    WHEN 'user' THEN 3
+                    ELSE 4
+                END`,
+                desc(userTable.created_at),
+            ],
         });
 
         return { users, totalPages };
+    }),
+    getAdminLinkedUsers: publicProcedure.input(z.object({
+        page: z.number().min(1),
+        total: z.number().min(1).max(25),
+        query: z.string().optional(),
+    })).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user || user.role !== "admin") {
+            throw new Error("You do not have permission to view linked users");
+        }
+
+        const offset = (opts.input.page - 1) * opts.input.total;
+        const limit = opts.input.total;
+        const query = opts.input.query?.trim();
+        const whereClause = query
+            ? or(
+                ilike(polytoriaUserTable.username, `%${query}%`),
+                ilike(userTable.display_name, `%${query}%`),
+                ilike(userTable.username, `%${query}%`),
+            )
+            : undefined;
+
+        const [totalCount] = await db
+            .select({ count: count() })
+            .from(polytoriaUserTable)
+            .innerJoin(userTable, eq(polytoriaUserTable.userId, userTable.id))
+            .where(whereClause);
+        const totalPages = Math.ceil(totalCount.count / limit);
+
+        const linkedUsers = await db
+            .select({
+                polytoriaId: polytoriaUserTable.id,
+                polytoriaUsername: polytoriaUserTable.username,
+                userId: userTable.id,
+                username: userTable.username,
+                display_name: userTable.display_name,
+                discordId: userTable.discordId,
+                avatar: userTable.avatar,
+                role: userTable.role,
+                userCreatedAt: userTable.created_at,
+            })
+            .from(polytoriaUserTable)
+            .innerJoin(userTable, eq(polytoriaUserTable.userId, userTable.id))
+            .where(whereClause)
+            .orderBy(polytoriaUserTable.username)
+            .limit(limit)
+            .offset(offset);
+
+        return { linkedUsers, totalPages };
     }),
     updateUserRole: publicProcedure.input(z.object({
         userId: z.string().min(1),
@@ -1047,6 +1106,44 @@ export const appRouter = router({
     }),
     verifyUser: publicProcedure.mutation(async () => {
         throw new Error("This verification flow has been replaced. Please use Link Account in settings.");
+    }),
+    setUserInventoryNotForSale: publicProcedure.input(z.object({
+        itemId: z.number().min(1),
+        notForSale: z.boolean(),
+    })).mutation(async (opts) => {
+        const { user } = await validateRequest();
+
+        if (!user || !user.polytoriaId) {
+            throw new Error("You must link a Polytoria account first");
+        }
+
+        try {
+            await db
+                .insert(userInventoryPreferencesTable)
+                .values({
+                    ownerPolytoriaId: user.polytoriaId,
+                    itemId: opts.input.itemId,
+                    notForSale: opts.input.notForSale,
+                    updated_at: Date.now(),
+                })
+                .onConflictDoUpdate({
+                    target: [
+                        userInventoryPreferencesTable.ownerPolytoriaId,
+                        userInventoryPreferencesTable.itemId,
+                    ],
+                    set: {
+                        notForSale: opts.input.notForSale,
+                        updated_at: Date.now(),
+                    },
+                });
+        } catch (error) {
+            console.error("Failed to update inventory sale status:", error);
+            throw new Error("Could not update sale status right now. If this is a new deployment, run database schema sync first.");
+        }
+
+        return {
+            success: true,
+        };
     }),
     searchCalculatorItems: publicProcedure.input(z.object({
         input: z.string(),

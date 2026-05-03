@@ -10,8 +10,9 @@
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio --port 9033 --host 127.0.0.1",
+    "db:studio": "drizzle-kit studio --port 9033 --host 0.0.0.0",
     "injestor": "bun run injestor/new.ts",
+    "injestor:refresh": "bun run injestor/refetch-bestprices.ts",
     "injestor:push": "drizzle-kit push --config=injestor/db/drizzle.config.ts",
     "injestor:generate": "drizzle-kit generate --config=injestor/db/drizzle.config.ts",
     "injestor:migrate": "drizzle-kit migrate --config=injestor/db/drizzle.config.ts"

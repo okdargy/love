@@ -28,6 +28,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         {
             label: "Users",
             href: "/admin/users"
+        },
+        {
+            label: "Linked Users",
+            href: "/admin/linked-users"
         }
     ]
 

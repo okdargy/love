@@ -1,6 +1,5 @@
-import { bigint, boolean, index, integer, pgSequence, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { bigint, boolean, index, integer, pgSequence, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
-import { discord } from '../auth';
 
 const nowEpochMs = sql`(extract(epoch from now()) * 1000)::bigint`;
 
@@ -31,6 +30,19 @@ export const polytoriaUserTable = pgTable("polytoria_user", {
 	userId: text("userId").notNull().references(() => userTable.id),
 	username: text("username").notNull(),
 });
+
+export const userInventoryPreferencesTable = pgTable("user_inventory_preferences", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey().notNull(),
+	ownerPolytoriaId: integer("ownerPolytoriaId").notNull(),
+	itemId: integer("itemId").notNull(),
+	notForSale: boolean("notForSale").notNull().default(true),
+	created_at: bigint("created_at", { mode: "number" }).notNull().default(nowEpochMs),
+	updated_at: bigint("updated_at", { mode: "number" }).notNull().default(nowEpochMs),
+}, (table) => [
+	index("user_inventory_preferences_owner_index").on(table.ownerPolytoriaId),
+	index("user_inventory_preferences_item_index").on(table.itemId),
+	uniqueIndex("user_inventory_preferences_owner_item_uq").on(table.ownerPolytoriaId, table.itemId),
+]);
 
 export const polytoriaUserRelations = relations(polytoriaUserTable, ({ one }) => ({
 	user: one(userTable, {

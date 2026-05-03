@@ -49,7 +49,9 @@ export interface WebsiteItem extends Item {
     isSoldOut: boolean;
     thumbnailUrl: string;
     creatorUrl: string;
+    displayPrice?: number;
 }
+
 export interface APIItem extends Item {
     tags: string[];
     creator: Creator;

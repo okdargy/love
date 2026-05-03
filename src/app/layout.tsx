@@ -100,7 +100,7 @@ export default async function RootLayout({
                       </div>
                     </header>
                     {announcement.enabled && announcement.message.length > 0 && (
-                      <div className="w-full border-b bg-primary/10 text-primary">
+                      <div className="sticky top-14 md:top-0 z-30 w-full border-b bg-[#fdecec] dark:bg-[#211010]  text-primary">
                         <div className="mx-auto w-full max-w-screen-lg px-6 py-2 text-sm">
                           <InfoIcon className="inline mr-2" size={16} />
                           {announcement.message}

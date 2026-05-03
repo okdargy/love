@@ -1,10 +1,11 @@
 import { AggregatedInventoryItem, ErrorResponse, InventoryItem, InventoryResponse } from "@/app/_types/api";
-import { Button } from "@/components/ui/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import Image from 'next/image';
 import { Lock } from 'lucide-react';
-import Link from "next/link";
 import { USER_AGENT } from "@/lib/utils";
+import { db } from "@/lib/db";
+import { userInventoryPreferencesTable } from "@/lib/db/schema";
+import { and, eq, inArray } from "drizzle-orm";
+import { validateRequest } from "@/lib/auth";
+import InventoryGrid from "./InventoryGrid";
 
 async function grabItemizedInventory(id: number): Promise<{
     isPrivate: boolean;
@@ -67,36 +68,51 @@ async function grabItemizedInventory(id: number): Promise<{
 }
 
 export default async function Inventory({ id }: { id: number }) {
+    const { user } = await validateRequest();
     const { isPrivate, inventory } = await grabItemizedInventory(id);
-    inventory.sort((a, b) => b.amount - a.amount);
+
+    const canManageSaleStatus = user?.polytoriaId === id;
+    const itemIds = inventory.map((item) => item.asset.id);
+
+    let notForSaleRows: Array<{ itemId: number }> = [];
+
+    if (itemIds.length > 0) {
+        try {
+            notForSaleRows = await db.query.userInventoryPreferencesTable.findMany({
+                where: and(
+                    eq(userInventoryPreferencesTable.ownerPolytoriaId, id),
+                    inArray(userInventoryPreferencesTable.itemId, itemIds),
+                    eq(userInventoryPreferencesTable.notForSale, true),
+                ),
+                columns: {
+                    itemId: true,
+                },
+            });
+        } catch (error) {
+            console.error("Failed to load inventory sale preferences:", error);
+        }
+    }
+
+    const notForSaleSet = new Set(notForSaleRows.map((row) => row.itemId));
+    const inventoryWithSaleStatus = inventory.map((item) => ({
+        ...item,
+        notForSale: notForSaleSet.has(item.asset.id),
+    }));
 
     return (
-        <div className="">
+        <div>
             {isPrivate ? <div className="flex flex-col items-center justify-center space-y-2">
                 <Lock className="h-6 w-6 text-muted-foreground" />
                 <p className="text-muted-foreground text-center">This user has a private inventory</p>
             </div> : inventory.length === 0 ? <p className="text-muted-foreground text-center">This user has no items</p> :
-                <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
-                    {inventory.map((item, index) => (
-                        <div key={index} className="flex items-center space-x-4 px-3 py-2.5 justify-between">
-                            <Image src={item.asset.thumbnail} alt={item.asset.name} width={64} height={64} className="rounded-md my-auto" />
-                            <div className="text-right">
-                                <Link href={`/store/${item.asset.id}`}>
-                                    <p className="text-md font-semibold">{item.asset.name}</p>
-                                </Link>
-                                <HoverCard>
-                                    <HoverCardTrigger asChild>
-                                        <p className="text-sm text-right text-muted-foreground cursor-pointer">Owns {item.amount} {item.amount === 1 ? 'copy' : 'copies'}</p>
-                                    </HoverCardTrigger>
-                                    <HoverCardContent className="text-left">
-                                        <p>{'#' + item.serials.sort((a, b) => a - b).join(', #')}</p>
-                                    </HoverCardContent>
-                                </HoverCard>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <InventoryGrid items={inventoryWithSaleStatus} canManageSaleStatus={canManageSaleStatus} />
             }
+
+            {!isPrivate && inventory.length > 0 && canManageSaleStatus ? (
+                <p className="mt-3 text-xs text-muted-foreground text-center">
+                    Toggle &quot;Mark NFS&quot; on any item to show it as not for sale on your profile.
+                </p>
+            ) : null}
         </div>
     );
 }

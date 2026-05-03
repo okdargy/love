@@ -24,21 +24,32 @@ type NullableOptional<T> = {
 
 type MergedItem = Item & NullableOptional<Omit<WebsiteItem, keyof Item> & Omit<APIItem, keyof Item>>;
 
-// price in getShopData will always be the best price, aka. the top reseller. if the website request fails, it will be null.
+// price in WebsiteItem is now the original price, displayPrice is the average price.
+// We map price -> originalPrice and displayPrice -> price to maintain backward compatibility.
 async function getShopData() {
     const items: MergedItem[] = [];
     const wresponse = await getWebsiteItems();
 
     // first push whatever we get from website, could be null because of cloudflare
     if (wresponse && wresponse.meta && wresponse.data.length > 0) {
-        items.push(...wresponse.data);
+        const transformedItems = wresponse.data.map(item => ({
+            ...item,
+            originalPrice: item.price,
+            price: item.displayPrice !== undefined && item.displayPrice !== item.price ? item.displayPrice : null
+        }));
+        items.push(...transformedItems);
 
         for (let page = 2; page <= wresponse.meta.lastPage; page++) {
             await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_PAGE));
 
             const pageResponse = await getWebsiteItems(page);
             if (pageResponse) {
-                items.push(...pageResponse.data);
+                const transformedItems = pageResponse.data.map(item => ({
+                    ...item,
+                    originalPrice: item.price,
+                    price: item.displayPrice !== undefined && item.displayPrice !== item.price ? item.displayPrice : null
+                }));
+                items.push(...transformedItems);
             }
         }
     }

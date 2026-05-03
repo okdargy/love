@@ -6,11 +6,16 @@ import Recent from "./Recent";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, Check, Code, Edit, Hammer, LinkIcon } from "lucide-react";
 import { parseDateInput, USER_AGENT } from "@/lib/utils";
 import { db } from "@/lib/db";
-import { userTable } from "@/lib/db/schema";
+import { polytoriaUserTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
@@ -89,44 +94,74 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         return <div>Loading...</div>;
     }
 
-    const [linkedResponse, linkedSiteUser] = await Promise.all([
-        fetch(`https://api.polytoria.com/v1/users/${id}/linked`, {
-            headers: {
-                "User-Agent": USER_AGENT,
-            },
-            next: { revalidate: 300 },
-        }),
-        db.query.userTable.findFirst({
-            where: eq(userTable.polytoriaId, id),
-            columns: {
-                id: true,
-            },
-        }),
-    ]);
-
-    const linkedData = linkedResponse.ok ? await linkedResponse.json() : null;
-
-    const discordDisplay = linkedData?.discord?.username
-        ? linkedData.discord.discriminator && linkedData.discord.discriminator !== "0"
-            ? `${linkedData.discord.username}#${linkedData.discord.discriminator}`
-            : `@${linkedData.discord.username}`
-        : null;
+    // const linkedUser = await db.select().from(polytoriaUserTable).where(eq(polytoriaUserTable.id, id)).limit(1).execute().then(result => result[0]?.user);
+    const linkedUser = await db.query.polytoriaUserTable.findFirst({
+        where: eq(polytoriaUserTable.id, id),
+        with: {
+            user: true
+        }
+    });
+    console.log(linkedUser);
 
     return (
         <div className="space-y-4">
             <div className="flex justify-between flex-col md:flex-row gap-y-3">
                 <div className="flex gap-x-5">
                     <Image src={userData.thumbnail.icon} alt={userData.username} width={512} height={512} className="h-20 w-20 rounded-full border-2 border-primary p-2" />
-                    <div className="my-auto">
-                        <h1 className="font-semibold text-2xl">{userData.username}</h1>
-                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                            {linkedSiteUser ? <Badge variant="secondary">Linked on polytoria.trade</Badge> : null}
-                            {discordDisplay ? <Badge variant="outline">Discord: {discordDisplay}</Badge> : null}
-                        </div>
+                    <div className="my-auto flex flex-col">
+                        <h1 className="font-semibold text-2xl flex items-center gap-x-3">
+                            {userData.username}
+                            {linkedUser?.user && (
+                                <>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Check className="h-4 w-4 text-primary" />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom" className="text-center max-w-48">
+                                            <p>Linked</p>
+                                            <p className="font-medium text-xs text-muted-foreground">This user has verified their account on LOVE, using thier Discord account.</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    {linkedUser.user.role == "admin" && (
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                    <Hammer className="h-4 w-4 text-primary" />
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" className="text-center max-w-48">
+                                                <p>Admin</p>
+                                                <p className="font-medium text-xs text-muted-foreground">This user has administrative privileges, meaning they can manage the platform.</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    )}
+                                    {linkedUser.user.role == "developer" && (
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                    <Code className="h-4 w-4 text-primary" />
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" className="text-center max-w-48">
+                                                <p>Developer</p>
+                                                <p className="font-medium text-xs text-muted-foreground">This user is a developer, meaning they helped build the platform.</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    )}
+                                    {linkedUser.user.role == "editor" && (
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                    <Edit className="h-4 w-4 text-primary" />
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" className="text-center max-w-48">
+                                                <p>Editor</p>
+                                                <p className="font-medium text-xs text-muted-foreground">This user is an editor, meaning they help decide values for the platform.</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    )}
+                                </>
+                            )}
+                        </h1>
                         <div className="flex space-x-2">
-                            <h2 className="text-muted-foreground">Value: {formatNumber(userData.netWorth)}</h2>
+                            <p className="text-muted-foreground text-sm">Value: {formatNumber(userData.netWorth)}</p>
                             <div className="border-l border-border mx-1 h-3 my-auto"></div>
-                            <h2 className="text-muted-foreground">{formatRelativeTime(userData.lastSeenAt)}</h2>
+                            <h2 className="text-muted-foreground text-sm">{formatRelativeTime(userData.lastSeenAt)}</h2>
                         </div>
                     </div>
                 </div>
