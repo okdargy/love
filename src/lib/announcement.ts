@@ -90,4 +90,4 @@ export const setAnnouncementSettings = async (input: AnnouncementSettings): Prom
   return cache;
 };
 
-void initializeAnnouncementCache();
+

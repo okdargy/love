@@ -2,9 +2,9 @@
   "openapi": "3.1.1",
   "jsonSchemaDialect": "https://spec.openapis.org/oas/3.1/dialect/base",
   "info": {
-    "title": "Polytoria.trade API",
+    "title": "polytoria.trade API",
     "version": "1.0.0",
-    "description": "API for [polytoria.trade](https://polytoria.trade) — a trading platform for Polytoria items.\n\nThis API is built with [tRPC](https://trpc.io). Procedures mapped to their HTTP endpoints."
+    "description": "API for [polytoria.trade](https://polytoria.trade), not affiliated with Polytoria\n\nThis API is built with [tRPC](https://trpc.io). Procedures mapped to their HTTP endpoints."
   },
   "paths": {
     "/api/trpc/searchPlayers": {
