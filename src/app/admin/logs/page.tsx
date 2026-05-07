@@ -2,8 +2,7 @@
 
 import { trpc } from '@/app/_trpc/client';
 import Error from '@/components/Error';
-import { TRPCClientErrorLike } from "@trpc/client";
-import { BuildProcedure } from "@trpc/server";
+
 import { useEffect, useState } from 'react';
 import Image from "next/image"
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,7 @@ export default function AdminLogs() {
     const logsPerPage = 5;
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"query", any, any>> | null>(null);
+    const [error, setError] = useState<{ message: string } | null>(null);
     const [data, setData] = useState<ReturnType<typeof trpc.getAuditLogs.useMutation>['data']>({
         logs: [],
         totalPages: 0
@@ -66,7 +65,7 @@ export default function AdminLogs() {
 
     return (
         <div>
-            {getAuditLogs.isLoading ? (
+            {getAuditLogs.isPending ? (
                 <p>Loading...</p>
             ) : error ? (
                 <Error message={error.message} />

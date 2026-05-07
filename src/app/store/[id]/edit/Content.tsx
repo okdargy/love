@@ -11,11 +11,7 @@ export type Defined<T> = T extends undefined ? never : T;
 export type ItemInfo = Defined<inferProcedureOutput<AppRouter['getItemWithTags']>>;
 
 export default function Content({ id }: { id: number }) {
-    const itemInfo = trpc.getItemWithTags.useQuery(id, {
-        onError(err) {
-            console.error(err)
-        }
-    })
+    const itemInfo = trpc.getItemWithTags.useQuery(id);
 
     return (
         <main>

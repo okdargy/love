@@ -70,7 +70,7 @@ export default function Page() {
 
     const isLinked = connectionStatus.data?.linked;
     const linkedAccount = connectionStatus.data?.account;
-    const isBusy = initConnection.isLoading || unlinkConnection.isLoading;
+    const isBusy = initConnection.isPending || unlinkConnection.isPending;
 
     return (
         <div className="space-y-6 mx-auto">

@@ -8,15 +8,14 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { TRPCClientErrorLike } from "@trpc/client";
-import type { BuildProcedure } from "@trpc/server";
+
 
 export default function AdminHome() {
   const [enabled, setEnabled] = useState(false);
   const [message, setMessage] = useState("");
   const [initialEnabled, setInitialEnabled] = useState(false);
   const [initialMessage, setInitialMessage] = useState("");
-  const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
+  const [error, setError] = useState<{ message: string } | null>(null);
 
   const getAnnouncement = trpc.getAdminAnnouncementSettings.useMutation({
     onSuccess: (data) => {
@@ -60,7 +59,7 @@ export default function AdminHome() {
     });
   };
 
-  if (getAnnouncement.isLoading) {
+  if (getAnnouncement.isPending) {
     return <p>Loading announcement settings...</p>;
   }
 
@@ -100,8 +99,8 @@ export default function AdminHome() {
           <p className="text-xs text-muted-foreground">{message.length}/500</p>
         </div>
 
-        <Button onClick={handleSave} disabled={!hasChanges || updateAnnouncement.isLoading}>
-          {updateAnnouncement.isLoading ? "Saving..." : "Save"}
+        <Button onClick={handleSave} disabled={!hasChanges || updateAnnouncement.isPending}>
+          {updateAnnouncement.isPending ? "Saving..." : "Save"}
         </Button>
       </div>
     </div>

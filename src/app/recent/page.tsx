@@ -58,7 +58,7 @@ export default function Recent() {
             </div>
 
             <div className="border border-border p-4 rounded-lg shadow-md">
-                {recent.isLoading ? (
+                {recent.isPending ? (
                     <div className="flex justify-center items-center h-64">
                         <Spinner width="24" height="24" className="fill-primary" />
                     </div>

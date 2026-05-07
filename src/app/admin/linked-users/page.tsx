@@ -5,8 +5,7 @@ import Error from "@/components/Error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDateWithFallback } from "@/lib/utils";
-import type { TRPCClientErrorLike } from "@trpc/client";
-import type { BuildProcedure } from "@trpc/server";
+
 import { useEffect, useState } from "react";
 
 type LinkedUser = NonNullable<ReturnType<typeof trpc.getAdminLinkedUsers.useMutation>["data"]>["linkedUsers"][number];
@@ -18,7 +17,7 @@ export default function AdminLinkedUsers() {
     const [searchQuery, setSearchQuery] = useState("");
     const [linkedUsers, setLinkedUsers] = useState<LinkedUser[]>([]);
     const [totalPages, setTotalPages] = useState(0);
-    const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
+    const [error, setError] = useState<{ message: string } | null>(null);
 
     const fetchUsers = (page: number, query?: string) => {
         getUsers.mutate({ page, total: perPage, query });
@@ -56,7 +55,7 @@ export default function AdminLinkedUsers() {
         }
     };
 
-    if (getUsers.isLoading) {
+    if (getUsers.isPending) {
         return <p>Loading linked users...</p>;
     }
 

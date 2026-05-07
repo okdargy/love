@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/pagination"
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { TRPCClientErrorLike } from "@trpc/client";
-import { BuildProcedure } from "@trpc/server";
+
 import Error from "@/components/Error";
 import { SlidersHorizontal } from "lucide-react";
 import { Popover } from "@radix-ui/react-popover";
@@ -99,7 +98,7 @@ export default function Home() {
     totalPages: 0,
     allTags: [],
   });
-  const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"query", any, any>> | null>(null);
+  const [error, setError] = useState<{ message: string } | null>(null);
   const [filters, setFilters] = useState(() => parseFiltersFromParams(searchParams));
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");

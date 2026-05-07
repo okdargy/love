@@ -2,8 +2,7 @@
 
 import { trpc } from "@/app/_trpc/client";
 import { useState } from "react";
-import { TRPCClientErrorLike } from "@trpc/client";
-import { BuildProcedure } from "@trpc/server";
+
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -41,7 +40,7 @@ export default function Form({ data }: { data: ItemInfo }) {
     const router = useRouter();
     const stats = Array.isArray(data.item.stats) ? data.item.stats[0] : data.item.stats;
 
-    const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
+    const [error, setError] = useState<{ message: string } | null>(null);
     const [loading, setLoading] = useState(false);
     
     // State for value change alert

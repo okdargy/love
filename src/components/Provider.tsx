@@ -22,7 +22,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
     }
   }));
   
-  const [trpcClient] = useState(
+  const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [
         httpBatchLink({

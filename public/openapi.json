@@ -1,0 +1,2013 @@
+{
+  "openapi": "3.1.1",
+  "jsonSchemaDialect": "https://spec.openapis.org/oas/3.1/dialect/base",
+  "info": {
+    "title": "Polytoria.trade API",
+    "version": "1.0.0",
+    "description": "API for [polytoria.trade](https://polytoria.trade) — a trading platform for Polytoria items.\n\nThis API is built with [tRPC](https://trpc.io). Procedures mapped to their HTTP endpoints."
+  },
+  "paths": {
+    "/api/trpc/searchPlayers": {
+      "post": {
+        "operationId": "searchPlayers",
+        "tags": [
+          "Players"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "number"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "username",
+                              "thumbnailUrl"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "summary": "Search players by username"
+      }
+    },
+    "/api/trpc/searchItems": {
+      "post": {
+        "operationId": "searchItems",
+        "tags": [
+          "Items"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "number"
+                              },
+                              "shorthand": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "type": "number"
+                              },
+                              "updated_at": {
+                                "type": "number"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "price": {
+                                "type": "number"
+                              },
+                              "recentAverage": {
+                                "type": "number"
+                              },
+                              "stock": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "id",
+                              "shorthand",
+                              "name",
+                              "created_at",
+                              "updated_at",
+                              "description",
+                              "thumbnailUrl",
+                              "price",
+                              "recentAverage",
+                              "stock"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "type": "number"
+                  },
+                  "offset": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "summary": "Search items by name or shorthand"
+      }
+    },
+    "/api/trpc/getItems": {
+      "post": {
+        "operationId": "getItems",
+        "tags": [
+          "Items"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "number"
+                              },
+                              "shorthand": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "type": "number"
+                              },
+                              "updated_at": {
+                                "type": "number"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "price": {
+                                "type": "number"
+                              },
+                              "recentAverage": {
+                                "type": "number"
+                              },
+                              "stock": {
+                                "type": "number"
+                              },
+                              "stats": {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "additionalProperties": {}
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "id",
+                              "shorthand",
+                              "name",
+                              "created_at",
+                              "updated_at",
+                              "description",
+                              "thumbnailUrl",
+                              "price",
+                              "recentAverage",
+                              "stock",
+                              "stats"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "number"
+                  },
+                  "offset": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "summary": "List items with pagination"
+      }
+    },
+    "/api/trpc/getItemsByPage": {
+      "post": {
+        "operationId": "getItemsByPage",
+        "tags": [
+          "Items"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "tags": {},
+                                  "stats": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {},
+                                      "value": {},
+                                      "demand": {},
+                                      "trend": {},
+                                      "funFact": {},
+                                      "created_at": {},
+                                      "updated_at": {}
+                                    },
+                                    "required": [
+                                      "id",
+                                      "value",
+                                      "demand",
+                                      "trend",
+                                      "funFact",
+                                      "created_at",
+                                      "updated_at"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  },
+                                  "price": {
+                                    "type": "number"
+                                  },
+                                  "stock": {
+                                    "type": "number"
+                                  },
+                                  "created_at": {
+                                    "type": "number"
+                                  },
+                                  "updated_at": {
+                                    "type": "number"
+                                  },
+                                  "id": {
+                                    "type": "number"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "shorthand": {
+                                    "type": "string"
+                                  },
+                                  "thumbnailUrl": {
+                                    "type": "string"
+                                  },
+                                  "recentAverage": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "tags",
+                                  "stats",
+                                  "id",
+                                  "name",
+                                  "shorthand",
+                                  "thumbnailUrl",
+                                  "recentAverage"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "totalPages": {
+                              "type": "number"
+                            },
+                            "allTags": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "number"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "emoji": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "emoji"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "items",
+                            "totalPages",
+                            "allTags"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "number"
+                  },
+                  "total": {
+                    "type": "number"
+                  },
+                  "search": {
+                    "type": "string"
+                  },
+                  "homepage": {
+                    "type": "boolean"
+                  },
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "sortBy": {
+                        "type": "string"
+                      },
+                      "order": {
+                        "type": "string"
+                      },
+                      "types": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "summary": "Browse items with filters and sorting"
+      }
+    },
+    "/api/trpc/getItem": {
+      "get": {
+        "operationId": "getItem",
+        "tags": [
+          "Items"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "number"
+                            },
+                            "shorthand": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "number"
+                            },
+                            "updated_at": {
+                              "type": "number"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "thumbnailUrl": {
+                              "type": "string"
+                            },
+                            "price": {
+                              "type": "number"
+                            },
+                            "recentAverage": {
+                              "type": "number"
+                            },
+                            "stock": {
+                              "type": "number"
+                            },
+                            "tags": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {}
+                              }
+                            },
+                            "stats": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "additionalProperties": {}
+                                },
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "id",
+                            "shorthand",
+                            "name",
+                            "created_at",
+                            "updated_at",
+                            "description",
+                            "thumbnailUrl",
+                            "price",
+                            "recentAverage",
+                            "stock",
+                            "tags",
+                            "stats"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "required": true,
+            "style": "deepObject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "summary": "Get item details by ID"
+      }
+    },
+    "/api/trpc/getItemWithTags": {
+      "get": {
+        "operationId": "getItemWithTags",
+        "tags": [
+          "Items"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "item": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "type": "number"
+                                },
+                                "shorthand": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "created_at": {
+                                  "type": "number"
+                                },
+                                "updated_at": {
+                                  "type": "number"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "thumbnailUrl": {
+                                  "type": "string"
+                                },
+                                "price": {
+                                  "type": "number"
+                                },
+                                "recentAverage": {
+                                  "type": "number"
+                                },
+                                "stock": {
+                                  "type": "number"
+                                },
+                                "tags": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                  }
+                                },
+                                "stats": {
+                                  "oneOf": [
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": {}
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "additionalProperties": {}
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id",
+                                "shorthand",
+                                "name",
+                                "created_at",
+                                "updated_at",
+                                "description",
+                                "thumbnailUrl",
+                                "price",
+                                "recentAverage",
+                                "stock",
+                                "tags",
+                                "stats"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "allTags": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "number"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "emoji": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "emoji"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "latestListing": {
+                              "type": "object",
+                              "properties": {
+                                "created_at": {
+                                  "type": "number"
+                                },
+                                "bestPrice": {
+                                  "type": "number"
+                                },
+                                "sellers": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "created_at",
+                                "bestPrice",
+                                "sellers"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "item",
+                            "allTags",
+                            "latestListing"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "required": true,
+            "style": "deepObject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "summary": "Get item with tags and latest listing"
+      }
+    },
+    "/api/trpc/searchTags": {
+      "post": {
+        "operationId": "searchTags",
+        "tags": [
+          "Tags"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "tags": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "number"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "emoji": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "emoji"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "totalPages": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "tags",
+                            "totalPages"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "number"
+                  },
+                  "total": {
+                    "type": "number"
+                  },
+                  "query": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "summary": "Search available tags"
+      }
+    },
+    "/api/trpc/getSerialHistory": {
+      "get": {
+        "operationId": "getSerialHistory",
+        "tags": [
+          "Trade History"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "history": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "number"
+                                  },
+                                  "userId": {
+                                    "type": "number"
+                                  },
+                                  "serial": {
+                                    "type": "number"
+                                  },
+                                  "username": {
+                                    "type": "string"
+                                  },
+                                  "itemId": {
+                                    "type": "number"
+                                  },
+                                  "created_at": {
+                                    "type": "number"
+                                  },
+                                  "isFirst": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "userId",
+                                  "serial",
+                                  "username",
+                                  "itemId",
+                                  "created_at",
+                                  "isFirst"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "itemInfo": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "type": "number"
+                                },
+                                "shorthand": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "created_at": {
+                                  "type": "number"
+                                },
+                                "updated_at": {
+                                  "type": "number"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "thumbnailUrl": {
+                                  "type": "string"
+                                },
+                                "price": {
+                                  "type": "number"
+                                },
+                                "recentAverage": {
+                                  "type": "number"
+                                },
+                                "stock": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id",
+                                "shorthand",
+                                "name",
+                                "created_at",
+                                "updated_at",
+                                "description",
+                                "thumbnailUrl",
+                                "price",
+                                "recentAverage",
+                                "stock"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "history",
+                            "itemInfo"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "required": true,
+            "style": "deepObject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number"
+                    },
+                    "serial": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        ],
+        "summary": "Get trade history for a specific serial"
+      }
+    },
+    "/api/trpc/getRecentItemHistory": {
+      "get": {
+        "operationId": "getRecentItemHistory",
+        "tags": [
+          "Trade History"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "number"
+                              },
+                              "userId": {
+                                "type": "number"
+                              },
+                              "serial": {
+                                "type": "number"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "itemId": {
+                                "type": "number"
+                              },
+                              "created_at": {
+                                "type": "number"
+                              },
+                              "isFirst": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "userId",
+                              "serial",
+                              "username",
+                              "itemId",
+                              "created_at",
+                              "isFirst"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "required": true,
+            "style": "deepObject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "summary": "Get recent trades for an item"
+      }
+    },
+    "/api/trpc/getAllRecentHistory": {
+      "post": {
+        "operationId": "getAllRecentHistory",
+        "tags": [
+          "Trade History"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "number"
+                              },
+                              "userId": {
+                                "type": "number"
+                              },
+                              "serial": {
+                                "type": "number"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "itemId": {
+                                "type": "number"
+                              },
+                              "created_at": {
+                                "type": "number"
+                              },
+                              "isFirst": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "userId",
+                              "serial",
+                              "username",
+                              "itemId",
+                              "created_at",
+                              "isFirst"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "number"
+                  },
+                  "offset": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "summary": "Get recent trade history feed"
+      }
+    },
+    "/api/trpc/getUsersLatestHistory": {
+      "get": {
+        "operationId": "getUsersLatestHistory",
+        "tags": [
+          "Trade History"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "number"
+                              },
+                              "userId": {
+                                "type": "number"
+                              },
+                              "serial": {
+                                "type": "number"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "itemId": {
+                                "type": "number"
+                              },
+                              "created_at": {
+                                "type": "number"
+                              },
+                              "isFirst": {
+                                "type": "boolean"
+                              },
+                              "item": {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "additionalProperties": {}
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "userId",
+                              "serial",
+                              "username",
+                              "itemId",
+                              "created_at",
+                              "isFirst",
+                              "item"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "required": true,
+            "style": "deepObject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "summary": "Get recent trades for a user"
+      }
+    },
+    "/api/trpc/getUserConnectionStatus": {
+      "get": {
+        "operationId": "getUserConnectionStatus",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "linked": {
+                              "type": "boolean"
+                            },
+                            "account": {
+                              "type": "object",
+                              "properties": {
+                                "id": {},
+                                "username": {},
+                                "thumbnailUrl": {}
+                              },
+                              "required": [
+                                "id",
+                                "username",
+                                "thumbnailUrl"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "linked",
+                            "account"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "summary": "Check linked Polytoria account"
+      }
+    },
+    "/api/trpc/unlinkUserConnection": {
+      "post": {
+        "operationId": "unlinkUserConnection",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "success": {
+                              "type": "boolean"
+                            },
+                            "message": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "success",
+                            "message"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "summary": "Unlink Polytoria account"
+      }
+    },
+    "/api/trpc/initializeUserConnection": {
+      "post": {
+        "operationId": "initializeUserConnection",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "polytoriaUsername": {},
+                            "polytoriaUserId": {},
+                            "message": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "polytoriaUsername",
+                            "polytoriaUserId",
+                            "message"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "summary": "Link a Polytoria account"
+      }
+    },
+    "/api/trpc/verifyUser": {
+      "post": {
+        "operationId": "verifyUser",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "not": {}
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "summary": "Verify user (deprecated)"
+      }
+    },
+    "/api/trpc/setUserInventoryNotForSale": {
+      "post": {
+        "operationId": "setUserInventoryNotForSale",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "success": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "success"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "itemId": {
+                    "type": "number"
+                  },
+                  "notForSale": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "summary": "Toggle item for-sale status"
+      }
+    },
+    "/api/trpc/searchCalculatorItems": {
+      "post": {
+        "operationId": "searchCalculatorItems",
+        "tags": [
+          "Calculator"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "number"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "shorthand": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "recentAverage": {
+                                "type": "number"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "shorthand",
+                              "thumbnailUrl",
+                              "recentAverage",
+                              "value"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "type": "number"
+                  },
+                  "offset": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "summary": "Search items for calculator"
+      }
+    },
+    "/api/trpc/getTopValueItems": {
+      "get": {
+        "operationId": "getTopValueItems",
+        "tags": [
+          "Items"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "number"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "shorthand": {
+                                "type": "string"
+                              },
+                              "thumbnailUrl": {
+                                "type": "string"
+                              },
+                              "recentAverage": {
+                                "type": "number"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "shorthand",
+                              "thumbnailUrl",
+                              "recentAverage",
+                              "value"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "required": true,
+            "style": "deepObject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "limit": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        ],
+        "summary": "Get highest-value items"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnnouncementSettings": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "DefaultErrorShape": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "number",
+            "enum": [
+              -32700,
+              -32600,
+              -32603,
+              -32001,
+              -32002,
+              -32003,
+              -32004,
+              -32005,
+              -32008,
+              -32009,
+              -32012,
+              -32013,
+              -32015,
+              -32022,
+              -32028,
+              -32029,
+              -32099
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/DefaultErrorData"
+          }
+        },
+        "required": [
+          "message",
+          "code",
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "DefaultErrorData": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "PARSE_ERROR",
+              "BAD_REQUEST",
+              "INTERNAL_SERVER_ERROR",
+              "NOT_IMPLEMENTED",
+              "BAD_GATEWAY",
+              "SERVICE_UNAVAILABLE",
+              "GATEWAY_TIMEOUT",
+              "UNAUTHORIZED",
+              "PAYMENT_REQUIRED",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "METHOD_NOT_SUPPORTED",
+              "TIMEOUT",
+              "CONFLICT",
+              "PRECONDITION_FAILED",
+              "PAYLOAD_TOO_LARGE",
+              "UNSUPPORTED_MEDIA_TYPE",
+              "UNPROCESSABLE_CONTENT",
+              "PRECONDITION_REQUIRED",
+              "TOO_MANY_REQUESTS",
+              "CLIENT_CLOSED_REQUEST"
+            ]
+          },
+          "httpStatus": {
+            "type": "number"
+          },
+          "path": {
+            "type": "string"
+          },
+          "stack": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "httpStatus"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Error response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "$ref": "#/components/schemas/DefaultErrorShape"
+                }
+              },
+              "required": [
+                "error"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Players",
+      "description": "Player search"
+    },
+    {
+      "name": "Items",
+      "description": "Item queries and search"
+    },
+    {
+      "name": "Tags",
+      "description": "Tag management"
+    },
+    {
+      "name": "Trade History",
+      "description": "Trade history and transaction data"
+    },
+    {
+      "name": "Users",
+      "description": "User account management"
+    },
+    {
+      "name": "Calculator",
+      "description": "Value calculator operations"
+    }
+  ]
+}

@@ -431,13 +431,13 @@ export default function CalculatorPage() {
                     </Button>
                 </div>
 
-                {(searchItems.isLoading || topValueItems.isLoading) && (
+                {(searchItems.isPending || topValueItems.isLoading) && (
                     <div className="flex justify-center p-8">
                         <Spinner width="24" height="24" className="fill-primary" />
                     </div>
                 )}
 
-                {!searchItems.isLoading && !topValueItems.isLoading && (
+                {!searchItems.isPending && !topValueItems.isLoading && (
                     <>
                         {searchResults && searchResults.length > 0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

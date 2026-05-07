@@ -15,7 +15,7 @@ import {
     SidebarMenuItem,
     SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { CalculatorIcon, ClockIcon, Cog, HomeIcon, LogInIcon, LogOut, NewspaperIcon, Wrench } from 'lucide-react';
+import { BookOpenText, CalculatorIcon, ClockIcon, Cog, HomeIcon, LogInIcon, LogOut, NewspaperIcon, Wrench } from 'lucide-react';
 import { LoveIcon } from "@/components/icons";
 import PlayerSearch from "./PlayerSearch";
 import ThemeToggle from "./ThemeToggle";
@@ -25,6 +25,7 @@ const NAV_LINKS = [
     { href: "/calculator", label: "Calculator", icon: CalculatorIcon },
     { href: "/recent", label: "Recent", icon: ClockIcon },
     { href: "/blog", label: "Blog", icon: NewspaperIcon },
+    { href: "/docs", label: "API Docs", icon: BookOpenText },
 ];
 
 async function logout(): Promise<void> {

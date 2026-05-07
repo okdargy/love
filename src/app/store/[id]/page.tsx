@@ -63,17 +63,9 @@ export default function Page() {
 
   const id = parseInt(pathname.id);
 
-  const itemInfo = trpc.getItemWithTags.useQuery(id, {
-    onError(err) {
-      console.error(err)
-    }
-  });
+  const itemInfo = trpc.getItemWithTags.useQuery(id);
 
-  const itemGraph = trpc.getItemGraph.useQuery(id, {
-    onError(err) {
-      console.error(err)
-    }
-  });
+  const itemGraph = trpc.getItemGraph.useQuery(id);
 
   const itemStats = itemInfo.data
     ? (Array.isArray(itemInfo.data.item.stats) ? itemInfo.data.item.stats[0] : itemInfo.data.item.stats)

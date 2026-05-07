@@ -7,6 +7,7 @@ import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 import type { User } from "lucia";
 import { USER_AGENT } from "@/lib/utils";
+import { cachedFetch } from "@/lib/redis";
 import { getAnnouncementSettings, setAnnouncementSettings } from "@/lib/announcement";
 
 const sanitizeSearchInput = (input: string | undefined) => {
@@ -265,19 +266,6 @@ export const appRouter = router({
     }),
     getItem: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         return await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, opts.input), with: { stats: true, tags: true } });
-    }),
-    getMetadataItem: publicProcedure.input(z.number().min(1)).mutation(async (opts) => {
-        const item = await db.query.collectablesTable.findFirst({
-            where: eq(collectablesTable.id, opts.input),
-            columns: {
-                id: true,
-                name: true,
-                description: true,
-                thumbnailUrl: true,
-            }
-        });
-
-        return (item ? item : {})
     }),
     getItemWithTags: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         try {
@@ -725,80 +713,76 @@ export const appRouter = router({
     }),
     getAllItemOwners: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         const id = opts.input;
-        
-        let allOwners: Inventory[] = [];
-        let page = 1;
-        let hasMore = true;
-    
-        do {
-            try {
-                const response = await fetch(`https://api.polytoria.com/v1/store/${id}/owners?limit=100&page=${page}`, {
-                    headers: {
-                        "User-Agent": USER_AGENT
+
+        const fetchOwners = async () => {
+            let allOwners: Inventory[] = [];
+            let page = 1;
+            let hasMore = true;
+
+            do {
+                try {
+                    const response = await fetch(`https://api.polytoria.com/v1/store/${id}/owners?limit=100&page=${page}`, {
+                        headers: {
+                            "User-Agent": USER_AGENT
+                        }
+                    });
+
+                    if (!response.ok) {
+                        console.error(`API request failed with status ${response.status}: ${response.statusText}`);
+
+                        if (response.status === 403 || response.status === 404) {
+                            console.warn(`Item ${id} owners data is not accessible (${response.status}). Returning empty results.`);
+                            break;
+                        }
+
+                        throw new Error(`Error fetching data: ${response.statusText}`);
                     }
-                });
-                
-                // Check if the response is not OK
-                if (!response.ok) {
-                    console.error(`API request failed with status ${response.status}: ${response.statusText}`);
-                    
-                    // If it's a 403/Forbidden or 404, break the loop instead of continuing
-                    if (response.status === 403 || response.status === 404) {
-                        console.warn(`Item ${id} owners data is not accessible (${response.status}). Returning empty results.`);
+
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.error(`Expected JSON but received ${contentType}`);
+                        const text = await response.text();
+                        console.error(`Response body: ${text.substring(0, 200)}...`);
                         break;
                     }
-                    
-                    throw new Error(`Error fetching data: ${response.statusText}`);
-                }
 
-                // Check content type to ensure we're getting JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    console.error(`Expected JSON but received ${contentType}`);
-                    const text = await response.text();
-                    console.error(`Response body: ${text.substring(0, 200)}...`);
-                    break;
-                }
-    
-                const data: OwnersResponse = await response.json();
-    
-                // Validate the response structure
-                if (!data.inventories || !Array.isArray(data.inventories)) {
-                    console.error(`Invalid response structure:`, data);
-                    break;
-                }
+                    const data: OwnersResponse = await response.json();
 
-                if (data.inventories.length === 0) {
-                    break;
+                    if (!data.inventories || !Array.isArray(data.inventories)) {
+                        console.error(`Invalid response structure:`, data);
+                        break;
+                    }
+
+                    if (data.inventories.length === 0) {
+                        break;
+                    }
+
+                    allOwners.push(...data.inventories);
+                    hasMore = page < (data.pages || 1);
+                    page++;
+
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                } catch (error) {
+                    console.error(`Failed to fetch owners on page ${page}:`, error);
+                    hasMore = false;
                 }
-    
-                allOwners.push(...data.inventories);
+            } while (hasMore);
 
-                hasMore = page < (data.pages || 1);
-                page++;
+            const ownerMap: { [key: string]: { username: string; id: number; serials: number[] } } = {};
 
-                // Add a small delay to avoid rate limiting
-                await new Promise(resolve => setTimeout(resolve, 100));
-            } catch (error) {
-                console.error(`Failed to fetch owners on page ${page}:`, error);
-                hasMore = false;
-            }
-        } while (hasMore);
-    
-        const ownerMap: { [key: string]: { username: string; id: number; serials: number[] } } = {};
-    
-        allOwners.forEach(inventory => {
-            const owner = inventory.user;
-            
-            if (!ownerMap[owner.id]) {
-                ownerMap[owner.id] = { username: owner.username, id: owner.id, serials: [] };
-            }
-            ownerMap[owner.id].serials.push(inventory.serial);
-        });
-    
-        const sortedOwners = Object.values(ownerMap).sort((a, b) => b.serials.length - a.serials.length);
-    
-        return sortedOwners;
+            allOwners.forEach(inventory => {
+                const owner = inventory.user;
+
+                if (!ownerMap[owner.id]) {
+                    ownerMap[owner.id] = { username: owner.username, id: owner.id, serials: [] };
+                }
+                ownerMap[owner.id].serials.push(inventory.serial);
+            });
+
+            return Object.values(ownerMap).sort((a, b) => b.serials.length - a.serials.length);
+        };
+
+        return cachedFetch(`owners:${id}`, 120, fetchOwners);
     }),
     getSerialHistory: publicProcedure.input(z.object({
         id: z.number().min(1),
@@ -868,12 +852,14 @@ export const appRouter = router({
     }),
     getItemGraph: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         try {
-            const res = await fetch("https://polytoria.com/api/store/price-data/" + opts.input, {
-                headers: {
-                    "User-Agent": USER_AGENT
-                }
+            const json = await cachedFetch(`pricedata:${opts.input}`, 120, async () => {
+                const res = await fetch("https://polytoria.com/api/store/price-data/" + opts.input, {
+                    headers: {
+                        "User-Agent": USER_AGENT
+                    }
+                });
+                return await res.json();
             });
-            const json = await res.json();
 
             const listings = await db.query.listingsHistoryTable.findMany({
                 where: eq(listingsHistoryTable.itemId, opts.input),

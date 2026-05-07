@@ -12,8 +12,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { formatDateWithFallback } from "@/lib/utils";
-import type { TRPCClientErrorLike } from "@trpc/client";
-import type { BuildProcedure } from "@trpc/server";
+
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -33,7 +32,7 @@ export default function AdminUsers() {
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [totalPages, setTotalPages] = useState(0);
     const [pendingRoles, setPendingRoles] = useState<Record<string, UserRole>>({});
-    const [error, setError] = useState<TRPCClientErrorLike<BuildProcedure<"mutation", any, any>> | null>(null);
+    const [error, setError] = useState<{ message: string } | null>(null);
 
     const fetchUsers = (page: number, query?: string) => {
         getUsers.mutate({
@@ -113,7 +112,7 @@ export default function AdminUsers() {
         toast.success("User role updated");
     };
 
-    if (getUsers.isLoading) {
+    if (getUsers.isPending) {
         return <p>Loading users...</p>;
     }
 
@@ -140,7 +139,7 @@ export default function AdminUsers() {
                     {users.map((user) => {
                         const selectedRole = pendingRoles[user.id] ?? (user.role as UserRole);
                         const mutationVariables = updateUserRole.variables as { userId: string; role: UserRole } | undefined;
-                        const isSavingThisRow = updateUserRole.isLoading && mutationVariables?.userId === user.id;
+                        const isSavingThisRow = updateUserRole.isPending && mutationVariables?.userId === user.id;
 
                         return (
                             <div key={user.id} className="border border-neutral-100/10 rounded-lg p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
