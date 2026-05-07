@@ -84,7 +84,7 @@ async function main() {
     join(process.cwd(), "src/server/index.ts"),
     {
       exportName: "appRouter",
-      title: "Polytoria.trade API",
+      title: "polytoria.trade API",
       version: "1.0.0",
     },
   );
@@ -128,10 +128,10 @@ async function main() {
   doc.tags = tags;
 
   doc.info = {
-    title: "Polytoria.trade API",
+    title: "polytoria.trade API",
     version: "1.0.0",
     description:
-      "API for [polytoria.trade](https://polytoria.trade) \u2014 a trading platform for Polytoria items.\n\nThis API is built with [tRPC](https://trpc.io). Procedures mapped to their HTTP endpoints.",
+      "API for [polytoria.trade](https://polytoria.trade), not affiliated with Polytoria\n\nThis API is built with [tRPC](https://trpc.io). Procedures mapped to their HTTP endpoints.",
   };
 
   const outputPath = join(process.cwd(), "public/openapi.json");
