@@ -40,22 +40,28 @@ cp .env.example .env
 Then, install the necessary dependencies with the package manager of your choosing:
 
 ```bash
-pnpm install
+bun install
 ```
 
 You need to then push the SQL schema to your database:
 
 ```bash
-pnpm run db:push
+bun run db:push
 ```
 
 Finally, either build for production or start a dev server:
 
 ```bash
 # Production
-pnpm run build
-pnpm run start
+bun run build
+bun run start
 
 # Development
-pnpm run dev
+bun run dev
 ```
+
+Then, if you want to start importing data, run the injestor: 
+```
+bun run injestor
+```
+-# (yes, I know it's spelled ingestor, the joke is jestor.. jester.. nvm)

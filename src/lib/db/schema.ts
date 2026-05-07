@@ -200,3 +200,19 @@ export const playerNetworthHistoryRelations = relations(playerNetworthHistoryTab
 		references: [playersTable.id],
 	})
 }));
+
+export const playerValueHistoryTable = pgTable("player_value_history", {
+	id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+	playerId: integer("playerId").notNull().references(() => playersTable.id),
+	totalValue: bigint("totalValue", { mode: 'number' }).notNull(),
+	createdAt: bigint("created_at", { mode: 'number' }).notNull().default(nowEpochMs),
+}, (table) => [
+	index("player_value_history_player_id_index").on(table.playerId),
+]);
+
+export const playerValueHistoryRelations = relations(playerValueHistoryTable, ({ one }) => ({
+	player: one(playersTable, {
+		fields: [playerValueHistoryTable.playerId],
+		references: [playersTable.id],
+	})
+}));

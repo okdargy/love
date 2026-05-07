@@ -4,10 +4,10 @@ import { ldb } from "./db";
 import { db } from "@/lib/db";
 
 import { itemsTable, serialsTable } from "./db/schema";
-import { collectablesTable, collectablesStatsTable, listingsHistoryTable, tradeHistoryTable, playersTable, playerNetworthHistoryTable } from "@/lib/db/schema";
+import { collectablesTable, collectablesStatsTable, listingsHistoryTable, tradeHistoryTable, playersTable, playerNetworthHistoryTable, playerValueHistoryTable } from "@/lib/db/schema";
 
 import { APIItem, Inventory, Item, ListingsAPIResponse, RankingEntry, WebsiteItem } from "./types";
-import { getAPIItems, getListings, getOwners, getRankings, getWebsiteItems } from "./api";
+import { getAPIItems, getListings, getOwners, getRankings, getUser, getWebsiteItems } from "./api";
 import { helpfulPrint, processDeal, processTrade, sendTradeWebhooks, type TradeHistoryWithItem } from "./utils";
 
 const INTERVALS = {
@@ -191,6 +191,22 @@ async function handleRankingsData(players: RankingEntry[]) {
     ).onConflictDoNothing();
     
 }   
+
+async function fetchAndStorePlayerValue(playerId: number) {
+    const userData = await getUser(playerId);
+    if (!userData) return;
+
+    await db.insert(playersTable).values({
+        id: playerId,
+        username: userData.username,
+        thumbnailUrl: userData.thumbnail,
+    }).onConflictDoNothing();
+
+    await db.insert(playerValueHistoryTable).values({
+        playerId,
+        totalValue: userData.netWorth,
+    });
+}
 
 async function insertNewItems(values: MergedItem[]) {
     if(values.length === 0) return;
@@ -449,6 +465,7 @@ class ItemCycleManager {
         }
 
         await this.processAccumulatedTrades();
+        await this.processPlayerValueUpdates();
 
         helpfulPrint(`Cycle complete in \`${Date.now() - startTime}ms\` with **${itemsCompleted}/${localItems.length}** items processed`);
         if (this.looping) {
@@ -532,6 +549,23 @@ class ItemCycleManager {
         if (tradeEmbeds.length > 0) {
             await sendTradeWebhooks(tradeEmbeds);
             helpfulPrint(`Sent ${tradeEmbeds.length} trade webhooks in batches`, "INFO", true);
+        }
+    }
+
+    private async processPlayerValueUpdates() {
+        if (this.tradeAccumulator.length === 0) return;
+
+        const userIds = new Set<number>();
+        for (const trade of this.tradeAccumulator) {
+            userIds.add(trade.userId);
+            if (trade.oldUserId) userIds.add(trade.oldUserId);
+        }
+
+        helpfulPrint(`Updating networth for ${userIds.size} active players`, "INFO", true);
+
+        for (const userId of userIds) {
+            await fetchAndStorePlayerValue(userId);
+            await new Promise(resolve => setTimeout(resolve, INTERVALS.NEXT_PAGE));
         }
     }
 }

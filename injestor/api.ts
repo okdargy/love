@@ -102,5 +102,22 @@ export const getRankings = async (page: number = 1, limit: number = 100): Promis
     return apiRequest<RankingsResponse>(url);
 }
 
+/**
+ * Gets a user's profile data including net worth
+ *
+ * @param id - The user ID
+ * @returns User data including netWorth, username, thumbnail or null if request fails
+ */
+export const getUser = async (id: number): Promise<{ netWorth: number; username: string; thumbnail: string } | null> => {
+    const url = `${API_BASE_URL.POLYTORIA}/users/${id}`;
+    const data = await apiRequest<{ netWorth: number; username: string; thumbnail: { avatar: string } | null }>(url);
+    if (!data) return null;
+    return {
+        netWorth: data.netWorth ?? 0,
+        username: data.username,
+        thumbnail: data.thumbnail?.avatar ?? "https://cdn.polytoria.com/placeholders/avatars/pending.png",
+    };
+};
+
 // For legacy kitty, that keeps coming back for getItems(), those who know.
 export const getItems = getWebsiteItems;
