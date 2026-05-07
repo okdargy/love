@@ -4,7 +4,7 @@ const config = {
   spec: {
     url: "/openapi.json",
   },
-  pageTitle: "Polytoria.trade API Documentation",
+  pageTitle: "polytoria.trade API Documentation",
 };
 
 export const GET = ApiReference(config);

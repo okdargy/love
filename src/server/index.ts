@@ -7,7 +7,7 @@ import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 import type { User } from "lucia";
 import { USER_AGENT } from "@/lib/utils";
-import { cachedFetch } from "@/lib/redis";
+import { cachedFetch, rateLimit } from "@/lib/redis";
 import { getAnnouncementSettings, setAnnouncementSettings } from "@/lib/announcement";
 
 const sanitizeSearchInput = (input: string | undefined) => {
@@ -343,6 +343,8 @@ export const appRouter = router({
             throw new Error("You do not have permission to edit items");
         }
 
+        rateLimit(`editItemStats:${user.id}`, 30, 60000);
+
         const item = await db.query.collectablesTable.findFirst({ where: eq(collectablesTable.id, id), with: { tags: true, stats: true } });
 
         if (!item) {
@@ -543,6 +545,8 @@ export const appRouter = router({
             throw new Error("You do not have permission to update user roles");
         }
 
+        rateLimit(`updateUserRole:${user.id}`, 10, 60000);
+
         if (opts.input.userId === user.id) {
             throw new Error("You cannot update your own role");
         }
@@ -602,6 +606,8 @@ export const appRouter = router({
             throw new Error("You do not have permission to update announcement settings");
         }
 
+        rateLimit(`updateAnnouncement:${user.id}`, 10, 60000);
+
         const settings = await setAnnouncementSettings({
             enabled: opts.input.enabled,
             message: opts.input.message,
@@ -625,6 +631,8 @@ export const appRouter = router({
         if (!user || user.role !== "admin") {
             throw new Error("You do not have permission to add tags");
         }
+
+        rateLimit(`addTag:${user.id}`, 20, 60000);
 
         await db.transaction(async (tx) => {
             const { name, emoji } = opts.input;
@@ -668,7 +676,9 @@ export const appRouter = router({
 
         if (!user || user.role !== "admin") {
             throw new Error("You do not have permission to remove tags");
-        }  
+        }
+
+        rateLimit(`removeTag:${user.id}`, 20, 60000);
 
         await db.transaction(async (tx) => {
             await tx.delete(itemTagsTable).where(eq(itemTagsTable.tagId, opts.input));
@@ -696,6 +706,8 @@ export const appRouter = router({
         if (!user || user.role !== "admin") {
             throw new Error("You do not have permission to edit tags");
         }
+
+        rateLimit(`editTag:${user.id}`, 20, 60000);
 
         await db.transaction(async (tx) => {
             await tx.update(tagsTable).set(opts.input).where(eq(tagsTable.id, Number(opts.input.id)));
@@ -922,6 +934,8 @@ export const appRouter = router({
             throw new Error("You must be logged in to unlink a Polytoria account");
         }
 
+        rateLimit(`unlink:${user.id}`, 5, 60000);
+
         const currentUser = await db.query.userTable.findFirst({
             where: eq(userTable.id, user.id),
             columns: {
@@ -1102,6 +1116,8 @@ export const appRouter = router({
         if (!user || !user.polytoriaId) {
             throw new Error("You must link a Polytoria account first");
         }
+
+        rateLimit(`setNotForSale:${user.id}`, 30, 60000);
 
         try {
             await db

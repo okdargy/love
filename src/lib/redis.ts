@@ -8,15 +8,11 @@ function getRedis(): Redis | null {
   if (!REDIS_URL) return null;
   if (!redis) {
     redis = new Redis(REDIS_URL, {
-      lazyConnect: true,
       maxRetriesPerRequest: 3,
       retryStrategy(times) {
         if (times > 3) return null;
         return Math.min(times * 200, 2000);
       },
-    });
-    redis.on("error", () => {
-      redis = null;
     });
   }
   return redis;
@@ -24,7 +20,7 @@ function getRedis(): Redis | null {
 
 export async function cachedFetch<T>(
   key: string,
-  ttl: number, // in minutes
+  ttl: number,
   fetcher: () => Promise<T>,
 ): Promise<T> {
   const client = getRedis();
@@ -51,4 +47,19 @@ export async function cachedFetch<T>(
   }
 
   return data;
+}
+
+const rateLimits = new Map<string, number[]>();
+
+export function rateLimit(key: string, maxRequests: number, windowMs: number): void {
+  const now = Date.now();
+  const timestamps = rateLimits.get(key) || [];
+  const recent = timestamps.filter(t => now - t < windowMs);
+
+  if (recent.length >= maxRequests) {
+    throw new Error("Too many requests. Please try again later.");
+  }
+
+  recent.push(now);
+  rateLimits.set(key, recent);
 }
