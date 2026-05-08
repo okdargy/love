@@ -3,6 +3,7 @@ import { Listing } from "./types";
 import { db } from "@/lib/db";
 import { eq, InferSelectModel, inArray } from "drizzle-orm";
 import { existsSync, readFileSync } from "fs";
+import { broadcastDeal } from "./ws-server";
 
 const tags = await db.query.tagsTable.findMany();
 
@@ -70,6 +71,17 @@ export const processDeal = async (item: {
                 timestamp: date ? date.toISOString() : new Date().toISOString(),
             }
         ]
+    });
+
+    broadcastDeal({
+        id: item.id,
+        name: itemInfo.name,
+        thumbnailUrl: itemInfo.thumbnailUrl,
+        shorthand: itemInfo.shorthand ?? null,
+        oldPrice: item.bestPrice,
+        newPrice: listing.price,
+        discount: deal,
+        timestamp: (date ?? new Date()).toISOString(),
     });
 
     const res = await fetch(process.env.DEALS_WEBHOOK_URL!, {

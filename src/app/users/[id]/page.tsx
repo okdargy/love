@@ -16,47 +16,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { formatRelativeTime } from "@/lib/format-utils";
 
 const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-const formatRelativeTime = (dateString: string) => {
-    const date = parseDateInput(dateString);
-    if (!date) {
-        return 'Unknown activity';
-    }
-
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 0) {
-        return 'Unknown activity';
-    }
-    
-    switch (true) {
-        case diffInSeconds < 60:
-            return 'Just now';
-        
-        case diffInSeconds < 3600:
-            const minutes = Math.floor(diffInSeconds / 60);
-            return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
-        
-        case diffInSeconds < 86400:
-            const hours = Math.floor(diffInSeconds / 3600);
-            return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
-        
-        case diffInSeconds < 2592000:
-            const days = Math.floor(diffInSeconds / 86400);
-            return `${days} ${days === 1 ? 'day' : 'days'} ago`;
-        
-        case diffInSeconds < 31536000:
-            const months = Math.floor(diffInSeconds / 2592000);
-            return `${months} ${months === 1 ? 'month' : 'months'} ago`;
-        
-        default:
-            const years = Math.floor(diffInSeconds / 31536000);
-            return `${years} ${years === 1 ? 'year' : 'years'} ago`;
-    }
-};
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;

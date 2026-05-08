@@ -9,6 +9,7 @@ import { collectablesTable, collectablesStatsTable, listingsHistoryTable, tradeH
 import { APIItem, Inventory, Item, ListingsAPIResponse, RankingEntry, WebsiteItem } from "./types";
 import { getAPIItems, getListings, getOwners, getRankings, getUser, getWebsiteItems } from "./api";
 import { helpfulPrint, processDeal, processTrade, sendTradeWebhooks, type TradeHistoryWithItem } from "./utils";
+import { startWSServer } from "./ws-server";
 
 const INTERVALS = {
     NEW_ITEMS: 1000 * 60 * 5, // 5 minutes, checking for new items/deals
@@ -569,6 +570,9 @@ class ItemCycleManager {
         }
     }
 }
+
+const WS_PORT = parseInt(process.env.DEALS_WS_PORT || "3002");
+startWSServer(WS_PORT);
 
 const cycleManager = new ItemCycleManager();
 cycleManager.start();
