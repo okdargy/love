@@ -28,7 +28,7 @@ export const processDeal = async (item: {
     
     const itemInfo = await db.query.collectablesTable.findFirst({
         where: eq(collectablesTable.id, item.id),
-        with: { tags: true }
+        with: { tags: true, stats: true }
     });
 
     if(!itemInfo) return console.error(`Failed to find item ${item.id} in db, cannot post webhook`);
@@ -73,6 +73,11 @@ export const processDeal = async (item: {
         ]
     });
 
+    const dealTags = itemInfo.tags.map(t => {
+        const tag = tags.find(tag => tag.id === t.tagId);
+        return { tagId: t.tagId, emoji: tag?.emoji ?? null, name: tag?.name ?? null };
+    });
+
     broadcastDeal({
         id: item.id,
         name: itemInfo.name,
@@ -82,6 +87,9 @@ export const processDeal = async (item: {
         newPrice: listing.price,
         discount: deal,
         timestamp: (date ?? new Date()).toISOString(),
+        value: itemInfo.stats?.value ?? null,
+        tags: dealTags,
+        recentAverage: itemInfo.recentAverage ?? null,
     });
 
     const res = await fetch(process.env.DEALS_WEBHOOK_URL!, {

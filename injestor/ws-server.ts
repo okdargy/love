@@ -7,6 +7,9 @@ export interface DealPayload {
   newPrice: number;
   discount: number;
   timestamp: string;
+  value: number | null;
+  tags: { tagId: number }[];
+  recentAverage: number | null;
 }
 
 const MAX_DEALS = 100;

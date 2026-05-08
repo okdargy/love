@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/icons";
 import Image from "next/image";
-import Link from "next/link";
 import { Wifi, WifiOff, RefreshCw, Volume2, Settings2 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/format-utils";
 import {
@@ -25,6 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface DealTag {
+  tagId: number;
+  emoji?: string | null;
+  name?: string | null;
+}
+
 interface Deal {
   id: number;
   name: string;
@@ -34,6 +39,9 @@ interface Deal {
   newPrice: number;
   discount: number;
   timestamp: string;
+  value: number | null;
+  tags: DealTag[];
+  recentAverage: number | null;
 }
 
 type ConnectionState = "connecting" | "connected" | "disconnected";
@@ -281,11 +289,15 @@ export default function DealsPage() {
       {connectionState === "connected" && deals.length > 0 && (
         <div className="space-y-3">
           {deals.map((deal, i) => (
-            <Card
+            <a
               key={`${deal.id}-${deal.timestamp}-${i}`}
-              className="flex items-center gap-4 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
+              href={`https://polytoria.com/store/${deal.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
             >
-              <Link href={`/store/${deal.id}`} className="shrink-0">
+            <Card className="flex items-center gap-4 p-4 animate-in fade-in slide-in-from-top-2 duration-300 hover:border-primary transition-colors cursor-pointer">
+              <div className="shrink-0">
                 <Image
                   src={deal.thumbnailUrl}
                   alt={deal.name}
@@ -293,34 +305,61 @@ export default function DealsPage() {
                   height={64}
                   className="rounded-lg"
                 />
-              </Link>
+              </div>
               <div className="flex-1 min-w-0">
-                <Link href={`/store/${deal.id}`} className="hover:underline">
-                  <p className="font-semibold truncate">
-                    {deal.name}
-                    {deal.shorthand && (
-                      <span className="text-muted-foreground font-normal">
-                        {" "}({deal.shorthand})
-                      </span>
-                    )}
-                  </p>
-                </Link>
+                <p className="font-semibold truncate hover:underline">
+                  {deal.name}
+                  {deal.shorthand && (
+                    <span className="text-muted-foreground font-normal">
+                      {" "}({deal.shorthand})
+                    </span>
+                  )}
+                </p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-muted-foreground line-through text-sm">
-                    R${deal.oldPrice.toLocaleString()}
+                  <span className="text-muted-foreground line-through text-sm inline-flex items-center gap-1">
+                    <i className="pi pi-brick"></i>
+                    {deal.oldPrice.toLocaleString()}
                   </span>
-                  <span className="text-green-500 font-semibold">
-                    R${deal.newPrice.toLocaleString()}
+                  <span className="text-green-500 font-semibold inline-flex items-center gap-1">
+                    <i className="pi pi-brick"></i>
+                    {deal.newPrice.toLocaleString()}
                   </span>
                   <Badge variant="destructive" className="text-xs">
                     -{Math.round(deal.discount)}%
                   </Badge>
                 </div>
+                <div className="flex items-center gap-2 mt-1.5">
+                  {deal.value && (
+                    <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                      Value: <i className="pi pi-brick text-[#4F95E7]"></i>
+                      <span className="text-[#4F95E7]">{deal.value.toLocaleString()}</span>
+                    </span>
+                  )}
+                  {deal.recentAverage && (
+                    <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                      Avg: <i className="pi pi-brick text-[#4FE883]"></i>
+                      <span className="text-[#4FE883]">{deal.recentAverage.toLocaleString()}</span>
+                    </span>
+                  )}
+                </div>
+                {deal.tags.length > 0 && (
+                  <div className="flex items-center gap-1 mt-1.5">
+                    {deal.tags.map((tag) => (
+                      <span
+                        key={tag.tagId}
+                        className="text-xs bg-background/90 border border-border text-foreground rounded-md px-2 py-0.5"
+                      >
+                        {tag.emoji ?? tag.tagId}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="text-xs text-muted-foreground shrink-0 self-start pt-1">
                 {formatRelativeTime(deal.timestamp)}
               </div>
             </Card>
+            </a>
           ))}
         </div>
       )}
