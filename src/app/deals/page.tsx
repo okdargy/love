@@ -86,10 +86,12 @@ export default function DealsPage() {
     return "dargy";
   });
 
+  const [, setTick] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const soundThresholdRef = useRef(soundThreshold);
   const soundIdRef = useRef(soundId);
+  const audioCacheRef = useRef<Map<SoundId, HTMLAudioElement>>(new Map());
 
   soundThresholdRef.current = soundThreshold;
   soundIdRef.current = soundId;
@@ -121,7 +123,7 @@ export default function DealsPage() {
           const deal = data.deal as Deal;
           setDeals((prev) => [deal, ...prev]);
           if (soundThresholdRef.current > 0 && deal.discount >= soundThresholdRef.current) {
-            playDealSound(soundIdRef.current);
+            playDealSound(soundIdRef.current, audioCacheRef.current);
           }
         }
       } catch {}
@@ -147,6 +149,11 @@ export default function DealsPage() {
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
     };
   }, [connect]);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("deals-sound-threshold", String(soundThreshold));
@@ -249,7 +256,7 @@ export default function DealsPage() {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => playDealSound(soundId)}
+                  onClick={() => playDealSound(soundId, audioCacheRef.current)}
                 >
                   <Volume2 size={14} className="mr-2" />
                   Test Sound
@@ -367,12 +374,17 @@ export default function DealsPage() {
   );
 }
 
-function playDealSound(soundId: SoundId) {
+function playDealSound(soundId: SoundId, cache: Map<SoundId, HTMLAudioElement>) {
   try {
-    const sound = SOUND_OPTIONS.find((s) => s.value === soundId);
-    if (!sound) return;
-    const audio = new Audio(sound.file);
-    audio.volume = 0.5;
+    let audio = cache.get(soundId);
+    if (!audio) {
+      const sound = SOUND_OPTIONS.find((s) => s.value === soundId);
+      if (!sound) return;
+      audio = new Audio(sound.file);
+      audio.volume = 0.5;
+      cache.set(soundId, audio);
+    }
+    audio.currentTime = 0;
     audio.play();
   } catch {}
 }

@@ -87,7 +87,7 @@ export const processDeal = async (item: {
         newPrice: listing.price,
         discount: deal,
         timestamp: (date ?? new Date()).toISOString(),
-        value: itemInfo.stats?.value ?? null,
+        value: Array.isArray(itemInfo.stats) ? itemInfo.stats[0]?.value ?? null : itemInfo.stats?.value ?? null,
         tags: dealTags,
         recentAverage: itemInfo.recentAverage ?? null,
     });

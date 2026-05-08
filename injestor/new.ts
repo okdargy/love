@@ -12,9 +12,9 @@ import { helpfulPrint, processDeal, processTrade, sendTradeWebhooks, type TradeH
 import { startWSServer } from "./ws-server";
 
 const INTERVALS = {
-    NEW_ITEMS: 1000 * 60 * 5, // 5 minutes, checking for new items/deals
-    NEXT_PAGE: 5 * 1000, // 5 seconds, after getting one page, wait X amount of time (increased from 5s)
-    NEXT_ITEM: 30 * 1000, // 30 seconds, after getting one item, wait X amount of time (increased from 30s)
+    NEW_ITEMS: 1000 * 60 * 1, // 1 minute, checking for new items/deals
+    NEXT_PAGE: 5 * 1000, // 5 seconds, after getting one page, wait X amount of time 
+    NEXT_ITEM: 30 * 1000, // 30 seconds, after getting one item, wait X amount of time
     CYCLE: 1000 * 60 * 60, // 60 minutes, to wait after the entire item cycle (listinsHistory, tradeHistory) is done, indepedent from new items
     RANKINGS_UPDATE: 1000 * 60 * 12, // 12 hours, fetch newest networth rankings
 };
@@ -26,7 +26,7 @@ type NullableOptional<T> = {
 type MergedItem = Item & NullableOptional<Omit<WebsiteItem, keyof Item> & Omit<APIItem, keyof Item>>;
 
 // price in WebsiteItem is now the original price, displayPrice is the average price.
-// We map price -> originalPrice and displayPrice -> price to maintain backward compatibility.
+// we map price -> originalPrice and displayPrice -> price to maintain backward compatibility
 async function getShopData() {
     const items: MergedItem[] = [];
     const wresponse = await getWebsiteItems();
