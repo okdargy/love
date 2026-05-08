@@ -329,20 +329,20 @@ export default function DealsPage() {
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2 mt-1.5">
-                  {deal.value && (
+                  {deal.value != null && (
                     <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
                       Value: <i className="pi pi-brick text-[#4F95E7]"></i>
                       <span className="text-[#4F95E7]">{deal.value.toLocaleString()}</span>
                     </span>
                   )}
-                  {deal.recentAverage && (
+                  {deal.recentAverage != null && (
                     <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
                       Avg: <i className="pi pi-brick text-[#4FE883]"></i>
                       <span className="text-[#4FE883]">{deal.recentAverage.toLocaleString()}</span>
                     </span>
                   )}
                 </div>
-                {deal.tags.length > 0 && (
+                {deal.tags && deal.tags.length > 0 && (
                   <div className="flex items-center gap-1 mt-1.5">
                     {deal.tags.map((tag) => (
                       <span

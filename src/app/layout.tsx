@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import { Provider } from "@/components/Provider";
 import { Toaster } from "@/components/ui/sonner"
 
+// @ts-ignore
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { SessionProvider } from "@/components/SessionContext";
