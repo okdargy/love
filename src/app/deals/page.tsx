@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/icons";
 import Image from "next/image";
 import Link from "next/link";
-import { Wifi, WifiOff, RefreshCw, Volume2, VolumeX, Settings2 } from "lucide-react";
+import { Wifi, WifiOff, RefreshCw, Volume2, Settings2 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/format-utils";
 import {
   Dialog,
@@ -235,7 +235,7 @@ export default function DealsPage() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    i'm lowk desperate for ping sounds.. message okdargy on discord and i'll probably add it
+                    i&apos;m lowk desperate for ping sounds.. message okdargy on discord and i&apos;ll probably add it
                   </p>
                 </div>
                 <Button
