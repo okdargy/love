@@ -183,14 +183,41 @@ async function handleRankingsData(players: RankingEntry[]) {
         }
     });
 
-    await db.insert(playerNetworthHistoryTable).values(
-        players.map(player => ({
+    const playerIds = players.map(p => p.user.id);
+
+    // we want to get the latest networth for each player, so we do a DISTINCT ON query to get the latest entry for each playerId
+    // this is because we only want to insert a new entry into playerNetworthHistoryTable if the rank or networth has changed, to avoid unnecessary entries and to be able to track changes over time
+    const result = await db.execute(
+        sql`
+        SELECT DISTINCT ON ("playerId") "playerId", "rank", "networth"
+        FROM player_networth_history
+        WHERE "playerId" IN (${sql.join(playerIds, sql`, `)})
+        ORDER BY "playerId", "created_at" DESC
+        `
+    );
+
+    const rows: { playerId: number; rank: number; networth: number }[] =
+        Array.isArray(result) ? result : (result as any).rows;
+
+    const latestMap = new Map<number, { rank: number; networth: number }>();
+    for (const row of rows) {
+        latestMap.set(row.playerId, { rank: row.rank, networth: row.networth });
+    }
+
+    const newValues = players
+        .filter(player => {
+            const latest = latestMap.get(player.user.id);
+            return !latest || latest.rank !== player.rank || latest.networth !== player.statistic;
+        })
+        .map(player => ({
             playerId: player.user.id,
             rank: player.rank,
             networth: player.statistic,
-        }))
-    ).onConflictDoNothing();
-    
+        }));
+
+    if (newValues.length === 0) return;
+
+    await db.insert(playerNetworthHistoryTable).values(newValues);
 }   
 
 async function fetchAndStorePlayerValue(playerId: number) {
@@ -426,6 +453,14 @@ class ItemCycleManager {
         if(!this.isRunning) this.runCycle();
     }
     
+    async flush() {
+        if (this.tradeAccumulator.length > 0) {
+            helpfulPrint(`Flushing ${this.tradeAccumulator.length} pending trades on shutdown...`, "INFO", true);
+            await this.processAccumulatedTrades();
+            await this.processPlayerValueUpdates();
+        }
+    }
+
     stop() {
         this.looping = false;
         if (this.cycleTimeout) {
@@ -576,6 +611,17 @@ startWSServer(WS_PORT);
 
 const cycleManager = new ItemCycleManager();
 cycleManager.start();
+
+async function shutdown() {
+    helpfulPrint("Shutdown signal received, flushing pending data...", "INFO", true);
+    cycleManager.stop();
+    await cycleManager.flush();
+    process.exit(0);
+}
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+process.on("SIGBREAK", shutdown);
 
 setInterval(async () => {
     const shopData = await getShopData();
