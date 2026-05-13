@@ -134,7 +134,7 @@ export default function Page() {
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-[440px]">
                                         <DialogHeader>
-                                            <DialogTitle className="mb-1.5">Polytoria <ChevronsLeftRightEllipsis className="inline h-4 w-4 mx-1" /> LOVE</DialogTitle>
+                                            <DialogTitle className="mb-1.5">Polytoria <ChevronsLeftRightEllipsis className="inline h-4 w-4 mx-1" /> SWAG</DialogTitle>
                                             <DialogDescription>
                                                 Before linking, ensure you have your Discord account connected to your Polytoria account in <a href="https://polytoria.com/my/settings" target="_blank" rel="noreferrer" className="underline">Settings</a>.
                                                 <br /><br />

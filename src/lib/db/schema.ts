@@ -1,5 +1,5 @@
 import { bigint, boolean, index, integer, pgSequence, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
-import { relations, sql } from 'drizzle-orm';
+import { desc, relations, sql } from 'drizzle-orm';
 
 const nowEpochMs = sql`(extract(epoch from now()) * 1000)::bigint`;
 
@@ -205,9 +205,10 @@ export const playerValueHistoryTable = pgTable("player_value_history", {
 	id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
 	playerId: integer("playerId").notNull().references(() => playersTable.id),
 	totalValue: bigint("totalValue", { mode: 'number' }).notNull(),
+	rap: bigint("rap", { mode: 'number' }).notNull().default(0),
 	createdAt: bigint("created_at", { mode: 'number' }).notNull().default(nowEpochMs),
 }, (table) => [
-	index("player_value_history_player_id_index").on(table.playerId),
+	index("player_value_history_player_id_created_idx").on(table.playerId, desc(table.createdAt)),
 ]);
 
 export const playerValueHistoryRelations = relations(playerValueHistoryTable, ({ one }) => ({

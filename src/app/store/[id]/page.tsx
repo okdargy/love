@@ -73,7 +73,7 @@ export default function Page() {
 
   useEffect(() => {
     if (itemInfo.data) {
-      document.title = itemInfo.data.item.name + " - LOVE";
+      document.title = itemInfo.data.item.name + " - SWAG";
     }
   }, [itemInfo.data]);
 

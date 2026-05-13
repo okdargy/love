@@ -2,6 +2,7 @@ import {
     APIStoreResponse,
     ListingsAPIResponse,
     OwnerAPIResponse,
+    PlayerInventoryResponse,
     RankingsResponse,
     WebsiteStoreResponse,
 } from "./types";
@@ -117,6 +118,19 @@ export const getUser = async (id: number): Promise<{ netWorth: number; username:
         username: data.username,
         thumbnail: data.thumbnail?.avatar ?? "https://cdn.polytoria.com/placeholders/avatars/pending.png",
     };
+};
+
+/**
+ * Gets a player's inventory (limited/collectible items only)
+ *
+ * @param id - The user ID
+ * @param page - Page number (default: 1)
+ * @param limit - Results per page (default: 100)
+ * @returns Player inventory response or null if request fails
+ */
+export const getPlayerInventory = async (id: number, page: number = 1, limit: number = 100): Promise<PlayerInventoryResponse | null> => {
+    const url = `${API_BASE_URL.POLYTORIA}/users/${id}/inventory?limited=true&limit=${limit}&page=${page}`;
+    return apiRequest<PlayerInventoryResponse>(url);
 };
 
 // For legacy kitty, that keeps coming back for getItems(), those who know.

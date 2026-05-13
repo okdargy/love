@@ -3,6 +3,7 @@ import { UserData } from '@/app/_types/api';
 import Image from "next/image";
 import Inventory from "./Inventory";
 import Recent from "./Recent";
+import PlayerValueHistory from "./PlayerValueHistory";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +82,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
                                         </TooltipTrigger>
                                         <TooltipContent side="bottom" className="text-center max-w-48">
                                             <p>Linked</p>
-                                            <p className="font-medium text-xs text-muted-foreground">This user has verified their account on LOVE, using thier Discord account.</p>
+                                            <p className="font-medium text-xs text-muted-foreground">This user has verified their account on SWAG, using thier Discord account.</p>
                                         </TooltipContent>
                                     </Tooltip>
                                     {linkedUser.user.role == "admin" && (
@@ -143,6 +144,10 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
             <div>
                 <h2 className="text-2xl font-bold mb-3">Inventory</h2>
                 <Inventory id={id} />
+            </div>
+            <div>
+                <h2 className="text-2xl font-bold mb-3">Value History</h2>
+                <PlayerValueHistory id={id} />
             </div>
             <div>
                 <div className="flex justify-between mb-3">

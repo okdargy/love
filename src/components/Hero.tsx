@@ -49,7 +49,7 @@ export default function Hero() {
             />
             <div className="z-10 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="text-center sm:text-left">
-                    <h1 className="text-xl sm:text-2xl font-bold">Welcome to LOVE!</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold">Welcome to SWAG!</h1>
                     <p className="text-sm text-primary-foreground/80 max-w-96">
                         Here you&apos;ll find the most reliable information for trading collectables on Polytoria
                     </p>
@@ -57,7 +57,7 @@ export default function Hero() {
                 <div className="flex">
                     <Image
                         src="/icon-white.svg"
-                        alt="LOVE Icon"
+                        alt="SWAG Icon"
                         width={75}
                         height={75}
                         className="drop-shadow-lg filter hover:animate-heartbeat w-16 sm:w-[75px] h-auto mr-0 sm:mr-4"

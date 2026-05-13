@@ -16,7 +16,7 @@ import {
     SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { BookOpenText, CalculatorIcon, ClockIcon, Cog, DollarSignIcon, HomeIcon, LogInIcon, LogOut, NewspaperIcon, Wrench } from 'lucide-react';
-import { LoveIcon } from "@/components/icons";
+import { SwagIcon } from "@/components/icons";
 import PlayerSearch from "./PlayerSearch";
 import ThemeToggle from "./ThemeToggle";
 
@@ -55,7 +55,7 @@ export default function Navbar(props: { session: Awaited<ReturnType<typeof valid
                         href="/"
                         className="p-2 hover:bg-primary/20 transition-all rounded-lg"
                     >
-                        <LoveIcon className="h-6 w-6 fill-primary" />
+                        <SwagIcon className="h-6 w-6 fill-primary" />
                     </Link>
                     <span className="text-xs bg-primary/20 text-primary px-2.5 py-0.5 uppercase rounded-md font-semibold tracking-wide">Beta</span>
                 </div>

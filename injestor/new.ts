@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, InferInsertModel, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, InferInsertModel, or, sql } from "drizzle-orm";
 
 import { ldb } from "./db";
 import { db } from "@/lib/db";
@@ -7,7 +7,7 @@ import { itemsTable, serialsTable } from "./db/schema";
 import { collectablesTable, collectablesStatsTable, listingsHistoryTable, tradeHistoryTable, playersTable, playerNetworthHistoryTable, playerValueHistoryTable } from "@/lib/db/schema";
 
 import { APIItem, Inventory, Item, ListingsAPIResponse, RankingEntry, WebsiteItem } from "./types";
-import { getAPIItems, getListings, getOwners, getRankings, getUser, getWebsiteItems } from "./api";
+import { getAPIItems, getListings, getOwners, getPlayerInventory, getRankings, getUser, getWebsiteItems } from "./api";
 import { helpfulPrint, processDeal, processTrade, sendTradeWebhooks, type TradeHistoryWithItem } from "./utils";
 import { startWSServer } from "./ws-server";
 
@@ -230,9 +230,49 @@ async function fetchAndStorePlayerValue(playerId: number) {
         thumbnailUrl: userData.thumbnail,
     }).onConflictDoNothing();
 
+    const rap = userData.netWorth;
+
+    let totalValue = rap;
+    try {
+        const inventory: number[] = [];
+        let page = 1;
+        let totalPages = 1;
+
+        while (page <= totalPages) {
+            const res = await getPlayerInventory(playerId, page);
+            if (!res) break;
+            inventory.push(...res.inventory.map(i => i.asset.id));
+            totalPages = res.pages;
+            page++;
+            if (page <= totalPages) await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        if (inventory.length > 0) {
+            const uniqueIds = [...new Set(inventory)];
+            const items = await db
+                .select({
+                    id: collectablesTable.id,
+                    recentAverage: collectablesTable.recentAverage,
+                    value: collectablesStatsTable.value,
+                })
+                .from(collectablesTable)
+                .leftJoin(collectablesStatsTable, eq(collectablesTable.id, collectablesStatsTable.id))
+                .where(inArray(collectablesTable.id, uniqueIds));
+
+            let loveValue = 0;
+            for (const item of items) {
+                loveValue += item.value ?? item.recentAverage ?? 0;
+            }
+            totalValue = loveValue;
+        }
+    } catch (e) {
+        console.error(`Failed to calculate LOVE value for player ${playerId}, falling back to RAP:`, e);
+    }
+
     await db.insert(playerValueHistoryTable).values({
         playerId,
-        totalValue: userData.netWorth,
+        totalValue,
+        rap,
     });
 }
 

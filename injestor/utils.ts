@@ -34,7 +34,7 @@ export const processDeal = async (item: {
     if(!itemInfo) return console.error(`Failed to find item ${item.id} in db, cannot post webhook`);
 
     const payload = JSON.stringify({
-        username: "LOVE Deals",
+        username: "SWAG Deals",
         avatar_url: "https://polytoria.trade/bot_icon.png",
         embeds: [
             {
@@ -215,7 +215,7 @@ export const sendTradeWebhooks = async (embeds: any[]) => {
 
     for (const chunk of chunks) {
         const payload = JSON.stringify({
-            username: "LOVE Trades",
+            username: "SWAG Trades",
             avatar_url: "https://polytoria.trade/bot_icon.png",
             embeds: chunk
         });
@@ -248,7 +248,7 @@ export const helpfulPrint = async (message: string, priority: PRIORITY_TYPES = "
     if (noWebhook) return;
 
     const body = JSON.stringify({
-        username: "LOVE Alerts",
+        username: "SWAG Alerts",
         avatar_url: "https://polytoria.trade/bot_icon.png",
         embeds: [
             {
@@ -284,7 +284,7 @@ export const helpfulPrintWithDbAttachment = async (message: string, priority: PR
     if (!webhookUrl) return;
 
     const embed = {
-        username: "LOVE Alerts",
+        username: "SWAG Alerts",
         avatar_url: "https://polytoria.trade/bot_icon.png",
         embeds: [
             {

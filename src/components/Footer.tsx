@@ -25,10 +25,10 @@ export default function Footer({ sha, lastUpdate }: { sha: string, lastUpdate: s
         <footer className="flex items-center gap-4 border-t bg-background">
             <div className="flex flex-row w-full max-w-screen-lg mx-auto gap-6 p-4 sm:p-6 justify-between">
                 <div className="flex gap-x-3.5 text-muted-foreground">
-                    <Link href="https://discord.gg/jUFET2fN3p" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-md font-semibold hover:fill-primary hover:text-primary transition-colors">
+                    <Link href="https://discord.gg/dT4Rn9qSJA" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-md font-semibold hover:fill-primary hover:text-primary transition-colors">
                         <Discord className='h-5 w-5 fill-current' />
                     </Link>
-                    <Link href="https://polytoria.com/guilds/584" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-md font-semibold hover:fill-primary hover:text-primary transition-colors">
+                    <Link href="https://polytoria.com/guilds/6544" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-md font-semibold hover:fill-primary hover:text-primary transition-colors">
                         <Polytoria className="h-5 w-5 fill-current" />
                     </Link>
                     <Link href="https://docs.google.com/document/d/1W7JN74MU-9Dbd-9xNnjxE18hQVBPXWuwjK5DGSnuQR4/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-md font-semibold hover:fill-primary hover:text-primary transition-colors">

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ilike, eq, count, or, desc, and, inArray, InferSelectModel, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable, playersTable, polytoriaUserTable, userInventoryPreferencesTable, userTable } from "@/lib/db/schema";
+import { collectablesStatsTable, collectablesTable, itemTagsTable, auditLogsTable, tradeHistoryTable, tagsTable, listingsHistoryTable, playersTable, playerValueHistoryTable, polytoriaUserTable, userInventoryPreferencesTable, userTable } from "@/lib/db/schema";
 import { publicProcedure, router } from "./trpc";
 import { validateRequest } from "@/lib/auth";
 import type { User } from "lucia";
@@ -52,7 +52,7 @@ const sendValueChangeAlert = ({
     }
 
     const payload = JSON.stringify({
-        username: "LOVE Updates",
+        username: "SWAG Updates",
         avatar_url: "https://polytoria.trade/bot_icon.png",
         content: `<@&${process.env.VALUE_ROLE_ID}>`,
         embeds: [
@@ -858,6 +858,24 @@ export const appRouter = router({
             });
 
             return res;
+        } catch (e) {
+            console.error(e);
+        }
+    }),
+    getPlayerValueHistory: publicProcedure.input(z.number().min(1)).query(async (opts) => {
+        try {
+            const [history, player] = await Promise.all([
+                db.query.playerValueHistoryTable.findMany({
+                    where: eq(playerValueHistoryTable.playerId, opts.input),
+                    orderBy: [desc(playerValueHistoryTable.createdAt)],
+                    limit: 90,
+                }),
+                db.query.playersTable.findFirst({
+                    where: eq(playersTable.id, opts.input),
+                }),
+            ]);
+
+            return { history: history.toReversed(), player };
         } catch (e) {
             console.error(e);
         }

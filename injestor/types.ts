@@ -94,6 +94,27 @@ export interface APIStoreResponse {
     total: number;
 }
 
+export interface PlayerInventoryAsset {
+    id: number;
+    type: string;
+    name: string;
+    thumbnail: string;
+    isLimited: boolean;
+}
+
+export interface PlayerInventoryEntry {
+    id: number;
+    asset: PlayerInventoryAsset;
+    serial: number;
+    purchasedAt: string;
+}
+
+export interface PlayerInventoryResponse {
+    inventory: PlayerInventoryEntry[];
+    pages: number;
+    total: number;
+}
+
 export interface Creator {
     type: string;
     id: number;

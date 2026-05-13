@@ -1378,6 +1378,119 @@
         "summary": "Get recent trades for a user"
       }
     },
+    "/api/trpc/getPlayerValueHistory": {
+      "get": {
+        "operationId": "getPlayerValueHistory",
+        "tags": [
+          "Procedures"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "history": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "number"
+                                  },
+                                  "playerId": {
+                                    "type": "number"
+                                  },
+                                  "totalValue": {
+                                    "type": "number"
+                                  },
+                                  "rap": {
+                                    "type": "number"
+                                  },
+                                  "createdAt": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "playerId",
+                                  "totalValue",
+                                  "rap",
+                                  "createdAt"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "player": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "number"
+                                },
+                                "username": {
+                                  "type": "string"
+                                },
+                                "thumbnailUrl": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "username",
+                                "thumbnailUrl"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "history",
+                            "player"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "required": true,
+            "style": "deepObject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "summary": "getPlayerValueHistory"
+      }
+    },
     "/api/trpc/getUserConnectionStatus": {
       "get": {
         "operationId": "getUserConnectionStatus",
@@ -2000,6 +2113,10 @@
     {
       "name": "Trade History",
       "description": "Trade history and transaction data"
+    },
+    {
+      "name": "Procedures",
+      "description": "Procedures procedures"
     },
     {
       "name": "Users",
