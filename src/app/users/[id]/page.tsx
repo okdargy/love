@@ -82,7 +82,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
                                         </TooltipTrigger>
                                         <TooltipContent side="bottom" className="text-center max-w-48">
                                             <p>Linked</p>
-                                            <p className="font-medium text-xs text-muted-foreground">This user has verified their account on SWAG, using thier Discord account.</p>
+                                            <p className="font-medium text-xs text-muted-foreground">This user has verified their account on LOVE, using thier Discord account.</p>
                                         </TooltipContent>
                                     </Tooltip>
                                     {linkedUser.user.role == "admin" && (

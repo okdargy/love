@@ -52,7 +52,7 @@ const sendValueChangeAlert = ({
     }
 
     const payload = JSON.stringify({
-        username: "SWAG Updates",
+        username: "LOVE Updates",
         avatar_url: "https://polytoria.trade/bot_icon.png",
         content: `<@&${process.env.VALUE_ROLE_ID}>`,
         embeds: [
@@ -307,6 +307,7 @@ export const appRouter = router({
             return { item, allTags, latestListing };
         } catch (e) {
             console.error(e);
+            throw e;
         }
     }),
     editItemStats: publicProcedure.input(z.object({
@@ -647,7 +648,7 @@ export const appRouter = router({
 
         return {
             success: true
-        }
+        };
     }),
     searchTags: publicProcedure.input(z.object({
         query: z.string().optional(),
@@ -694,7 +695,7 @@ export const appRouter = router({
 
         return {
             success: true
-        }
+        };
     }),
     editTag: publicProcedure.input(z.object({
         id: z.number().min(1),
@@ -721,7 +722,7 @@ export const appRouter = router({
 
         return {
             success: true
-        }
+        };
     }),
     getAllItemOwners: publicProcedure.input(z.number().min(1)).query(async (opts) => {
         const id = opts.input;
@@ -860,24 +861,62 @@ export const appRouter = router({
             return res;
         } catch (e) {
             console.error(e);
+            throw e;
         }
     }),
     getPlayerValueHistory: publicProcedure.input(z.number().min(1)).query(async (opts) => {
+        const player = await db.query.playersTable.findFirst({
+            where: eq(playersTable.id, opts.input),
+        });
+
         try {
-            const [history, player] = await Promise.all([
-                db.query.playerValueHistoryTable.findMany({
-                    where: eq(playerValueHistoryTable.playerId, opts.input),
-                    orderBy: [desc(playerValueHistoryTable.createdAt)],
-                    limit: 90,
-                }),
-                db.query.playersTable.findFirst({
-                    where: eq(playersTable.id, opts.input),
-                }),
-            ]);
+            const history = await db.query.playerValueHistoryTable.findMany({
+                where: eq(playerValueHistoryTable.playerId, opts.input),
+                orderBy: [desc(playerValueHistoryTable.createdAt)],
+                limit: 90,
+            });
 
             return { history: history.toReversed(), player };
         } catch (e) {
-            console.error(e);
+            const message = e instanceof Error ? e.message : String(e);
+            console.error("getPlayerValueHistory primary query failed:", e);
+
+            const isSchemaDriftError =
+                message.includes("player_value_history")
+                || message.includes("column")
+                || message.includes("does not exist");
+
+            if (!isSchemaDriftError) {
+                throw e;
+            }
+
+            try {
+                const fallbackResult = await db.execute(sql`
+                    SELECT
+                        id,
+                        "playerId",
+                        "totalValue",
+                        0::bigint AS rap,
+                        created_at AS "createdAt"
+                    FROM player_value_history
+                    WHERE "playerId" = ${opts.input}
+                    ORDER BY created_at DESC
+                    LIMIT 90
+                `);
+
+                const rows: {
+                    id: number;
+                    playerId: number;
+                    totalValue: number;
+                    rap: number;
+                    createdAt: number;
+                }[] = Array.isArray(fallbackResult) ? fallbackResult : (fallbackResult as any).rows;
+
+                return { history: rows.toReversed(), player };
+            } catch (fallbackError) {
+                console.error("getPlayerValueHistory fallback query failed:", fallbackError);
+                return { history: [], player };
+            }
         }
     }),
     getItemGraph: publicProcedure.input(z.number().min(1)).query(async (opts) => {
@@ -904,6 +943,7 @@ export const appRouter = router({
             return { res: json, listings: listings };
         } catch (e) {
             console.error(e);
+            throw e;
         }
     }),
     getUserConnectionStatus: publicProcedure.query(async () => {

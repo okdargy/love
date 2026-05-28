@@ -90,7 +90,7 @@ export async function generateMetadata(
       }
     } catch (e) {
       return {
-        title: 'SWAG',
+        title: 'LOVE',
         description: 'The requested blog post could not be found.'
       }
     }

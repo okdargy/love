@@ -25,8 +25,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "SWAG",
-  description: "Welcome to SWAG, your #1 reliable source for Trading & Economy information on Polytoria",
+  title: "LOVE",
+  description: "Welcome to List Of Values: Everlast, your #1 reliable source for Trading & Economy information on Polytoria",
   openGraph: {
     images: [
       {

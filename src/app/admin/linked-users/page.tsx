@@ -67,7 +67,7 @@ export default function AdminLinkedUsers() {
         <div className="space-y-3">
             <div className="w-full flex gap-x-2">
                 <Input
-                    placeholder="Search by Polytoria username or SWAG user"
+                    placeholder="Search by Polytoria username or LOVE user"
                     className="w-full"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -89,7 +89,7 @@ export default function AdminLinkedUsers() {
                                     </span>
                                 </p>
                                 <p className="text-sm text-neutral-400">
-                                    Polytoria ID: <code>{entry.polytoriaId}</code> &middot; SWAG ID: <code>{entry.userId}</code>
+                                    Polytoria ID: <code>{entry.polytoriaId}</code> &middot; LOVE ID: <code>{entry.userId}</code>
                                 </p>
                                 <p className="text-sm text-neutral-400">
                                     Discord: <code>{entry.discordId}</code> &middot; Role: <code>{entry.role}</code>

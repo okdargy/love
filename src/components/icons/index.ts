@@ -1,2 +1,2 @@
-export * from './SwagIcon';
+export * from './LoveIcon';
 export * from './Spinner';
