@@ -48,6 +48,8 @@ type ConnectionState = "connecting" | "connected" | "disconnected";
 
 const SOUND_OPTIONS = [
   { value: "dargy", label: "dargy", file: "/sounds/dargy.mp3" },
+  { value: "nuclear", label: "Ancarchyland's Nuclear", file: "/sounds/nuclear.mp3" },
+  { value: "bell", label: "Bell", file: "/sounds/bell.mp3" }
 ] as const;
 
 type SoundId = (typeof SOUND_OPTIONS)[number]["value"];
