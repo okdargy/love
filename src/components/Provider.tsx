@@ -1,5 +1,7 @@
 "use client";
 
+import "@/lib/polyfills";
+
 import { useState } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
