@@ -1218,6 +1218,21 @@
                               },
                               "isFirst": {
                                 "type": "boolean"
+                              },
+                              "item": {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "additionalProperties": {}
+                                    }
+                                  }
+                                ]
                               }
                             },
                             "required": [
@@ -1227,7 +1242,8 @@
                               "username",
                               "itemId",
                               "created_at",
-                              "isFirst"
+                              "isFirst",
+                              "item"
                             ],
                             "additionalProperties": false
                           }
@@ -1260,6 +1276,9 @@
                     "type": "number"
                   },
                   "offset": {
+                    "type": "number"
+                  },
+                  "userId": {
                     "type": "number"
                   }
                 },

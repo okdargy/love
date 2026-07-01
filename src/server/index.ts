@@ -835,13 +835,20 @@ export const appRouter = router({
     getAllRecentHistory: publicProcedure.input(z.object({
         limit: z.number().min(1).max(25).optional(),
         offset: z.number().min(0).optional(),
+        userId: z.number().min(1).optional(),
     })).mutation(async (opts) => {
         try {
             const res = db.query.tradeHistoryTable.findMany({
-                where: eq(tradeHistoryTable.isFirst, false),
+                where: opts.input.userId
+                    ? and(
+                        eq(tradeHistoryTable.userId, opts.input.userId),
+                        eq(tradeHistoryTable.isFirst, false)
+                    )
+                    : eq(tradeHistoryTable.isFirst, false),
                 orderBy: [desc(tradeHistoryTable.id)],
                 limit: opts.input.limit ?? 10,
-                offset: opts.input.offset ?? 0
+                offset: opts.input.offset ?? 0,
+                with: { item: true },
             });
 
             return res;
@@ -876,7 +883,7 @@ export const appRouter = router({
                 limit: 90,
             });
 
-            return { history: history.toReversed(), player };
+            return { history: [...history].reverse(), player };
         } catch (e) {
             const message = e instanceof Error ? e.message : String(e);
             console.error("getPlayerValueHistory primary query failed:", e);
@@ -912,7 +919,7 @@ export const appRouter = router({
                     createdAt: number;
                 }[] = Array.isArray(fallbackResult) ? fallbackResult : (fallbackResult as any).rows;
 
-                return { history: rows.toReversed(), player };
+                return { history: [...rows].reverse(), player };
             } catch (fallbackError) {
                 console.error("getPlayerValueHistory fallback query failed:", fallbackError);
                 return { history: [], player };

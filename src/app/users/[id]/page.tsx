@@ -152,7 +152,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
             <div>
                 <div className="flex justify-between mb-3">
                     <h2 className="text-2xl font-bold my-auto">Recent History</h2>
-                    <Link href={`/recent`} className="my-auto">
+                    <Link href={`/recent?userId=${id}`} className="my-auto">
                         <p className="text-sm text-muted-foreground">
                             View All
                         </p>
