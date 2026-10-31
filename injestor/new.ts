@@ -16,7 +16,7 @@ const INTERVALS = {
     NEXT_PAGE: 5 * 1000, // 5 seconds, after getting one page, wait X amount of time 
     NEXT_ITEM: 30 * 1000, // 30 seconds, after getting one item, wait X amount of time
     CYCLE: 1000 * 60 * 60, // 60 minutes, to wait after the entire item cycle (listinsHistory, tradeHistory) is done, indepedent from new items
-    RANKINGS_UPDATE: 1000 * 60 * 12, // 12 hours, fetch newest networth rankings
+    RANKINGS_UPDATE: 1000 * 60 * 60 * 12, // 12 hours, fetch newest networth rankings
 };
 
 type NullableOptional<T> = {
@@ -185,14 +185,20 @@ async function handleRankingsData(players: RankingEntry[]) {
 
     const playerIds = players.map(p => p.user.id);
 
-    // we want to get the latest networth for each player, so we do a DISTINCT ON query to get the latest entry for each playerId
+    // we want to get the latest networth for each player, so we look up the newest entry for each playerId
     // this is because we only want to insert a new entry into playerNetworthHistoryTable if the rank or networth has changed, to avoid unnecessary entries and to be able to track changes over time
     const result = await db.execute(
         sql`
-        SELECT DISTINCT ON ("playerId") "playerId", "rank", "networth"
-        FROM player_networth_history
-        WHERE "playerId" IN (${sql.join(playerIds, sql`, `)})
-        ORDER BY "playerId", "created_at" DESC
+        SELECT p.id AS "playerId", h."rank", h."networth"
+        FROM players p
+        CROSS JOIN LATERAL (
+            SELECT "rank", "networth"
+            FROM player_networth_history
+            WHERE "playerId" = p.id
+            ORDER BY "created_at" DESC
+            LIMIT 1
+        ) h
+        WHERE p.id IN (${sql.join(playerIds, sql`, `)})
         `
     );
 
@@ -668,10 +674,14 @@ setInterval(async () => {
     handleShopData(shopData);
 }, INTERVALS.NEW_ITEMS);
 
-setInterval(async () => {   
+const updateRankings = async () => {
     const rankingsData = await getRankingsData();
     handleRankingsData(rankingsData);
-}, INTERVALS.RANKINGS_UPDATE);
+};
+
+// also run at startup, so a redeploy doesn't push the next update 12 hours out
+updateRankings();
+setInterval(updateRankings, INTERVALS.RANKINGS_UPDATE);
 
 const msToRelative = (ms: number) => {
     const seconds = Math.floor(ms / 1000);

@@ -191,7 +191,7 @@ export const playerNetworthHistoryTable = pgTable("player_networth_history", {
 	networth: bigint("networth", { mode: 'number' }).notNull(),
 	created_at: bigint("created_at", { mode: 'number' }).notNull().default(nowEpochMs),
 }, (table) => [
-	index("player_networth_history_player_id_index").on(table.playerId),
+	index("player_networth_history_player_id_created_idx").on(table.playerId, desc(table.created_at)),
 ]);
 
 export const playerNetworthHistoryRelations = relations(playerNetworthHistoryTable, ({ one }) => ({
